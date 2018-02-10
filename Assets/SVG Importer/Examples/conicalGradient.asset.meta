@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: ba34a52223c5a442c8f5ac792dcd1b76
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\"
+    height=\"100%\" viewBox=\"0 0 1920 1200\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;\">\n
+    \   <g id=\"Layer1\">\n        <circle cx=\"991.944\" cy=\"603.041\" r=\"296.953\"
+    style=\"fill:url(#tag1);\"/>\n    </g>\n    <defs>\n        <conicalGradient id=\"tag1\"
+    cx=\"0\" cy=\"0\" r=\"1\" gradientUnits=\"userSpaceOnUse\" gradientTransform=\"matrix(296.953,0,0,296.953,991.944,603.041)\"><stop
+    offset=\"0%\" style=\"stop-color:rgb(218,230,26);stop-opacity:1\"/><stop offset=\"50%\"
+    style=\"stop-color:rgb(13,121,242);stop-opacity:1\"/><stop offset=\"100%\" style=\"stop-color:white;stop-opacity:1\"/></conicalGradient>\n
+    \   </defs>\n</svg>\n"
+  assetBundleName: 
+  assetBundleVariant: 

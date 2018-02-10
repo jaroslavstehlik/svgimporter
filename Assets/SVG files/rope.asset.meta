@@ -1,0 +1,46 @@
+fileFormatVersion: 2
+guid: 320845e0663e07c44b77eb1b50f7c38d
+timeCreated: 1489448340
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    preserveAspectRatio=\"xMidYMid\" width=\"1536\" height=\"293\" viewBox=\"0 0 1536
+    293\">\n  <defs>\n    <style>\n      .cls-1 {\n        fill: #15a7ac;\n        stroke:
+    #45d7dc;\n        stroke-width: 8px;\n        filter: url(#drop-shadow-1);\n      }\n\n
+    \     .cls-2 {\n        fill: #ee749f;\n        stroke: #fbb9d0;\n        stroke-width:
+    10px;\n        filter: url(#drop-shadow-2);\n      }\n\n      .cls-2, .cls-3 {\n
+    \       fill-rule: evenodd;\n      }\n\n      .cls-3 {\n        fill: #f9cedd;\n
+    \       filter: url(#drop-shadow-3);\n      }\n    </style>\n\n    <filter id=\"drop-shadow-1\"
+    filterUnits=\"userSpaceOnUse\">\n      <feOffset dy=\"14\" in=\"SourceAlpha\"/>\n
+    \     <feGaussianBlur result=\"dropBlur\"/>\n      <feFlood flood-color=\"#14797c\"/>\n
+    \     <feComposite operator=\"in\" in2=\"dropBlur\" result=\"dropShadowComp\"/>\n
+    \     <feComposite in=\"SourceGraphic\" result=\"shadowed\"/>\n    </filter>\n
+    \   <filter id=\"drop-shadow-2\" filterUnits=\"userSpaceOnUse\">\n      <feOffset
+    dy=\"8\" in=\"SourceAlpha\"/>\n      <feGaussianBlur result=\"dropBlur\"/>\n      <feFlood
+    flood-color=\"#ab2c59\"/>\n      <feComposite operator=\"in\" in2=\"dropBlur\"
+    result=\"dropShadowComp\"/>\n      <feComposite in=\"SourceGraphic\" result=\"shadowed\"/>\n
+    \   </filter>\n    <filter id=\"drop-shadow-3\" filterUnits=\"userSpaceOnUse\">\n
+    \     <feOffset dy=\"8\" in=\"SourceAlpha\"/>\n      <feGaussianBlur result=\"dropBlur\"/>\n
+    \     <feFlood flood-color=\"#b64d72\"/>\n      <feComposite operator=\"in\" in2=\"dropBlur\"
+    result=\"dropShadowComp\"/>\n      <feComposite in=\"SourceGraphic\" result=\"shadowed\"/>\n
+    \   </filter>\n  </defs>\n  <g>\n    <g style=\"fill: #15a7ac; filter: url(#drop-shadow-1)\">\n
+    \     <rect x=\"-82\" y=\"59\" width=\"1696\" height=\"173\" rx=\"25\" ry=\"25\"
+    id=\"rect-1\" style=\"stroke: inherit; filter: none; fill: inherit\" class=\"cls-1\"/>\n
+    \   </g>\n    <use xlink:href=\"#rect-1\" style=\"stroke: #45d7dc; filter: none;
+    fill: none\"/>\n    <g style=\"fill: #ee749f; filter: url(#drop-shadow-2)\">\n
+    \     <path d=\"M829.040,282.777 C801.517,277.744 773.949,277.479 746.334,281.982
+    C718.719,286.484 700.213,275.578 690.817,249.262 C681.421,222.946 667.866,198.974
+    650.153,177.347 C632.440,155.719 632.647,134.264 650.774,112.981 C668.901,91.698
+    682.915,67.991 692.817,41.861 C702.719,15.730 721.431,5.182 748.954,10.215 C776.477,15.247
+    804.046,15.512 831.661,11.010 C859.276,6.507 877.781,17.413 887.178,43.729 C896.574,70.045
+    910.129,94.017 927.841,115.644 C945.554,137.272 945.347,158.727 927.221,180.010
+    C909.094,201.293 895.080,225.000 885.178,251.130 C875.276,277.261 856.563,287.809
+    829.040,282.777 Z\" id=\"path-1\" style=\"stroke: inherit; filter: none; fill:
+    inherit\" class=\"cls-2\"/>\n    </g>\n    <use xlink:href=\"#path-1\" style=\"stroke:
+    #fbb9d0; filter: none; fill: none\"/>\n    <path d=\"M734.248,181.624 C736.483,152.037
+    737.009,122.420 735.824,92.773 C734.640,63.125 746.300,56.666 770.805,73.395 C795.311,90.125
+    820.697,105.388 846.965,119.187 C873.233,132.985 872.996,146.312 846.255,159.170
+    C819.515,172.027 793.603,186.381 768.519,202.230 C743.436,218.080 732.012,211.211
+    734.248,181.624 Z\" class=\"cls-3\"/>\n  </g>\n</svg>\n"
+  assetBundleName: 
+  assetBundleVariant: 

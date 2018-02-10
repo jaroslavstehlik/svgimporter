@@ -1,0 +1,29 @@
+fileFormatVersion: 2
+guid: cff108b3b53696c46963c7a60245283b
+timeCreated: 1489448331
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\"
+    height=\"100%\" viewBox=\"0 0 7 8\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;\">\n
+    \   <g transform=\"matrix(1,0,0,1,-7,-0)\">\n        <g id=\"Artboard2\" transform=\"matrix(1,0,0,1,0,0.247266)\">\n
+    \           <clipPath id=\"_clip1\">\n                <rect x=\"7.812\" y=\"-0.247\"
+    width=\"6.124\" height=\"7\"/>\n            </clipPath>\n            <g clip-path=\"url(#_clip1)\">\n
+    \               <g id=\"Layer1\" transform=\"matrix(1,0,0,1,-1.00147,-4)\">\n
+    \                   <g transform=\"matrix(0.437507,0,0,0.437507,8.37504,3.75273)\">\n
+    \                       <path d=\"M5.002,2L5.002,12.205C4.318,11.907 3.369,11.907
+    2.451,12.379C1.087,13.081 0.702,14.359 1.227,15.17C1.752,15.981 3.187,16.322 4.552,15.621C5.534,15.115
+    6.008,14.31 6.001,13.598L6.001,5.8L14.001,4.2L14.001,11.205C13.316,10.907 12.368,10.907
+    11.45,11.379C10.086,12.081 9.701,13.359 10.226,14.17C10.75,14.981 12.185,15.322
+    13.55,14.621C14.53,14.116 15.005,13.312 14.999,12.6L14.999,4L14.999,1L14.999,0L5.002,2Z\"
+    style=\"fill:white;fill-rule:nonzero;\"/>\n                    </g>\n                    <g
+    transform=\"matrix(1,0,0,1,-0.694929,0)\">\n                        <path d=\"M12.723,6.649L14.966,4.406C15.05,4.323
+    15.185,4.323 15.268,4.406L15.57,4.707C15.653,4.791 15.653,4.926 15.57,5.009L13.326,7.253L15.57,9.496C15.653,9.58
+    15.653,9.715 15.57,9.798L15.268,10.1C15.185,10.183 15.05,10.183 14.966,10.1L12.723,7.856L10.479,10.1C10.396,10.183
+    10.261,10.183 10.177,10.1L9.876,9.798C9.792,9.715 9.792,9.58 9.876,9.496L12.119,7.253L9.876,5.009C9.792,4.926
+    9.792,4.791 9.876,4.707L10.177,4.406C10.261,4.323 10.396,4.323 10.479,4.406L12.723,6.649Z\"
+    style=\"fill:rgb(204,204,204);\"/>\n                    </g>\n                </g>\n
+    \           </g>\n        </g>\n    </g>\n</svg>\n"
+  assetBundleName: 
+  assetBundleVariant: 

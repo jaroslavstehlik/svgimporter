@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: f7995f1b7bbf32a43bf6acd2ca75a1e9
+timeCreated: 1489448360
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 1024 768\" enable-background=\"new 0 0
+    1024 768\" xml:space=\"preserve\">\r\n<g id=\"zablesk\">\r\n\t\r\n\t\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"631.9961\" y1=\"595.5756\"
+    x2=\"67.1786\" y2=\"537.8987\" gradientTransform=\"matrix(1 0 0 -1 0 768)\">\r\n\t\t<stop
+    \ offset=\"0.1166\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t<stop  offset=\"1\"
+    style=\"stop-color:#FFFFFF;stop-opacity:0\"/>\r\n\t</linearGradient>\r\n\t<path
+    opacity=\"0.79\" fill=\"url(#SVGID_1_)\" enable-background=\"new    \" d=\"M627.6,141.8c5.7,4.1,10.4,16.5,11.4,31.4\r\n\t\tc1,15-2,27.9-7,32.7C463.4,223.8,40.3,244,39.3,229.1C38.3,214.2,415.1,153.8,627.6,141.8z\"/>\r\n\t\r\n\t\t<ellipse
+    transform=\"matrix(-7.389746e-02 -0.9973 0.9973 -7.389746e-02 503.6143 814.1629)\"
+    opacity=\"0.2\" fill=\"#FFFFFF\" enable-background=\"new    \" cx=\"629.8\" cy=\"173.2\"
+    rx=\"54.7\" ry=\"30.2\"/>\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

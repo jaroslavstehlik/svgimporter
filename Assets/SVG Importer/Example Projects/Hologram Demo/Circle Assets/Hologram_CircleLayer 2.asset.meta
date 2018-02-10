@@ -1,0 +1,36 @@
+fileFormatVersion: 2
+guid: 00f96628368cd6f49a7a386c2d9e80aa
+timeCreated: 1464566384
+licenseType: Free
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<!-- Generator: Adobe
+    Illustrator 19.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg
+    version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 100 100\" style=\"enable-background:new
+    0 0 100 100;\" xml:space=\"preserve\">\r\n<g id=\"Layer_2\">\r\n\t<g id=\"Center_1_\">\r\n\t\t<g
+    id=\"Center\">\r\n\t\t\t<g style=\"opacity:0.39;\">\r\n\t\t\t\t<path style=\"fill:#27AAE1;\"
+    d=\"M47.9,37.6c4,0,7.3,3.3,7.3,7.3s-3.3,7.3-7.3,7.3s-7.3-3.3-7.3-7.3S43.8,37.6,47.9,37.6\r\n\t\t\t\t\t
+    M47.9,37.4c-4.1,0-7.5,3.4-7.5,7.5s3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5S52,37.4,47.9,37.4L47.9,37.4z\"/>\r\n\t\t\t</g>\r\n\t\t\t<g
+    style=\"opacity:0.25;\">\r\n\t\t\t\t<path style=\"fill:#27AAE1;\" d=\"M47.9,34.6c5.7,0,10.3,4.6,10.3,10.3s-4.6,10.3-10.3,10.3s-10.3-4.6-10.3-10.3\r\n\t\t\t\t\tS42.2,34.6,47.9,34.6
+    M47.9,34.4c-5.8,0-10.5,4.7-10.5,10.5s4.7,10.5,10.5,10.5s10.5-4.7,10.5-10.5S53.7,34.4,47.9,34.4\r\n\t\t\t\t\tL47.9,34.4z\"/>\r\n\t\t\t</g>\r\n\t\t\t\r\n\t\t\t\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"38.4389\" y1=\"57.1\" x2=\"57.3111\"
+    y2=\"57.1\" gradientTransform=\"matrix(1 0 0 -1 0 102)\">\r\n\t\t\t\t<stop  offset=\"0.0047\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.1\"/>\r\n\t\t\t\t<stop  offset=\"0.4967\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.4881\"/>\r\n\t\t\t\t<stop  offset=\"0.5117\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.5\"/>\r\n\t\t\t\t<stop  offset=\"1\"
+    style=\"stop-color:#407B8D;stop-opacity:0.7\"/>\r\n\t\t\t</linearGradient>\r\n\t\t\t\r\n\t\t\t\t<circle
+    style=\"opacity:0.58;fill:none;stroke:url(#SVGID_1_);stroke-miterlimit:10;enable-background:new
+    \   ;\" cx=\"47.9\" cy=\"44.9\" r=\"8.9\"/>\r\n\t\t\t<g style=\"opacity:0.58;\">\r\n\t\t\t\t\r\n\t\t\t\t\t<linearGradient
+    id=\"SVGID_2_\" gradientUnits=\"userSpaceOnUse\" x1=\"37.5564\" y1=\"57.1\" x2=\"58.1936\"
+    y2=\"57.1\" gradientTransform=\"matrix(1 0 0 -1 0 102)\">\r\n\t\t\t\t\t<stop  offset=\"0.0047\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.1\"/>\r\n\t\t\t\t\t<stop  offset=\"0.4967\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.4881\"/>\r\n\t\t\t\t\t<stop  offset=\"0.5117\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.5\"/>\r\n\t\t\t\t\t<stop  offset=\"1\"
+    style=\"stop-color:#407B8D;stop-opacity:0.7\"/>\r\n\t\t\t\t</linearGradient>\r\n\t\t\t\t<path
+    style=\"fill:url(#SVGID_2_);\" d=\"M47.9,37.6c4,0,7.3,3.3,7.3,7.3s-3.3,7.3-7.3,7.3s-7.3-3.3-7.3-7.3S43.8,37.6,47.9,37.6\r\n\t\t\t\t\t
+    M47.9,34.6c-5.7,0-10.3,4.6-10.3,10.3s4.6,10.3,10.3,10.3s10.3-4.6,10.3-10.3S53.6,34.6,47.9,34.6L47.9,34.6z\"/>\r\n\t\t\t</g>\r\n\t\t</g>\r\n\t\t<circle
+    id=\"YellowBulb01\" style=\"fill:#FFAF3A;\" cx=\"47.8\" cy=\"44.9\" r=\"0.5\"/>\r\n\t</g>\r\n</g>\r\n<g
+    id=\"Layer_1\">\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,106 @@
+fileFormatVersion: 2
+guid: 3c634869e3dd843c5955d42a50f64e12
+timeCreated: 1463515022
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t width=\"595.3px\" height=\"841.9px\" viewBox=\"0 0 595.3
+    841.9\" enable-background=\"new 0 0 595.3 841.9\" xml:space=\"preserve\">\r\n<g>\r\n\t<path
+    fill=\"#878787\" d=\"M223.7,151.6c-49.9,15.6-53.3,78.4-53.4,81.1l8.4,0.4c0-0.6,3.3-59.6,47.5-73.4\"/>\r\n\t<g>\r\n\t\t\r\n\t\t\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"550.686\" y1=\"110.22\"
+    x2=\"505.5762\" y2=\"82.6005\" gradientTransform=\"matrix(-1.3221 0 0 1.3221 906.5651
+    329.3994)\">\r\n\t\t\t<stop  offset=\"0\" style=\"stop-color:#88BCE7\"/>\r\n\t\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#0086CD\"/>\r\n\t\t</linearGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_1_)\" d=\"M215.6,410.7c0,0-70.7,69.7-67.2,81.3c5,16.6,79.9-4.4,106.6-22.1\"/>\r\n\t\t\r\n\t\t\t<linearGradient
+    id=\"SVGID_2_\" gradientUnits=\"userSpaceOnUse\" x1=\"398.7101\" y1=\"-214.8975\"
+    x2=\"354.5154\" y2=\"-112.1261\" gradientTransform=\"matrix(1 0 0 1 11.9695 348.8826)\">\r\n\t\t\t<stop
+    \ offset=\"0\" style=\"stop-color:#88BCE7\"/>\r\n\t\t\t<stop  offset=\"1\" style=\"stop-color:#0086CD\"/>\r\n\t\t</linearGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_2_)\" d=\"M330,174.6c0,0,55.5-67.1,90.3-49.8c34.8,17.3,8.4,114.2,8.4,114.2L330,174.6z\"/>\r\n\t\t\r\n\t\t\t<radialGradient
+    id=\"SVGID_3_\" cx=\"210.5818\" cy=\"-195.3549\" r=\"149.3359\" gradientTransform=\"matrix(1
+    0 0 1 11.9695 348.8826)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t\t<stop  offset=\"0\"
+    style=\"stop-color:#BCDCF5\"/>\r\n\t\t\t<stop  offset=\"0.6184\" style=\"stop-color:#99C6EB\"/>\r\n\t\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#88BCE7\"/>\r\n\t\t</radialGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_3_)\" d=\"M151.1,302.4c2.6-73,49.4-189.9,210.6-142.4c71.7,21.1,120.9,96.2,144.8,175.3\r\n\t\t\tc49.6,163.6-46.2,276.4-95.6,304.7c-17,9.8,12.9,31.3-20.1,76.7c-13.5,18.5-49.5,36.6-76.7,40.1c0,0,30.6-32.9,24.4-64.1\r\n\t\t\tc-2.8-14.1,7.4-48,33.4-56.2c0,0-25.9,1.1-50.7-30.7c-17.1-22-31.6-23.2-51.9-23.5c0,0,21.2-33,61.3-30.7\r\n\t\t\tc11.8,0.7,37.5,4.2,57.6,35.5c0,0,59.6-63.6-71.3-91.5C218.3,474.5,147.4,405.9,151.1,302.4z\"/>\r\n\t\t<path
+    fill=\"#009BD9\" d=\"M234.8,160.1c39.6-7.3,66.5,11.6,83.6,33c0,0.4-0.1,0.7,0,1.2c0.3,4.4,13.5,20.5,25.5,35.4\r\n\t\t\tc-7.3,10.2-7.6,24.3,0.2,35c9.7,13.1,28.3,15.9,41.4,6.2c13.1-9.7,15.9-28.3,6.2-41.4c-7.5-10.1-20.1-14-31.6-10.9\r\n\t\t\tc-11-13.6-23.9-27.4-33.6-31.6c0,0-0.9,0.1-2.2,0.4c-0.5-0.6-1-1.2-1.5-1.8l-0.2-0.6c0,0-0.1,0-0.2,0.1\r\n\t\t\tc-12.6-14.6-31.5-29.7-57.4-33.8C254,153.1,244,156.1,234.8,160.1z\"/>\r\n\t\t<path
+    fill=\"#0081C7\" d=\"M435.2,422.1c-22.8,22.5-97.1,54-100.2,42.3c-3.2-11.7,35.4-83.6,51.7-87\r\n\t\t\tC402.9,374,435.2,422.1,435.2,422.1z\"/>\r\n\t\t<path
+    fill=\"#009BD9\" d=\"M267.9,272.5c0,23.5-11.5,42.6-25.6,42.6c-14.2,0-25.6-19.1-25.6-42.6c0-23.5,11.5-42.6,25.6-42.6\r\n\t\t\tC256.4,229.9,267.9,248.9,267.9,272.5z\"/>\r\n\t\t<path
+    fill=\"#009BD9\" d=\"M216.3,272.5c0,23.5-11.5,42.6-25.6,42.6c-14.2,0-25.6-19.1-25.6-42.6c0-23.5,11.5-42.6,25.6-42.6\r\n\t\t\tC204.9,229.9,216.3,248.9,216.3,272.5z\"/>\r\n\t\t<path
+    fill=\"#BCDCF5\" d=\"M267.9,279c0,23.5-11.5,42.6-25.6,42.6c-14.2,0-25.6-19.1-25.6-42.6c0-23.5,11.5-42.6,25.6-42.6\r\n\t\t\tC256.4,236.4,267.9,255.5,267.9,279z\"/>\r\n\t\t<path
+    fill=\"#BCDCF5\" d=\"M216.3,279c0,23.5-11.5,42.6-25.6,42.6c-14.2,0-25.6-19.1-25.6-42.6c0-23.5,11.5-42.6,25.6-42.6\r\n\t\t\tC204.9,236.4,216.3,255.5,216.3,279z\"/>\r\n\t\t\r\n\t\t\t<radialGradient
+    id=\"SVGID_4_\" cx=\"-337.7818\" cy=\"-637.2568\" r=\"427.0225\" gradientTransform=\"matrix(0.1329
+    0 0 0.2205 274.823 363.1483)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t\t<stop
+    \ offset=\"0.3034\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t\t<stop  offset=\"0.4891\"
+    style=\"stop-color:#FDFDFD\"/>\r\n\t\t\t<stop  offset=\"0.6195\" style=\"stop-color:#F6F6F6\"/>\r\n\t\t\t<stop
+    \ offset=\"0.7329\" style=\"stop-color:#EBEBEB\"/>\r\n\t\t\t<stop  offset=\"0.8366\"
+    style=\"stop-color:#DBDBDB\"/>\r\n\t\t\t<stop  offset=\"0.9329\" style=\"stop-color:#C6C5C5\"/>\r\n\t\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#B2B2B2\"/>\r\n\t\t</radialGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_4_)\" d=\"M267.9,276.5c0,23.5-11.5,42.6-25.6,42.6c-14.2,0-25.6-19.1-25.6-42.6c0-23.5,11.5-42.6,25.6-42.6\r\n\t\t\tC256.4,233.9,267.9,253,267.9,276.5z\"/>\r\n\t\t\r\n\t\t\t<radialGradient
+    id=\"SVGID_5_\" cx=\"-633.0723\" cy=\"-637.2568\" r=\"427.0175\" gradientTransform=\"matrix(0.1329
+    0 0 0.2205 262.5427 363.1483)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t\t<stop
+    \ offset=\"0.3034\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t\t<stop  offset=\"0.4891\"
+    style=\"stop-color:#FDFDFD\"/>\r\n\t\t\t<stop  offset=\"0.6195\" style=\"stop-color:#F6F6F6\"/>\r\n\t\t\t<stop
+    \ offset=\"0.7329\" style=\"stop-color:#EBEBEB\"/>\r\n\t\t\t<stop  offset=\"0.8366\"
+    style=\"stop-color:#DBDBDB\"/>\r\n\t\t\t<stop  offset=\"0.9329\" style=\"stop-color:#C6C5C5\"/>\r\n\t\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#B2B2B2\"/>\r\n\t\t</radialGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_5_)\" d=\"M216.3,276.5c0,23.5-11.5,42.6-25.6,42.6c-14.2,0-25.6-19.1-25.6-42.6c0-23.5,11.5-42.6,25.6-42.6\r\n\t\t\tC204.9,233.9,216.3,253,216.3,276.5z\"/>\r\n\t\t\r\n\t\t\t<radialGradient
+    id=\"SVGID_6_\" cx=\"540.0079\" cy=\"252.48\" r=\"340.1472\" gradientTransform=\"matrix(1.3221
+    0 0 1.3221 -288.6991 329.3994)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t\t<stop
+    \ offset=\"0\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t\t<stop  offset=\"0.1776\"
+    style=\"stop-color:#FCFCFC\"/>\r\n\t\t\t<stop  offset=\"0.3856\" style=\"stop-color:#F1F1F1\"/>\r\n\t\t\t<stop
+    \ offset=\"0.609\" style=\"stop-color:#E0E0E0\"/>\r\n\t\t\t<stop  offset=\"0.8414\"
+    style=\"stop-color:#C7C7C7\"/>\r\n\t\t\t<stop  offset=\"1\" style=\"stop-color:#B2B2B2\"/>\r\n\t\t</radialGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_6_)\" d=\"M401.8,415.6c-81.9-92.5-152.1-53.5-152.1-53.5l-35.8,24.9l-10.5,0.7\r\n\t\t\tC172.7,449,229,494.7,277.7,497.2c132.6,6.6,110.6,89.9,110.6,89.9C452.2,562.2,439.4,458,401.8,415.6z\"/>\r\n\t\t<path
+    fill=\"#DADADA\" d=\"M401.8,415.6c-9.6-10.9-19.1-19.9-28.3-27.4c-17.9,21.2-41,67.2-38.5,76.3c2.5,9.3,50.2-8.8,81-27.9\r\n\t\t\tC411.8,428.6,407,421.5,401.8,415.6z\"/>\r\n\t\t\r\n\t\t\t<radialGradient
+    id=\"SVGID_7_\" cx=\"329.5344\" cy=\"7.4107\" r=\"80.1471\" gradientTransform=\"matrix(1.3202
+    7.160000e-02 -7.160000e-02 1.3202 -280.937 299.6697)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t\t<stop
+    \ offset=\"0\" style=\"stop-color:#BCDCF5\"/>\r\n\t\t\t<stop  offset=\"0.6184\"
+    style=\"stop-color:#99C6EB\"/>\r\n\t\t\t<stop  offset=\"1\" style=\"stop-color:#88BCE7\"/>\r\n\t\t</radialGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_7_)\" d=\"M152.6,339.9c31.8-30.2,134.8-20.2,135.5,18.6c0.7,39.6-93.3,95.6-142.7,80.7\r\n\t\t\tc-44.7-13.4-48.4-42.6-30-54.3C139.7,369.3,135.6,356.1,152.6,339.9z\"/>\r\n\t\t\r\n\t\t\t<radialGradient
+    id=\"SVGID_8_\" cx=\"351.8794\" cy=\"15.5881\" r=\"109.8259\" gradientTransform=\"matrix(1.3202
+    7.160000e-02 -7.160000e-02 1.3202 -280.937 299.6697)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t\t<stop
+    \ offset=\"0\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t\t<stop  offset=\"1\" style=\"stop-color:#EDEDED\"/>\r\n\t\t</radialGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_8_)\" d=\"M288.1,358.6c-0.1-3.8-1.3-7.2-3.3-10.2c-39.5,60.5-113.6,93.5-168.8,75.6\r\n\t\t\tc6.5,5.9,16.1,11.3,29.4,15.3C194.8,454.2,288.8,398.1,288.1,358.6z\"/>\r\n\t\t<path
+    d=\"M231.5,290c0,4.8-2.3,8.6-5,8.6c-2.8,0-5-3.9-5-8.6c0-4.8,2.3-8.6,5-8.6C229.3,281.4,231.5,285.2,231.5,290z\"/>\r\n\t\t<path
+    d=\"M210.3,290c0,4.8-2.3,8.6-5,8.6c-2.8,0-5-3.9-5-8.6c0-4.8,2.3-8.6,5-8.6C208,281.4,210.3,285.2,210.3,290z\"/>\r\n\t\t<path
+    fill=\"#009BD9\" d=\"M435.2,422.1C408.3,439.5,329.9,455,328.4,443c-2.5-20.4,59.8-72.9,59.8-72.9l47,48.3V422.1z\"/>\r\n\t\t\r\n\t\t\t<radialGradient
+    id=\"SVGID_9_\" cx=\"477.7787\" cy=\"52.3204\" r=\"42.3863\" gradientTransform=\"matrix(1.3221
+    0 0 1.3221 -286.0136 329.3994)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t\t<stop
+    \ offset=\"0\" style=\"stop-color:#BCDCF5\"/>\r\n\t\t\t<stop  offset=\"0.6184\"
+    style=\"stop-color:#99C6EB\"/>\r\n\t\t\t<stop  offset=\"1\" style=\"stop-color:#88BCE7\"/>\r\n\t\t</radialGradient>\r\n\t\t<path
+    fill=\"url(#SVGID_9_)\" d=\"M435.2,418.3c-26.9,17.4-106.1,32.9-106.8,20.8c-0.7-12.1,51.8-74.5,68.4-74.5\r\n\t\t\tC413.4,364.6,435.2,418.3,435.2,418.3z\"/>\r\n\t</g>\r\n\t<path
+    fill=\"#878787\" d=\"M226.2,159.6c53.1-16.6,85.8,12.1,103.8,39.2l7-4.7c-16.1-24.1-52.1-61.6-113.3-42.5\"/>\r\n\t<path
+    fill=\"#575756\" d=\"M206.4,160.1c24.4-11.5,49.1-12.9,66.3-9.8c30.8,5.6,49.2,27.5,60.8,44.8l6.6-4.8\r\n\t\tc-16.1-24.1-52.1-61.6-113.3-42.5L206.4,160.1z\"/>\r\n\t<g>\r\n\t\t<path
+    d=\"M75.6,303.5c7.8,2.3,15.4,0,16.9-5c1.5-5.1-3.6-11.1-11.5-13.4c-7.8-2.3-15.4-0.1-16.9,5\r\n\t\t\tC62.6,295.2,67.8,301.2,75.6,303.5z\"/>\r\n\t\t<polygon
+    points=\"92.3,299.5 103.6,261.1 100.6,260.2 89.3,298.6 \t\t\"/>\r\n\t\t<path d=\"M99.5,330.4c7.8,2.3,15.4,0,16.9-5c1.5-5.1-3.6-11.1-11.5-13.4c-7.8-2.3-15.4-0.1-16.9,5\r\n\t\t\tC86.6,322.1,91.7,328.1,99.5,330.4z\"/>\r\n\t\t<rect
+    x=\"100.4\" y=\"305.2\" transform=\"matrix(-0.2827 0.9592 -0.9592 -0.2827 448.7498
+    278.0359)\" width=\"40.1\" height=\"3.1\"/>\r\n\t\t<polygon points=\"97,272.5
+    102.7,253 128.1,286.3 122.4,305.5 \t\t\"/>\r\n\t</g>\r\n\t\r\n\t\t<radialGradient
+    id=\"SVGID_10_\" cx=\"-168.957\" cy=\"217.4458\" r=\"61.3621\" gradientTransform=\"matrix(-0.3878
+    0.2875 0.2875 0.3878 245.0399 209.4774)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t<stop
+    \ offset=\"0.3539\" style=\"stop-color:#E30613\"/>\r\n\t\t<stop  offset=\"0.5108\"
+    style=\"stop-color:#DA0812\"/>\r\n\t\t<stop  offset=\"0.8034\" style=\"stop-color:#C20D0E\"/>\r\n\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#AE0F0A\"/>\r\n\t</radialGradient>\r\n\t<path
+    fill=\"url(#SVGID_10_)\" d=\"M348.8,260.9c9.7,13.1,28.3,15.9,41.4,6.2c13.1-9.7,15.9-28.3,6.2-41.4\r\n\t\tc-9.8-13.1-28.3-15.9-41.4-6.2C341.8,229.2,339,247.8,348.8,260.9z\"/>\r\n\t<path
+    d=\"M357.7,254.3c6.7,9.1,19.6,11,28.7,4.3c9.1-6.7,11-19.6,4.3-28.7c-6.8-9.1-19.6-11-28.7-4.3\r\n\t\tC352.9,232.4,351,245.2,357.7,254.3z\"/>\r\n\t<path
+    fill=\"#FFED00\" d=\"M323,190.6c-0.5-6.9,4.4-9.4,4.4-9.4l0.8,2.6c1.6-0.5,3-0.6,3-0.6c11.7,5.1,28.1,24.1,40.2,40\r\n\t\tc6.9-3.2,15.3-1.3,20.1,5.1c2.1,2.8,3.1,6.1,3.2,9.4l2.7-3.1c0,0,0,7.3-6.2,13.7c-0.9,1.1-1.9,2.1-3,3c-7.2,5.3-17.3,3.9-22.7-3.2\r\n\t\tc0,0,0,0-0.1,0c-0.2-0.3-0.9-1.3-1-1.5C353.9,231.2,323.5,197.3,323,190.6z\"/>\r\n\t\r\n\t\t<linearGradient
+    id=\"SVGID_11_\" gradientUnits=\"userSpaceOnUse\" x1=\"339.9679\" y1=\"-127.7934\"
+    x2=\"352.5964\" y2=\"-140.0265\" gradientTransform=\"matrix(1 0 0 1 12.2722 348.2693)\">\r\n\t\t<stop
+    \ offset=\"0\" style=\"stop-color:#FFDD00\"/>\r\n\t\t<stop  offset=\"0.412\" style=\"stop-color:#FFD100\"/>\r\n\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#FBBA00\"/>\r\n\t</linearGradient>\r\n\t<path
+    fill=\"url(#SVGID_11_)\" d=\"M367,241.7c-10.4-15.3-40.8-49.2-41.3-55.9c-0.5-7,8.2-7.4,8.2-7.4c11.7,5.1,28.1,24.1,40.2,40\r\n\t\tc6.9-3.2,15.3-1.3,20.1,5.1c5.4,7.3,3.9,17.5-3.4,22.9c-7.2,5.3-17.3,3.9-22.7-3.2c0,0,0,0-0.1,0C367.8,243,367.1,242,367,241.7z\"\r\n\t\t/>\r\n\t<path
+    d=\"M372.5,239.7c3.9,5.2,11.2,6.3,16.4,2.4c5.2-3.9,6.3-11.2,2.4-16.4c-3.9-5.2-11.2-6.3-16.4-2.4\r\n\t\tC369.7,227.2,368.6,234.5,372.5,239.7z\"/>\r\n\t\r\n\t\t<radialGradient
+    id=\"SVGID_12_\" cx=\"-206.4843\" cy=\"136.6777\" r=\"38.5504\" gradientTransform=\"matrix(-0.3878
+    0.2875 0.2875 0.3878 261.7225 232.8361)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t<stop
+    \ offset=\"0.3539\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t<stop  offset=\"0.5723\"
+    style=\"stop-color:#F5F5F5\"/>\r\n\t\t<stop  offset=\"0.9802\" style=\"stop-color:#DCDBDB\"/>\r\n\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#DADADA\"/>\r\n\t</radialGradient>\r\n\t<path
+    fill=\"url(#SVGID_12_)\" d=\"M373.4,238.7c3.5,4.7,10.2,5.7,14.9,2.2c4.7-3.5,5.7-10.2,2.2-14.9c-3.5-4.7-10.2-5.7-14.9-2.2\r\n\t\tC370.9,227.3,369.9,234,373.4,238.7z\"/>\r\n\t<path
+    d=\"M380.8,235.4c0,0.4,0.2,0.7,0.6,0.7l0,0c0.4,0,0.7-0.2,0.7-0.6l0.9-9.2c0-0.4-0.2-0.7-0.6-0.7l0,0c-0.4,0-0.7,0.2-0.7,0.6\r\n\t\tL380.8,235.4z\"/>\r\n\t<path
+    d=\"M384.3,234.4c0,0.4,0.2,0.7,0.6,0.7l0,0c0.4,0,0.7-0.3,0.7-0.6l0.4-6.9c0-0.4-0.3-0.7-0.6-0.7l0,0c-0.4,0-0.7,0.3-0.7,0.6\r\n\t\tL384.3,234.4z\"/>\r\n\t<polygon
+    fill=\"#E30613\" points=\"384.7,239.8 386.4,241.6 387.2,239.2 \t\"/>\r\n\t<path
+    d=\"M376.5,237.5c0,0.4,0.2,0.7,0.6,0.7l0,0c0.4,0,0.7-0.2,0.7-0.6l1.3-12.2c0-0.4-0.2-0.7-0.6-0.7l0,0c-0.4,0-0.7,0.2-0.7,0.6\r\n\t\tL376.5,237.5z\"/>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

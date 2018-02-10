@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: d468ae6852a3747a384d7d0fe99100e7
+labels:
+- Point
+- Vector
+- Path
+- Smart
+- Curve
+- SVG
+- Arc
+- Shape
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

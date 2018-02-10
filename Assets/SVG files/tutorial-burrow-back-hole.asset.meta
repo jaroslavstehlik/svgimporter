@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 0a32a6f611b47b543a80092547f68ce1
+timeCreated: 1489448359
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    version=\"1.1\" id=\"Layer_1\" x=\"0px\" y=\"0px\" viewBox=\"0 0 2048 1536\" enable-background=\"new
+    0 0 2048 1536\" xml:space=\"preserve\">\n<g>\n\t<path fill=\"#443A47\" d=\"M1090,815c-24.5,0-42.9,3.9-75,11.7c-33.1,8-86.8,1.6-88.3-3.1c-8.1-24.7-3.7-74.3,5.8-87.5
+    \  c11.1-15.4,107.3-14,107.3-14l47.3,4.9L1090,815z\"/>\n\t<path fill=\"#94869A\"
+    d=\"M1090,805c-38.1,0-69.3,17.5-163,10.3V831c88.5,0,141.7-11.9,163-11.9V805z\"/>\t\n</g>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

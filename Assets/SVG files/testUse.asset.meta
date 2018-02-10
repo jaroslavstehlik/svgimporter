@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: d8b058489c9e6994bb70bc1522af3e5f
+timeCreated: 1489448350
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\n<!DOCTYPE svg PUBLIC
+    \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg
+    width=\"1000\" height=\"1000\" viewBox=\"0 0 1000 1000\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <desc>Example radgrad01 - fill
+    a rectangle by referencing a \n           radial gradient paint server</desc>\n
+    \ <g>\n    <defs>\n      <radialGradient id=\"MyGradient1\" cx=\"400\" cy=\"200\"
+    r=\"100\" fx=\"250\" fy=\"200\" spreadMethod=\"repeat\">\n        <stop offset=\"0%\"
+    stop-color=\"red\" />\n        <stop offset=\"50%\" stop-color=\"yellow\" />\n
+    \       <stop offset=\"100%\" stop-color=\"green\" />\n      </radialGradient>\n
+    \     \n      <radialGradient id=\"MyGradient2\" cx=\"400\" cy=\"600\" r=\"100\"
+    fx=\"350\" fy=\"600\" spreadMethod=\"repeat\">\n        <stop offset=\"0%\" stop-color=\"red\"
+    />\n        <stop offset=\"50%\" stop-color=\"yellow\" />\n        <stop offset=\"100%\"
+    stop-color=\"green\" />\n      </radialGradient>\n    </defs>\n    <rect id=\"GradientBox\"
+    fill=\"url(#MyGradient1)\" stroke=\"black\" stroke-width=\"6\"  \n          x=\"100\"
+    y=\"100\" width=\"600\" height=\"200\"/>\n\n    <use xlink:href=\"#GradientBox\"
+    \ width=\"120.6\" height=\"114\" id=\"XMLID_1_\" x=\"-60.3\" y=\"-57\" transform=\"matrix(0.6955
+    0.7185 0.7185 -0.6955 279.882 279.5)\" overflow=\"visible\" enable-background=\"new
+    \   \"/>\n    <use xlink:href=\"#GradientBox\"  width=\"120.6\" height=\"114\"
+    id=\"XMLID_1_\" x=\"0\" y=\"0\" transform=\"matrix(0.6955 0.7185 0.7185 -0.6955
+    279.882 279.5)\" overflow=\"visible\" enable-background=\"new    \"/>\n  </g>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 711e821c15031ba4f94c999d41d91130
+timeCreated: 1489448345
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\"
+    height=\"100%\" viewBox=\"0 0 201 156\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;\">\n
+    \   <g transform=\"matrix(1,0,0,1,-0,-138)\">\n        <clipPath id=\"_clip1\">\n
+    \           <rect id=\"Artboard2\" x=\"0\" y=\"138\" width=\"200.273\" height=\"156\"/>\n
+    \       </clipPath>\n        <g clip-path=\"url(#_clip1)\">\n            <g transform=\"matrix(0.438739,0,0,0.296015,-76.7793,15.4497)\">\n
+    \               <path d=\"M456.027,644.251L424.439,660.406L352.985,941L175,941L469.391,414L456.027,644.251Z\"
+    style=\"fill:rgb(250,250,250);\"/>\n            </g>\n            <g transform=\"matrix(0.438739,0,0,0.296015,-85.7851,15.4497)\">\n
+    \               <path d=\"M652,941L352.985,941L425.895,660.397L457.403,644.243L489.917,414L652,941Z\"
+    style=\"fill:rgb(147,149,152);\"/>\n            </g>\n        </g>\n    </g>\n</svg>\n"
+  assetBundleName: 
+  assetBundleVariant: 

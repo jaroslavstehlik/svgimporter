@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: b3ba043aeb5f2ad499e4a9d95c7a4976
+timeCreated: 1489448337
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\"
+    height=\"100%\" viewBox=\"0 0 612 792\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;\">\n
+    \   <g transform=\"matrix(0.866025,0.5,-0.5,0.866025,500,500)\">\n        <path
+    d=\"M-331.1,-80.9L-178.1,-80.9C-164,-80.9 -152.6,-69.5 -152.6,-55.4L-152.6,-4.4C-152.6,9.7
+    -164,21.1 -178.1,21.1L-331.1,21.1C-345.2,21.1 -356.6,9.7 -356.6,-4.4L-356.6,-55.4C-356.6,-69.4
+    -345.2,-80.9 -331.1,-80.9Z\" style=\"fill:url(#_Linear1);fill-rule:nonzero;\"/>\n
+    \   </g>\n    <defs>\n        <linearGradient id=\"_Linear1\" x1=\"0\" y1=\"0\"
+    x2=\"1\" y2=\"0\" gradientUnits=\"userSpaceOnUse\" gradientTransform=\"matrix(-1.62648,-90.7612,90.7612,-1.62648,-238.214,8.2502)\"><stop
+    offset=\"0%\" style=\"stop-color:rgb(242,104,34);stop-opacity:1\"/><stop offset=\"5%\"
+    style=\"stop-color:rgb(242,104,34);stop-opacity:1\"/><stop offset=\"25%\" style=\"stop-color:rgb(249,240,108);stop-opacity:1\"/><stop
+    offset=\"50%\" style=\"stop-color:rgb(239,59,104);stop-opacity:1\"/><stop offset=\"95%\"
+    style=\"stop-color:white;stop-opacity:1\"/><stop offset=\"100%\" style=\"stop-color:white;stop-opacity:1\"/></linearGradient>\n
+    \   </defs>\n</svg>\n"
+  assetBundleName: 
+  assetBundleVariant: 

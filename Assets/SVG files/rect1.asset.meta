@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 8e047e6bfea7f904dbc847c5c660d67b
+timeCreated: 1489448338
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \n\t\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg
+    width=\"1000px\" height=\"1000px\" viewBox=\"0 0 1000 1000\"\n\txmlns=\"http://www.w3.org/2000/svg\"
+    version=\"1.1\">\n\t<rect x=\"0\" y=\"0\" width=\"400\" height=\"200\" rx=\"50\"
+    fill=\"green\"/>\n\t<rect x=\"100\" y=\"100\" width=\"400\" height=\"200\" rx=\"50\"
+    fill=\"none\" stroke=\"blue\"/>\n\t<g transform=\"translate(200 400) rotate(-30)\">\n\t\t<rect
+    x=\"0\" y=\"0\" width=\"400\" height=\"200\" rx=\"150\" ry=\"80\" \n\t\t\tfill=\"none\"
+    stroke=\"purple\" stroke-width=\"30\" />\n\t\t\t\n\t\t<g transform=\"translate(100
+    50)\">\n\t\t\t<rect x=\"0\" y=\"0\" width=\"100\" height=\"100\" rx=\"50\" \n\t\t\t\tfill=\"yellow\"
+    stroke=\"purple\" stroke-width=\"30\" />\n\t\t\t<line x1=\"0\" y1=\"0\" x2=\"100\"
+    y2=\"100\" stroke=\"black\"/>\n\t\t</g>\n\t</g>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

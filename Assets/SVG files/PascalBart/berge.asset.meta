@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: afd0bf21a7578904da5cdd88e46b6fc9
+timeCreated: 1489448360
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<svg id=\"_5.hintergrund\" data-name=\"5.hintergrund\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"200mm\" height=\"132.6mm\"
+    viewBox=\"0 0 566.9 375.9\">\r\n  <defs>\r\n    <style>\r\n      .cls-1 {\r\n
+    \       fill: url(#Unbenannter_Verlauf_33);\r\n      }\r\n\r\n      .cls-2 {\r\n
+    \       fill: url(#Unbenannter_Verlauf_33-2);\r\n      }\r\n    </style>\r\n    <linearGradient
+    id=\"Unbenannter_Verlauf_33\" data-name=\"Unbenannter Verlauf 33\" x1=\"283.46\"
+    y1=\"358.15\" x2=\"283.46\" y2=\"-14.7\" gradientUnits=\"userSpaceOnUse\">\r\n
+    \     <stop offset=\"0\" stop-color=\"#fff\"/>\r\n      <stop offset=\"0.45\"
+    stop-color=\"#fdfdfd\"/>\r\n      <stop offset=\"0.61\" stop-color=\"#f6f6f6\"/>\r\n
+    \     <stop offset=\"0.73\" stop-color=\"#ebebeb\"/>\r\n      <stop offset=\"0.82\"
+    stop-color=\"#dadada\"/>\r\n      <stop offset=\"0.9\" stop-color=\"#c4c4c4\"/>\r\n
+    \     <stop offset=\"0.97\" stop-color=\"#aaaaa9\"/>\r\n      <stop offset=\"1\"
+    stop-color=\"#9d9d9c\"/>\r\n    </linearGradient>\r\n    <linearGradient id=\"Unbenannter_Verlauf_33-2\"
+    x1=\"283.46\" y1=\"388.31\" x2=\"283.46\" y2=\"12.45\" xlink:href=\"#Unbenannter_Verlauf_33\"/>\r\n
+    \ </defs>\r\n  <title>berge</title>\r\n  <polygon class=\"cls-1\" points=\"0 1.9
+    33.3 26.1 66.7 53.9 100 28.3 133.4 31.1 166.7 0.9 200.1 37.5 229.9 19.8 266.8
+    72.5 295 54.1 333.5 0 366.8 33.4 400.2 74.3 433.5 60.9 464.1 28 500.2 69.1 533.6
+    57.9 566.9 1.9 566.9 372.9 0 372.9 0 1.9\"/>\r\n  <polygon class=\"cls-2\" points=\"0
+    4.9 31 54.9 66.7 53.9 100 28.3 151.9 33.3 166.7 0.9 218.2 56.9 229.9 19.8 266.8
+    72.5 316.1 55.2 333.5 0 366.8 33.4 400.6 74.1 433.5 60.9 464.1 28 480.2 75.5 534.4
+    57.5 566.9 4.9 566.9 375.9 0 375.9 0 4.9\"/>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

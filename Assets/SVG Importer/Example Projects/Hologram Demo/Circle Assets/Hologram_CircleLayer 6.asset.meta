@@ -1,0 +1,24 @@
+fileFormatVersion: 2
+guid: 9594ac390f3efe546adb3871dab040fb
+timeCreated: 1464566383
+licenseType: Free
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<!-- Generator: Adobe
+    Illustrator 19.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg
+    version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 100 100\" style=\"enable-background:new
+    0 0 100 100;\" xml:space=\"preserve\">\r\n<g id=\"Layer_6\">\r\n\t<g id=\"Center_Circle_2\">\r\n\t\t<g
+    id=\"Center_Bayonet\">\r\n\t\t\t\r\n\t\t\t\t<circle style=\"opacity:0.33;fill:none;stroke:#284A54;stroke-width:0.25;stroke-miterlimit:10;enable-background:new
+    \   ;\" cx=\"47.9\" cy=\"44.9\" r=\"22.1\"/>\r\n\t\t\t<g style=\"opacity:0.5;\">\r\n\t\t\t\t\r\n\t\t\t\t\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"25.7\" y1=\"57.1\" x2=\"70.1\"
+    y2=\"57.1\" gradientTransform=\"matrix(1 0 0 -1 0 102)\">\r\n\t\t\t\t\t<stop  offset=\"0.0047\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.1\"/>\r\n\t\t\t\t\t<stop  offset=\"0.4967\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.4881\"/>\r\n\t\t\t\t\t<stop  offset=\"0.5117\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.5\"/>\r\n\t\t\t\t\t<stop  offset=\"1\"
+    style=\"stop-color:#407B8D;stop-opacity:0.7\"/>\r\n\t\t\t\t</linearGradient>\r\n\t\t\t\t<path
+    style=\"fill:url(#SVGID_1_);\" d=\"M47.9,25.7c10.6,0,19.2,8.6,19.2,19.2s-8.6,19.2-19.2,19.2s-19.2-8.6-19.2-19.2\r\n\t\t\t\t\tS37.3,25.7,47.9,25.7
+    M47.9,22.7c-12.2,0-22.2,10-22.2,22.2s10,22.2,22.2,22.2s22.2-10,22.2-22.2S60.1,22.7,47.9,22.7L47.9,22.7\r\n\t\t\t\t\tz\"/>\r\n\t\t\t</g>\r\n\t\t</g>\r\n\t</g>\r\n</g>\r\n<g
+    id=\"Layer_1\">\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

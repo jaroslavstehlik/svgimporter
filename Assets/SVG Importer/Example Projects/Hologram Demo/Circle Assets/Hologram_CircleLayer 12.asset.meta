@@ -1,0 +1,47 @@
+fileFormatVersion: 2
+guid: 312847f408a07784781e22c3bb1000d2
+timeCreated: 1464566383
+licenseType: Free
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<!-- Generator: Adobe
+    Illustrator 19.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg
+    version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 100 100\" style=\"enable-background:new
+    0 0 100 100;\" xml:space=\"preserve\">\r\n<g id=\"Layer_12\">\r\n\t<g id=\"Middle_Ring_3\">\r\n\t\t<g
+    style=\"opacity:0.5;\">\r\n\t\t\t<g>\r\n\t\t\t\t<path style=\"fill:#FFC90C;\"
+    d=\"M91.4,44.9l-3.2,7.3c0.4-2.4,0.6-4.8,0.6-7.3c0-11.9-5.1-22.6-13.1-30.1l6.8,3.7\r\n\t\t\t\t\tC88.1,25.8,91.4,35,91.4,44.9z\"/>\r\n\t\t\t\t<path
+    style=\"fill:#233D4C;\" d=\"M75.8,14.8c8.1,7.5,13.1,18.2,13.1,30.1c0,2.5-0.2,4.9-0.6,7.3l0,0c-2.1,11.7-9.2,21.7-18.9,27.7\r\n\t\t\t\t\tl-8-0.3C75.2,74.1,85,60.7,85,44.9c0-20-15.9-36.4-35.7-37.1l0,0l9.1-2.5l0,0C64.9,7,70.9,10.3,75.8,14.8z\"/>\r\n\t\t\t\t<path
+    style=\"fill:#233D4C;\" d=\"M15.8,19.3l7.9-2.6c-7.9,6.8-12.9,16.9-12.9,28.2c0,9.6,3.6,18.3,9.6,24.9l-7.3-3.3l0,0\r\n\t\t\t\t\tc-1-1.6-1.9-3.2-2.6-5l0,0C8.2,56.4,7,50.7,7,44.8c0-0.9,0-1.8,0.1-2.7C7.5,33.5,10.8,25.6,15.8,19.3L15.8,19.3z\"/>\r\n\t\t\t\t<path
+    style=\"fill:#FFC90C;\" d=\"M10.4,61.6l-3.5-2.2H6.8c-1.4-3.8-2.2-7.9-2.4-12.1l2.5-5.2H7C6.9,43,6.9,44,6.9,44.9\r\n\t\t\t\t\tC6.9,50.8,8.1,56.5,10.4,61.6z\"/>\r\n\t\t\t</g>\r\n\t\t\t\r\n\t\t\t\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"7.5\" y1=\"57.1\" x2=\"88.3\"
+    y2=\"57.1\" gradientTransform=\"matrix(1 0 0 -1 0 102)\">\r\n\t\t\t\t<stop  offset=\"0.4413\"
+    style=\"stop-color:#3B7098;stop-opacity:0\"/>\r\n\t\t\t\t<stop  offset=\"0.5594\"
+    style=\"stop-color:#3A6D94;stop-opacity:0.2132\"/>\r\n\t\t\t\t<stop  offset=\"0.6711\"
+    style=\"stop-color:#366589;stop-opacity:0.4148\"/>\r\n\t\t\t\t<stop  offset=\"0.7803\"
+    style=\"stop-color:#315776;stop-opacity:0.6119\"/>\r\n\t\t\t\t<stop  offset=\"0.8878\"
+    style=\"stop-color:#29435B;stop-opacity:0.8059\"/>\r\n\t\t\t\t<stop  offset=\"0.9933\"
+    style=\"stop-color:#1E2B39;stop-opacity:0.9964\"/>\r\n\t\t\t\t<stop  offset=\"0.9953\"
+    style=\"stop-color:#1E2A38\"/>\r\n\t\t\t</linearGradient>\r\n\t\t\t<circle style=\"fill:none;stroke:url(#SVGID_1_);stroke-miterlimit:10;\"
+    cx=\"47.9\" cy=\"44.9\" r=\"39.9\"/>\r\n\t\t</g>\r\n\t\t\r\n\t\t\t<circle style=\"opacity:0.39;fill:none;stroke:#407B8D;stroke-width:0.25;stroke-miterlimit:10;enable-background:new
+    \   ;\" cx=\"47.9\" cy=\"44.9\" r=\"41\"/>\r\n\t\t<g>\r\n\t\t\t\r\n\t\t\t\t<linearGradient
+    id=\"SVGID_2_\" gradientUnits=\"userSpaceOnUse\" x1=\"8.75\" y1=\"57.1\" x2=\"87.05\"
+    y2=\"57.1\" gradientTransform=\"matrix(1 0 0 -1 0 102)\">\r\n\t\t\t\t<stop  offset=\"0.4413\"
+    style=\"stop-color:#3B7098;stop-opacity:0\"/>\r\n\t\t\t\t<stop  offset=\"0.5594\"
+    style=\"stop-color:#3A6D94;stop-opacity:0.2132\"/>\r\n\t\t\t\t<stop  offset=\"0.6711\"
+    style=\"stop-color:#366589;stop-opacity:0.4148\"/>\r\n\t\t\t\t<stop  offset=\"0.7803\"
+    style=\"stop-color:#315776;stop-opacity:0.6119\"/>\r\n\t\t\t\t<stop  offset=\"0.8878\"
+    style=\"stop-color:#29435B;stop-opacity:0.8059\"/>\r\n\t\t\t\t<stop  offset=\"0.9933\"
+    style=\"stop-color:#1E2B39;stop-opacity:0.9964\"/>\r\n\t\t\t\t<stop  offset=\"0.9953\"
+    style=\"stop-color:#1E2A38\"/>\r\n\t\t\t</linearGradient>\r\n\t\t\t\r\n\t\t\t\t<circle
+    style=\"fill:none;stroke:url(#SVGID_2_);stroke-width:0.5;stroke-miterlimit:10;stroke-dasharray:0.5004,0.5004;\"
+    cx=\"47.9\" cy=\"44.9\" r=\"38.9\"/>\r\n\t\t</g>\r\n\t\t\r\n\t\t\t<linearGradient
+    id=\"SVGID_3_\" gradientUnits=\"userSpaceOnUse\" x1=\"5\" y1=\"57.1\" x2=\"90.8\"
+    y2=\"57.1\" gradientTransform=\"matrix(1 0 0 -1 0 102)\">\r\n\t\t\t<stop  offset=\"0.4413\"
+    style=\"stop-color:#1E2A38;stop-opacity:0\"/>\r\n\t\t\t<stop  offset=\"0.9834\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.4852\"/>\r\n\t\t\t<stop  offset=\"1\"
+    style=\"stop-color:#1E2A38;stop-opacity:0.5\"/>\r\n\t\t</linearGradient>\r\n\t\t<circle
+    style=\"fill:none;stroke:url(#SVGID_3_);stroke-width:6;stroke-miterlimit:10;\"
+    cx=\"47.9\" cy=\"44.9\" r=\"39.9\"/>\r\n\t</g>\r\n</g>\r\n<g id=\"Layer_1\">\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

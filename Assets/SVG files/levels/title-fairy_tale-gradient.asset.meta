@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a6cf6a8597b05bd4eac987d0e932a519
+timeCreated: 1489448338
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg version=\"1.1\"
+    id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 2048 1536\" enable-background=\"new 0
+    0 2048 1536\" xml:space=\"preserve\">\r\n<linearGradient id=\"pozadi_1_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"1024\" y1=\"1536\" x2=\"1024\" y2=\"1\">\r\n\t<stop  offset=\"0.2086\" style=\"stop-color:#ABD2BC\"/>\r\n\t<stop
+    \ offset=\"0.5153\" style=\"stop-color:#FFE29B\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#CAE9E9\"/>\r\n</linearGradient>\r\n<rect
+    id=\"pozadi_3_\" y=\"1\" fill=\"url(#pozadi_1_)\" width=\"2048\" height=\"1535\"/>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

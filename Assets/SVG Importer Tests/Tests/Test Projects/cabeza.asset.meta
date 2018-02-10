@@ -1,0 +1,30 @@
+fileFormatVersion: 2
+guid: 2bb6060c3f682eb488f0eb3ca4c2d750
+timeCreated: 1461053478
+licenseType: Free
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Capa_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t width=\"340.7px\" height=\"304.5px\" viewBox=\"0 0 340.7
+    304.5\" enable-background=\"new 0 0 340.7 304.5\" xml:space=\"preserve\">\r\n<g>\r\n\t<path
+    fill=\"#ECA55D\" d=\"M147.7,65c0,0-89.8,6.9-69.3,122.8c20.6,115.9,208.1,81.2,213.6,25c4.3-43.8-8.1-66.4-4.5-68.1\r\n\t\tC299,139.4,275.3,36.8,147.7,65z\"/>\r\n\t<path
+    fill=\"#868687\" d=\"M120.8,145c-1.4-0.3-2.5,7.9-4.4,19.5c18.8,8.9,74.1,27.9,174.1,6.2c-1.7-13.3-3.8-23.7-3.8-23.7\r\n\t\tS241.5,170.5,120.8,145z\"/>\r\n\t<path
+    fill=\"#532A39\" d=\"M266,273.4c-6,1.8,20.7,16.4,19.6,20.7c-1.1,4.2,10.5,0,9.1-19c-1.4-19-17.6-17.1-22.3-16.3\r\n\t\tC267.7,259.7,277.6,270.1,266,273.4z\"/>\r\n\t<path
+    fill=\"#532A39\" d=\"M32.8,221.2c-9.9,3.1-7.5,25.2-4.1,26.7c3.4,1.5,26.4,16.5,21.3,3.1c-6-15.6,2.8-15.7,2.8-15.7\r\n\t\tS36.3,220.1,32.8,221.2z\"/>\r\n\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"170.332\" y1=\"266.6006\"
+    x2=\"170.332\" y2=\"8.8296\">\r\n\t\t<stop  offset=\"0\" style=\"stop-color:#FE726D\"/>\r\n\t\t<stop
+    \ offset=\"4.128431e-03\" style=\"stop-color:#FE6F6D\"/>\r\n\t\t<stop  offset=\"4.415368e-02\"
+    style=\"stop-color:#FE596D\"/>\r\n\t\t<stop  offset=\"8.238441e-02\" style=\"stop-color:#FE4C6D\"/>\r\n\t\t<stop
+    \ offset=\"0.1166\" style=\"stop-color:#FE476D\"/>\r\n\t\t<stop  offset=\"1\"
+    style=\"stop-color:#FE476D\"/>\r\n\t</linearGradient>\r\n\t<path fill=\"url(#SVGID_1_)\"
+    d=\"M62.8,131.8c0,0-54-142.3,130.5-120.7c73,8.5,93.8,69,110.2,120.1c27.5,85.4,5.8,140.1-20.1,135.1\r\n\t\tc-40.3-7.7-27-16.3-27-16.3s29.6-13.3,34.5-35.8c4.9-22.6-4.3-66.7-4.3-66.7s-45.1,23.6-165.8-2c-5.8-1.2-6.9,154.1-93.2,71.6\r\n\t\tC27.5,217.1,8.8,196.5,62.8,131.8z\"/>\r\n\t<path
+    fill=\"#F3FC44\" d=\"M233.1,124.5c0,11.1-9,20.1-20.1,20.1c-11.1,0-20.1-9-20.1-20.1c0-11.1,9-20.1,20.1-20.1\r\n\t\tC224.1,104.4,233.1,113.4,233.1,124.5z\"/>\r\n\t<path
+    fill=\"#F3FC44\" d=\"M198.5,89c4.8,5.5,23.3,1,23.7-5.5c0.7-12.6-24.4-38.4-24.4-38.4S193.7,83.5,198.5,89z\"/>\r\n\t<path
+    fill=\"#F3FC44\" d=\"M174,133.6c5.2-2.2,4.2-17,0.7-21c-3.1-3.6-32.5,10.1-32.5,10.1S165.2,137.3,174,133.6z\"/>\r\n\t<path
+    fill=\"#F3FC44\" d=\"M253.4,134.9c-5.2-2.2-7.8-21.9-3.7-25.3c3.9-3.2,26.8,5.4,26.8,5.4S262.1,138.6,253.4,134.9z\"/>\r\n\t<path
+    fill=\"#6A1B32\" d=\"M241.6,85.2c-2.2,4.5-4.9,7.7-6,7.1c-1-0.5,0-4.6,2.2-9c2.3-4.5,4.9-7.7,6-7.1\r\n\t\tC244.8,76.7,243.8,80.7,241.6,85.2z\"/>\r\n\t<path
+    fill=\"#6A1B32\" d=\"M175.1,87c3.8,3.3,6.2,6.6,5.5,7.5c-0.8,0.9-4.4-1.1-8.2-4.3c-3.8-3.3-6.2-6.6-5.5-7.5\r\n\t\tC167.7,81.8,171.4,83.8,175.1,87z\"/>\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

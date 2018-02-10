@@ -1,0 +1,164 @@
+fileFormatVersion: 2
+guid: aaf460c3cf4af4e60abdefc6ba56f475
+timeCreated: 1463515023
+licenseType: Pro
+NativeFormatImporter:
+  userData: '
+
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
+    preserveAspectRatio="none" x="0px" y="0px" width="550px" height="400px" viewBox="0
+    0 550 400">
+
+    <defs>
+
+    <linearGradient id="Gradient_1" gradientUnits="userSpaceOnUse" x1="62" y1="30.15"
+    x2="62" y2="4.85" spreadMethod="pad">
+
+    <stop  offset="0%" stop-color="#284F05"/>
+
+
+    <stop  offset="80.7843137254902%" stop-color="#497E08"/>
+
+
+    <stop  offset="100%" stop-color="#395F18"/>
+
+    </linearGradient>
+
+
+    <linearGradient id="Gradient_2" gradientUnits="userSpaceOnUse" x1="62" y1="30.15"
+    x2="62" y2="4.85" spreadMethod="pad">
+
+    <stop  offset="25.88235294117647%" stop-color="#3F9100"/>
+
+
+    <stop  offset="53.333333333333336%" stop-color="#63CF00"/>
+
+
+    <stop  offset="80.7843137254902%" stop-color="#AEF80E"/>
+
+
+    <stop  offset="100%" stop-color="#ECFFA6"/>
+
+    </linearGradient>
+
+
+    <linearGradient id="Gradient_3" gradientUnits="userSpaceOnUse" x1="62" y1="30.15"
+    x2="62" y2="4.85" spreadMethod="pad">
+
+    <stop  offset="5.882352941176471%" stop-color="#4CAD00"/>
+
+
+    <stop  offset="58.03921568627451%" stop-color="#9DEA00"/>
+
+
+    <stop  offset="100%" stop-color="#9AED00"/>
+
+    </linearGradient>
+
+
+    <g id="assets_mc_button_green_normal_0_Layer0_0_FILL">
+
+    <path fill="url(#Gradient_1)" stroke="none" d="
+
+    M 108 12
+
+    Q 108 5 101 5
+
+    L 23 5
+
+    Q 16 5 16 12
+
+    L 16 23
+
+    Q 16 30 23 30
+
+    L 101 30
+
+    Q 108 30 108 23
+
+    L 108 12 Z"/>
+
+    </g>
+
+
+    <g id="assets_mc_button_green_normal_0_Layer0_1_FILL">
+
+    <path fill="url(#Gradient_2)" stroke="none" d="
+
+    M 105 10
+
+    Q 105 5 100 5
+
+    L 21 5
+
+    Q 16 5 16 10
+
+    L 16 22
+
+    Q 16 27 21 27
+
+    L 100 27
+
+    Q 105 27 105 22
+
+    L 105 10 Z"/>
+
+    </g>
+
+
+    <g id="assets_mc_button_green_normal_0_Layer0_2_FILL">
+
+    <path fill="url(#Gradient_3)" stroke="none" d="
+
+    M 102 9
+
+    Q 102 5 98 5
+
+    L 20 5
+
+    Q 16 5 16 9
+
+    L 16 19.5
+
+    Q 16 23.5 20 23.5
+
+    L 98 23.5
+
+    Q 102 23.5 102 19.5
+
+    L 102 9 Z"/>
+
+    </g>
+
+    </defs>
+
+
+    <g transform="matrix( 1, 0, 0, 1, 172.05,187.55) ">
+
+    <g transform="matrix( 1, 0, 0, 1, -16,-5) ">
+
+    <use xlink:href="#assets_mc_button_green_normal_0_Layer0_0_FILL"/>
+
+    </g>
+
+
+    <g transform="matrix( 1, 0, 0, 1, -14.5,-3.5) ">
+
+    <use xlink:href="#assets_mc_button_green_normal_0_Layer0_1_FILL"/>
+
+    </g>
+
+
+    <g transform="matrix( 1, 0, 0, 1, -13,-2) ">
+
+    <use xlink:href="#assets_mc_button_green_normal_0_Layer0_2_FILL"/>
+
+    </g>
+
+    </g>
+
+    </svg>
+
+'
+  assetBundleName: 
+  assetBundleVariant: 

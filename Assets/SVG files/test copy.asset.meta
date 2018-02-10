@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 6abe733f28ea28d43930c97e10248474
+timeCreated: 1489448331
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"-2000 0 4012 792\" enable-background=\"new
+    0 0 612 792\" xml:space=\"preserve\">\r\n<linearGradient id=\"SVGID_2_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"-613.0983\" y1=\"144.1842\" x2=\"-248.4263\" y2=\"144.1842\" gradientTransform=\"matrix(-1
+    4.696023e-03 -4.696023e-03 -1 -182.3754 204.7639)\">\r\n\t<stop  offset=\"0\"
+    style=\"stop-color:#567575\"/>\r\n\t<stop  offset=\"0.5765\" style=\"stop-color:#638585\"/>\r\n</linearGradient>\r\n<path
+    fill=\"none\" stroke=\"url(#SVGID_2_)\" stroke-width=\"12\" stroke-miterlimit=\"10\"
+    d=\"M71.6,102.2C71.6,27,190.1,12.4,264.2,27\r\n\tC329,39.8,361,47.7,430,47.7\"/>\r\n<path
+    fill=\"none\" stroke=\"#638585\" stroke-width=\"12\" stroke-miterlimit=\"10\"
+    d=\"M431.2,47.6c56.3,0,94.8,112.5,158.1,5.7\"/>\r\n<path fill=\"none\" stroke=\"#638585\"
+    stroke-width=\"12\" stroke-miterlimit=\"10\" d=\"M259.8,106.7c0-35.2-2.8-80,56.2-69.5\"/>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

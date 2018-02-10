@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 485ddf2c093d74abf922b2a83a6cd235
+labels:
+- Rendering
+- VectorGraphics
+- SVG
+- Bezier
+- Spline
+- 2d
+- Renderer
+- Render
+timeCreated: 1433197501
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 66316f4f052a343aa806a50319404e5c, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

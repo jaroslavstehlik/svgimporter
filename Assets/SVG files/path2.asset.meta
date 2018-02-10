@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bcb30f393f0760c4a9cad9ae6e97823a
+timeCreated: 1489448356
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \n\t\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg
+    width=\"1024\" height=\"1024\" viewBox=\"0 0 500 400\"\n\txmlns=\"http://www.w3.org/2000/svg\"
+    version=\"1.1\">\n\t<title>Example triangle01- simple example of a 'path'</title>\n\t<desc>Picture
+    showing a simple example of path data\n\t\tusing both a \"C\" and an \"S\" command,\n\t\talong
+    with annotations showing the control points\n\t\tand end points</desc>\n\t<path
+    stroke-width=\"10\" stroke=\"blue\" d=\"M 100 200 C 100 100 250,300 250,200 S400,300
+    400,200\"/>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

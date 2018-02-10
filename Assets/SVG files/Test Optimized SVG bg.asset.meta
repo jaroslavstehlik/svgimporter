@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: 0c379ef390a9c7f4098f264d7dbb7420
+timeCreated: 1489448332
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<svg id=\"svg2\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"
+    xmlns=\"http://www.w3.org/2000/svg\" height=\"1e3\" viewBox=\"0 0 1000 1000\"
+    width=\"1e3\" version=\"1.1\" xmlns:cc=\"http://creativecommons.org/ns#\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\r\n\t<defs id=\"defs4\">\r\n\t\t<linearGradient
+    id=\"Test1\">\r\n\t\t\t<stop id=\"stop8075\" stop-color=\"#78cb30\" offset=\"0\"/>\r\n\t\t\t<stop
+    id=\"stop8077\" stop-color=\"#303dcb\" offset=\"1\"/>\r\n\t\t</linearGradient>\r\n\t\t<linearGradient
+    id=\"linearGradient8078\" x1=\"1e2\" xlink:href=\"#Test1\" gradientUnits=\"userSpaceOnUse\"
+    y1=\"3e2\" gradientTransform=\"translate(3e1 2)\" x2=\"5e2\" y2=\"3e2\"/>\r\n\t\t<linearGradient
+    id=\"linearGradient8086\" x1=\"2e2\" xlink:href=\"#Test1\" gradientUnits=\"userSpaceOnUse\"
+    y1=\"8e2\" gradientTransform=\"translate(4e2 -6e1)\" x2=\"5e2\" y2=\"8e2\"/>\r\n\t\t<linearGradient
+    id=\"linearGradient8087\" x1=\"6e2\" xlink:href=\"#Test1\" gradientUnits=\"userSpaceOnUse\"
+    x2=\"9e2\" gradientTransform=\"translate(5e1 -1e1)\" y1=\"3e2\" y2=\"3e2\"/>\r\n\t\t<linearGradient
+    id=\"linearGradient8088\" y2=\"8e2\" xlink:href=\"#Test1\" gradientUnits=\"userSpaceOnUse\"
+    x2=\"5e2\" y1=\"8e2\" x1=\"2e2\"/>\r\n\t</defs>\r\n\t<g id=\"layer1\" transform=\"translate(0
+    -5e1)\">\r\n\t\t<rect id=\"rect8068\" height=\"4e2\" width=\"4e2\" y=\"1e2\" x=\"1e2\"
+    fill=\"url(#linearGradient8078)\"/>\r\n\t\t<g id=\"g13\">\r\n\t\t\t<rect id=\"rect8070\"
+    height=\"3e2\" width=\"3e2\" y=\"6e2\" x=\"6e2\" fill=\"url(#linearGradient8086)\"/>\r\n\t\t\t<path
+    id=\"path8079\" fill-rule=\"evenodd\" fill=\"url(#linearGradient8087)\" d=\"m6e2
+    3e2 1e2-2e2 2e2 2e2-2e2 2e2v-2e2l-1e2 1e2z\"/>\r\n\t\t</g>\r\n\t\t<ellipse id=\"path8080\"
+    rx=\"2e2\" ry=\"2e2\" cy=\"8e2\" cx=\"3e2\" fill=\"url(#linearGradient8088)\"/>\r\n\t</g>\r\n\t<rect
+    y=\"0\" opacity=\"0.3\" fill=\"#FF66CC\" width=\"1000\" height=\"1000\"/>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

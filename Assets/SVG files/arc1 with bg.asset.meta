@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 511e9818d86fe004ead1beccb0b5a292
+timeCreated: 1489448332
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    width=\"500\" height=\"1000\" viewBox=\"0 0 1000 1000\"\r\n     xmlns=\"http://www.w3.org/2000/svg\"
+    version=\"1.1\">\r\n<title>Example arcs01 - arc commands in path data</title>\r\n
+    \ <desc>Picture of a pie chart with two pie wedges and\r\n        a picture of
+    a line with arc blips</desc>\r\n\t<path d=\"M600,300 A400,200 0 1,0 800,400\"\r\n
+    \       fill=\"none\" stroke=\"purple\" stroke-width=\"5\"  />\r\n        \t<path
+    d=\"M600,300 A300,200 0 0,1 800,400\"\r\n        fill=\"none\" stroke=\"red\"
+    stroke-width=\"5\"  />\r\n        <rect y=\"0\" opacity=\"0.3\" fill=\"#FF66CC\"
+    width=\"500\" height=\"1000\"/>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

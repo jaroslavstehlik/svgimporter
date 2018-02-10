@@ -1,0 +1,79 @@
+fileFormatVersion: 2
+guid: 1d0bffb0b22587c4da0fbfdf49005c01
+timeCreated: 1489448352
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<svg version=\"1.0\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"720\" height=\"504\" viewBox=\"-2100
+    -1470 4200 2940\">\r\n\t<defs>\r\n\t\t<path id=\"D\" d=\"M -31.5,0 h 33 a 30 30
+    0 0 0 30,-30 v -10 a 30 30 0 0 0 -30,-30 H -31.5 z M -18.5,-13 h 19 a 19 19 0
+    0 0 19,-19 v -6 a 19 19 0 0 0 -19,-19 H -18.5 z\" fill-rule=\"evenodd\"/>\r\n\t\t<path
+    id=\"E\" d=\"M 0,0 h 63 v -13 H 12 v -18 h 40 v -12 h -40 v -14 H 60 v -13 H 0
+    z\" transform=\"translate(-31.5)\"/>\r\n\t\t<path id=\"e\" d=\"M -26.25,0 h 52.5
+    v -12 h -40.5 v -16 h 33 v -12 h -33 v -11 H 25 v -12 H -26.25 z\"/>\r\n\t\t<g
+    id=\"G\">\r\n\t\t\t<clipPath id=\"gcut\">\r\n\t\t\t\t<path d=\"M -31.5,0 v -70
+    h 63 v 70 z M 0,-47 v 12 h 31.5 v -12 z\"/>\r\n\t\t\t</clipPath>\r\n\t\t\t<use
+    xlink:href=\"#O\" clip-path=\"url(#gcut)\"/>\r\n\t\t\t<rect x=\"5\" y=\"-35\"
+    width=\"26.5\" height=\"10\"/>\r\n\t\t\t<rect x=\"21.5\" y=\"-35\" width=\"10\"
+    height=\"35\"/>\r\n\t\t</g>\r\n\t\t<path id=\"M\" d=\"M -31.5,0 h 12 v -48 l 14,48
+    h 11 l 14,-48 V 0 h 12 V -70 h -17.5 l -14,48 l -14,-48 H -31.5 z\"/>\r\n\t\t<path
+    id=\"O\" d=\"M 0,0 a 31.5 35 0 0 0 0,-70 a 31.5 35 0 0 0 0,70 M 0,-13 a 18.5 22
+    0 0 0 0,-44 a 18.5 22 0 0 0 0,44\" fill-rule=\"evenodd\"/>\r\n\t\t<path id=\"P\"
+    d=\"M -31.5,0 h 13 v -26 h 28 a 22 22 0 0 0 0,-44 h -40 z M -18.5,-39 h 27 a 9
+    9 0 0 0 0,-18 h -27 z\" fill-rule=\"evenodd\"/>\r\n\t\t<g id=\"R\">\r\n\t\t\t<use
+    xlink:href=\"#P\"/>\r\n\t\t\t<path d=\"M 28,0 c 0,-10 0,-32 -15,-32 h -19 c 22,0
+    22,22 22,32\"/>\r\n\t\t</g>\r\n\t\t<path id=\"S\" d=\"M -15.75,-22 C -15.75,-15
+    -9,-11.5 1,-11.5 C 11,-11.5 15.74,-14.75 15.75,-19.25 C 15.75,-33.5 -31,-24.5
+    -30.75,-49.5 C -30.5,-71 -6,-70 3,-70 C 12,-70 29,-66 28.75,-48.75 L 13.5,-48.75
+    C 13.5,-56.25 6.5,-59 -1.5,-59 C -9.25,-59 -14.75,-57.75 -14.75,-50.5 C -15,-38.75
+    31.5,-46.5 31.5,-21.75 C 31.5,-3.5 13.5,0 0,0 C -11.5,0 -31.55,-4.5 -31.5,-22
+    z\"/>\r\n\t\t<g id=\"star\" fill=\"#fff\">\r\n\t\t\t<g id=\"c\">\r\n\t\t\t\t<path
+    id=\"t\" d=\"M 0,-1 v 1 h .5\" transform=\"rotate(18 0,-1)\"/>\r\n\t\t\t\t<use
+    xlink:href=\"#t\" transform=\"scale(-1,1)\"/>\r\n\t\t\t</g>\r\n\t\t\t<use xlink:href=\"#c\"
+    transform=\"rotate(72)\"/>\r\n\t\t\t<use xlink:href=\"#c\" transform=\"rotate(-72)\"/>\r\n\t\t\t<use
+    xlink:href=\"#c\" transform=\"rotate(144)\"/>\r\n\t\t\t<use xlink:href=\"#c\"
+    transform=\"rotate(-144)\"/>\r\n\t\t</g>\r\n\t\t<use id=\"star1\" xlink:href=\"#star\"
+    transform=\"scale(31.5)\"/>\r\n\t\t<use id=\"star2\" xlink:href=\"#star\" transform=\"scale(26.25)\"/>\r\n\t\t<use
+    id=\"star3\" xlink:href=\"#star\" transform=\"scale(21)\"/>\r\n\t\t<use id=\"star4\"
+    xlink:href=\"#star\" transform=\"scale(15)\"/>\r\n\t\t<use id=\"star5\" xlink:href=\"#star\"
+    transform=\"scale(10.5)\"/>\r\n\t</defs>\r\n\t<rect x=\"-50%\" y=\"-50%\" width=\"100%\"
+    height=\"100%\" fill=\"#009b3a\"/>\r\n\t<path d=\"M -1743,0 0,1113 1743,0 0,-1113
+    z\" fill=\"#fedf00\"/>\r\n\t<circle r=\"735\" fill=\"#002776\"/>\r\n\t<clipPath
+    id=\"band\">\r\n\t\t<circle r=\"735\"/>\r\n\t</clipPath>\r\n\t<path d=\"M -2205,1470
+    a 1785 1785 0 0 1 3570,0 h -105 a 1680 1680 0 1 0 -3360,0 z\" clip-path=\"url(#band)\"
+    fill=\"#fff\"/>\r\n\t<g fill=\"#009b3a\" transform=\"translate(-420,1470)\">\r\n\t\t<use
+    xlink:href=\"#O\" y=\"-1697.5\" transform=\"rotate(-7)\"/>\r\n\t\t<use xlink:href=\"#R\"
+    y=\"-1697.5\" transform=\"rotate(-4)\"/>\r\n\t\t<use xlink:href=\"#D\" y=\"-1697.5\"
+    transform=\"rotate(-1)\"/>\r\n\t\t<use xlink:href=\"#E\" y=\"-1697.5\" transform=\"rotate(2)\"/>\r\n\t\t<use
+    xlink:href=\"#M\" y=\"-1697.5\" transform=\"rotate(5)\"/>\r\n\t\t<use xlink:href=\"#e\"
+    y=\"-1697.5\" transform=\"rotate(9.75)\"/>\r\n\t\t<use xlink:href=\"#P\" y=\"-1697.5\"
+    transform=\"rotate(14.5)\"/>\r\n\t\t<use xlink:href=\"#R\" y=\"-1697.5\" transform=\"rotate(17.5)\"/>\r\n\t\t<use
+    xlink:href=\"#O\" y=\"-1697.5\" transform=\"rotate(20.5)\"/>\r\n\t\t<use xlink:href=\"#G\"
+    y=\"-1697.5\" transform=\"rotate(23.5)\"/>\r\n\t\t<use xlink:href=\"#R\" y=\"-1697.5\"
+    transform=\"rotate(26.5)\"/>\r\n\t\t<use xlink:href=\"#E\" y=\"-1697.5\" transform=\"rotate(29.5)\"/>\r\n\t\t<use
+    xlink:href=\"#S\" y=\"-1697.5\" transform=\"rotate(32.5)\"/>\r\n\t\t<use xlink:href=\"#S\"
+    y=\"-1697.5\" transform=\"rotate(35.5)\"/>\r\n\t\t<use xlink:href=\"#O\" y=\"-1697.5\"
+    transform=\"rotate(38.5)\"/>\r\n\t</g>\r\n\t<use id=\"\u03B1CMi\" xlink:href=\"#star1\"
+    x=\"-600\" y=\"-132\"/>\r\n\t<use id=\"\u03B1CMa\" xlink:href=\"#star1\" x=\"-535\"
+    y=\"177\"/>\r\n\t<use id=\"\u03B2CMa\" xlink:href=\"#star2\" x=\"-625\" y=\"243\"/>\r\n\t<use
+    id=\"\u03B3CMa\" xlink:href=\"#star4\" x=\"-463\" y=\"132\"/>\r\n\t<use id=\"\u03B4CMa\"
+    xlink:href=\"#star2\" x=\"-382\" y=\"250\"/>\r\n\t<use id=\"\u03B5CMa\" xlink:href=\"#star3\"
+    x=\"-404\" y=\"323\"/>\r\n\t<use id=\"\u03B1Vir\" xlink:href=\"#star1\" x=\"228\"
+    y=\"-228\"/>\r\n\t<use id=\"\u03B1Sco\" xlink:href=\"#star1\" x=\"515\" y=\"258\"/>\r\n\t<use
+    id=\"\u03B2Sco\" xlink:href=\"#star3\" x=\"617\" y=\"265\"/>\r\n\t<use id=\"\u03B5Sco\"
+    xlink:href=\"#star2\" x=\"545\" y=\"323\"/>\r\n\t<use id=\"\u03B8Sco\" xlink:href=\"#star2\"
+    x=\"368\" y=\"477\"/>\r\n\t<use id=\"\u03B9Sco\" xlink:href=\"#star3\" x=\"367\"
+    y=\"551\"/>\r\n\t<use id=\"\u03BASco\" xlink:href=\"#star3\" x=\"441\" y=\"419\"/>\r\n\t<use
+    id=\"\u03BBSco\" xlink:href=\"#star2\" x=\"500\" y=\"382\"/>\r\n\t<use id=\"\u03BCSco\"
+    xlink:href=\"#star3\" x=\"365\" y=\"405\"/>\r\n\t<use id=\"\u03B1Hya\" xlink:href=\"#star2\"
+    x=\"-280\" y=\"30\"/>\r\n\t<use id=\"\u03B3Hya\" xlink:href=\"#star3\" x=\"200\"
+    y=\"-37\"/>\r\n\t<use id=\"\u03B1Cru\" xlink:href=\"#star1\" y=\"330\"/>\r\n\t<use
+    id=\"\u03B2Cru\" xlink:href=\"#star2\" x=\"85\" y=\"184\"/>\r\n\t<use id=\"\u03B3Cru\"
+    xlink:href=\"#star2\" y=\"118\"/>\r\n\t<use id=\"\u03B4Cru\" xlink:href=\"#star3\"
+    x=\"-74\" y=\"184\"/>\r\n\t<use id=\"\u03B5Cru\" xlink:href=\"#star4\" x=\"-37\"
+    y=\"235\"/>\r\n\t<use id=\"\u03B1TrA\" xlink:href=\"#star2\" x=\"220\" y=\"495\"/>\r\n\t<use
+    id=\"\u03B2TrA\" xlink:href=\"#star3\" x=\"283\" y=\"430\"/>\r\n\t<use id=\"\u03B3TrA\"
+    xlink:href=\"#star3\" x=\"162\" y=\"412\"/>\r\n\t<use id=\"\u03B1Car\" xlink:href=\"#star1\"
+    x=\"-295\" y=\"390\"/>\r\n\t<use id=\"\u03C3Oct\" xlink:href=\"#star5\" y=\"575\"/>\r\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

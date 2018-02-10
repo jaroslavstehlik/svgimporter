@@ -1,0 +1,43 @@
+fileFormatVersion: 2
+guid: afcf7026d99de1247b4b9a4fe8e7a9a0
+timeCreated: 1489448357
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\"
+    height=\"100%\" viewBox=\"0 0 1920 1200\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;\">\n
+    \   <g id=\"Layer1\">\n        <path d=\"M402.645,524.587L402.645,326.106\" style=\"fill:none;stroke-width:1px;stroke:black;\"/>\n
+    \       <path d=\"M462.645,524.587L462.645,326.106\" style=\"fill:none;stroke-width:2px;stroke:black;\"/>\n
+    \       <path d=\"M522.645,524.587L522.645,326.106\" style=\"fill:none;stroke-width:4px;stroke:black;\"/>\n
+    \       <path d=\"M582.645,524.587L582.645,326.106\" style=\"fill:none;stroke-width:8px;stroke:black;\"/>\n
+    \       <path d=\"M642.645,524.587L642.645,326.106\" style=\"fill:none;stroke-width:16px;stroke:black;\"/>\n
+    \       <path d=\"M712.645,524.587L712.645,326.106\" style=\"fill:none;stroke-width:32px;stroke:black;\"/>\n
+    \       <path d=\"M406.887,798.48L406.887,600\" style=\"fill:none;stroke-width:32px;stroke:black;\"/>\n
+    \       <path d=\"M466.945,798.48L466.945,600\" style=\"fill:none;stroke-width:32px;stroke-linecap:square;stroke:black;\"/>\n
+    \       <path d=\"M531.212,798.48L531.212,600\" style=\"fill:none;stroke-width:32px;stroke-linecap:round;stroke:black;\"/>\n
+    \       <path d=\"M1178.02,326.106L1178.02,226.866L1178.02,127.626\" style=\"fill:none;stroke-width:32px;stroke:black;\"/>\n
+    \       <path d=\"M1268.66,326.106L1268.66,226.866L1290.13,149.093\" style=\"fill:none;stroke-width:32px;stroke:black;\"/>\n
+    \       <path d=\"M1348.66,326.106L1348.66,226.866L1394.61,173.568\" style=\"fill:none;stroke-width:32px;stroke:black;\"/>\n
+    \       <path d=\"M1428.66,326.106L1428.66,226.866L1491.45,226.866\" style=\"fill:none;stroke-width:32px;stroke:black;\"/>\n
+    \       <path d=\"M1540.66,326.106L1540.66,226.866L1588.64,274.163\" style=\"fill:none;stroke-width:32px;stroke:black;\"/>\n
+    \       <path d=\"M1178.02,574.186L1178.02,474.946L1178.02,375.706\" style=\"fill:none;stroke-width:32px;stroke-linejoin:bevel;stroke:black;\"/>\n
+    \       <path d=\"M1268.66,574.186L1268.66,474.946L1290.13,397.173\" style=\"fill:none;stroke-width:32px;stroke-linejoin:bevel;stroke:black;\"/>\n
+    \       <path d=\"M1348.66,574.186L1348.66,474.946L1394.61,421.648\" style=\"fill:none;stroke-width:32px;stroke-linejoin:bevel;stroke:black;\"/>\n
+    \       <path d=\"M1428.66,574.186L1428.66,474.946L1491.45,474.946\" style=\"fill:none;stroke-width:32px;stroke-linejoin:bevel;stroke:black;\"/>\n
+    \       <path d=\"M1540.66,574.186L1540.66,474.946L1588.64,522.243\" style=\"fill:none;stroke-width:32px;stroke-linejoin:bevel;stroke:black;\"/>\n
+    \       <rect x=\"1162.02\" y=\"600\" width=\"32\" height=\"198.48\" style=\"fill:black;\"/>\n
+    \       <path d=\"M1252.66,798.48L1252.66,698.161L1252.95,696.023L1274.71,617.209L1305.55,625.723L1284.66,701.408L1284.66,798.48L1252.66,798.48Z\"
+    style=\"fill:black;\"/>\n        <path d=\"M1332.66,798.48L1332.66,696.364L1334.67,690.972L1382.49,635.495L1406.72,656.388L1364.66,705.184L1364.66,798.48L1332.66,798.48Z\"
+    style=\"fill:black;\"/>\n        <path d=\"M1412.66,798.48L1412.66,692.613L1422.04,683.24L1491.45,683.24L1491.45,715.24L1444.66,715.24L1444.66,798.48L1412.66,798.48Z\"
+    style=\"fill:black;\"/>\n        <path d=\"M1524.66,798.48L1524.66,688.591L1544.31,680.369L1599.88,735.143L1577.41,757.932L1556.66,737.479L1556.66,798.48L1524.66,798.48Z\"
+    style=\"fill:black;\"/>\n        <rect x=\"1162.02\" y=\"825.982\" width=\"32\"
+    height=\"198.48\" style=\"fill:black;\"/>\n        <path d=\"M1252.66,1024.46L1252.66,923.055L1274.71,843.191L1305.55,851.705L1284.66,927.39L1284.66,1024.46L1252.66,1024.46Z\"
+    style=\"fill:black;\"/>\n        <path d=\"M1332.66,1024.46L1332.66,919.278L1382.49,861.477L1406.72,882.37L1364.66,931.166L1364.66,1024.46L1332.66,1024.46Z\"
+    style=\"fill:black;\"/>\n        <path d=\"M1412.66,1024.46L1412.66,909.222L1491.45,909.222L1491.45,941.222L1444.66,941.222L1444.66,1024.46L1412.66,1024.46Z\"
+    style=\"fill:black;\"/>\n        <path d=\"M1524.66,1024.46L1524.66,886.983L1599.88,961.125L1577.41,983.914L1556.66,963.461L1556.66,1024.46L1524.66,1024.46Z\"
+    style=\"fill:black;\"/>\n        <g transform=\"matrix(1.17402,0,0,1.17402,-191.042,-45.4623)\">\n
+    \           <circle cx=\"1538.53\" cy=\"229.794\" r=\"14.63\" style=\"fill:rgb(9,0,0);\"/>\n
+    \       </g>\n    </g>\n</svg>\n"
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 5a0567d591db3f84b9e05ee2a127ae75
+timeCreated: 1489448354
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 612 792\" enable-background=\"new 0 0
+    612 792\" xml:space=\"preserve\">\r\n<linearGradient id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"133.4663\" y1=\"603.6426\" x2=\"275.1268\" y2=\"461.9822\" gradientTransform=\"matrix(0.6299
+    0.7767 -0.7767 0.6299 465.2431 -29.9026)\">\r\n\t<stop  offset=\"0\" style=\"stop-color:#FFFF00\"/>\r\n\t<stop
+    \ offset=\"0.5\" style=\"stop-color:#0000FF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#ED2224\"/>\r\n</linearGradient>\r\n<polygon
+    fill=\"url(#SVGID_1_)\" stroke=\"#3A53A4\" points=\"165.3,284.4 470,354.5 362.7,661.9
+    58,591.9 \"/>\r\n<linearGradient id=\"SVGID_2_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"331.7351\" y1=\"432.0907\" x2=\"475.83\" y2=\"287.9958\" gradientTransform=\"matrix(0.9462
+    0.3235 -0.298 0.8715 98.7497 -159.6049)\">\r\n\t<stop  offset=\"0\" style=\"stop-color:#FFFF00\"/>\r\n\t<stop
+    \ offset=\"0.5\" style=\"stop-color:#0000FF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#ED2224;stop-opacity:0.5\"/>\r\n</linearGradient>\r\n<polygon
+    fill=\"url(#SVGID_2_)\" stroke=\"#3A53A4\" points=\"239.5,138.8 558.9,60.6 658.5,364.3
+    339.1,442.4 \"/>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

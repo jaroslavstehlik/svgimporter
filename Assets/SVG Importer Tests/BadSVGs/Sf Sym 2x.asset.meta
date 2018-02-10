@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 92de2ec9c715e47d192f9c1a11858256
+timeCreated: 1465330940
+licenseType: Pro
+NativeFormatImporter:
+  userData: <svg viewBox="0 0 49 63" xmlns="http://www.w3.org/2000/svg"><g fill="none"
+    fill-rule="evenodd" transform="matrix(0 1 -1 0 47.5 -0.94)" stroke="#fefefe" stroke-width="2"><path
+    d="m 54.712 27.449 c 0 10.04 -8.211 18.25 -18.247 18.25 h -8.07 c -10.04 0 -18.247
+    -8.213 -18.247 -18.25" stroke-dasharray="2.582 3.873 2.582 3.873 2.582 3.873"/><path
+    d="m 10.143 18.324 c 0 -10.04 8.211 -18.25 18.247 -18.25 h 8.07 c 10.04 0 18.247
+    8.213 18.247 18.25"/><path d="m 62.685 22 h -62.58" stroke-dasharray="2.582 3.873
+    2.582 3.873 2.582 3.873"/></g></svg>
+  assetBundleName: 
+  assetBundleVariant: 

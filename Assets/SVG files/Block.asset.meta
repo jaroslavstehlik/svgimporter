@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: a0eb6350236875b41aa534fdebd0c426
+timeCreated: 1489448354
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    19.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg version=\"1.1\"
+    id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t width=\"100px\" height=\"100px\" viewBox=\"0 0 100 100\"
+    enable-background=\"new 0 0 100 100\" xml:space=\"preserve\">\r\n<g>\r\n\t<rect
+    x=\"0\" y=\"0\" fill=\"#58595B\" width=\"100\" height=\"100\"/>\r\n\t<polygon
+    fill=\"#414042\" points=\"20,80 20,20 5,5 5,95 95,95 80,80 \t\"/>\r\n\t<polygon
+    fill=\"#6D6E71\" points=\"5,5 20,20 80,20 80,80 95,95 95,5 \t\"/>\r\n\t<path fill=\"#070707\"
+    fill-opacity=\"0.15\" d=\"M0,43.3C14.7,47.6,31.8,50,50,50s35.3-2.4,50-6.7V0H0V43.3z\"/>\r\n\t<g>\r\n\t\t<g
+    opacity=\"7.000000e-002\">\r\n\t\t\t<image overflow=\"visible\" width=\"172\"
+    height=\"172\" xlink:href=\"FB117344.png\"  transform=\"matrix(1 0 0 1 -36 -36)\">\r\n\t\t\t</image>\r\n\t\t</g>\r\n\t\t<path
+    fill=\"#231F20\" d=\"M95,5v90H5V5H95 M100,0H0v100h100V0L100,0z\"/>\r\n\t</g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n<g>\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

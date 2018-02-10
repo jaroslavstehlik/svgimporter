@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d220c89ecc28ad7459fffc2b1ee3edc8
+timeCreated: 1489448360
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<svg width=\"75\" height=\"50\" viewBox=\"0 0 75 50\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <title>\n    BuyBtnBG\n  </title>\n
+    \ <defs>\n    <linearGradient x1=\"50%\" y1=\"0%\" x2=\"50%\" y2=\"100%\" id=\"b\">\n
+    \     <stop stop-opacity=\"0\" offset=\"0%\"/>\n      <stop offset=\"100%\"/>\n
+    \   </linearGradient>\n    <path id=\"a\" d=\"M175 0h75v50h-75z\"/>\n  </defs>\n
+    \ <g transform=\"translate(-175)\" fill=\"none\" fill-rule=\"evenodd\">\n    <use
+    xlink:href=\"#a\"/>\n    <use fill=\"#F7CA18\" xlink:href=\"#a\"/>\n    <use xlink:href=\"#a\"/>\n
+    \   <use fill=\"url(#b)\" xlink:href=\"#a\"/>\n  </g>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

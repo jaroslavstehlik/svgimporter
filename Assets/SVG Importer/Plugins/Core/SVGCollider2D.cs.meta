@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 4b37de79cb0bf455cb36256f189b8eef
+labels:
+- Collider
+- Collider2d
+- Automatic
+- Easy
+- Polygon
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

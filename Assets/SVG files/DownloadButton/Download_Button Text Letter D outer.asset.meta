@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: c9315ff14d505f84384592a8373c08e1
+timeCreated: 1489448354
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\r\n<svg
+    xmlns=\"http://www.w3.org/2000/svg\" height=\"50\" width=\"210\" version=\"1.1\">\r\n\t<defs>\r\n\t\t<radialGradient
+    id=\"gra1\" gradientUnits=\"userSpaceOnUse\" cy=\"20.494\" cx=\"35.293\" gradientTransform=\"matrix(0,-0.843022,1.020168,0,0.606436,42.58614)\"
+    r=\"16.956\">\r\n\t\t\t<stop stop-color=\"#73d216\" offset=\"0\"/>\r\n\t\t\t<stop
+    stop-color=\"#4e9a06\" offset=\"1\"/>\r\n\t\t</radialGradient>\r\n\t\t<radialGradient
+    id=\"gra2\" gradientUnits=\"userSpaceOnUse\" cy=\"1.535\" cx=\"15.987\" gradientTransform=\"matrix(0,-2.046729,-1.55761,0,44.11559,66.93275)\"
+    r=\"17.171\">\r\n\t\t\t<stop stop-color=\"#FFF\" offset=\"0\"/>\r\n\t\t\t<stop
+    stop-color=\"#FFF\" stop-opacity=\"0\" offset=\"1\"/>\r\n\t\t</radialGradient>\r\n\t\t<linearGradient
+    id=\"gra3\" y2=\"-2.4318\" gradientUnits=\"userSpaceOnUse\" x2=\"68.467\" gradientTransform=\"matrix(1.5371422,0,0,1.0631029,-0.71726347,2.6007275)\"
+    y1=\"44.57\" x1=\"68.467\">\r\n\t\t\t<stop stop-color=\"#0065a5\" offset=\"0\"/>\r\n\t\t\t<stop
+    stop-color=\"#3eb4ff\" offset=\"0.5\"/>\r\n\t\t\t<stop stop-color=\"#e3f4ff\"
+    offset=\"1\"/>\r\n\t\t</linearGradient>\r\n\t</defs>\t\r\n\t<g fill=\"#000\">\r\n\t\t<path
+    style=\"\" d=\"m3.3341-2.9732,5.3793,0c1.6613,0.000003,2.9646-0.15467,3.9099-0.46403,0.94523-0.30935,1.6986-0.74474,2.26-1.3062,0.79055-0.79056,1.4064-1.8533,1.8475-3.1881s0.66165-2.9532,0.66167-4.8551c-0.00002-2.6352-0.43254-4.6603-1.2976-6.0754-0.86506-1.415-1.9163-2.3631-3.1537-2.8443-0.8937-0.3437-2.3316-0.51557-4.3138-0.51559h-5.2934z\"/>\r\n\t</g>\r\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

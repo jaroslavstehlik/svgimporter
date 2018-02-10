@@ -1,0 +1,38 @@
+fileFormatVersion: 2
+guid: 7e30779f1a55c3c4884322792f76a947
+timeCreated: 1489448331
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 612 792\" enable-background=\"new 0 0
+    612 792\" xml:space=\"preserve\">\r\n<radialGradient id=\"SVGID_1_\" cx=\"147.6374\"
+    cy=\"163.9121\" r=\"83.6321\" gradientUnits=\"userSpaceOnUse\">\r\n\t<stop  offset=\"0\"
+    style=\"stop-color:#FFFFFF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#000000\"/>\r\n</radialGradient>\r\n<rect
+    x=\"68.5\" y=\"76\" fill=\"url(#SVGID_1_)\" stroke=\"#000000\" stroke-miterlimit=\"10\"
+    width=\"158.2\" height=\"175.8\"/>\r\n<radialGradient id=\"SVGID_2_\" cx=\"285.5494\"
+    cy=\"241.3846\" r=\"121.1448\" gradientUnits=\"userSpaceOnUse\">\r\n\t<stop  offset=\"0\"
+    style=\"stop-color:#FFFFFF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#000000\"/>\r\n</radialGradient>\r\n<rect
+    x=\"147.6\" y=\"139.7\" fill=\"url(#SVGID_2_)\" stroke=\"#000000\" stroke-miterlimit=\"10\"
+    width=\"275.8\" height=\"203.3\"/>\r\n<linearGradient id=\"SVGID_3_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"135.5495\" y1=\"454.022\" x2=\"321.2637\" y2=\"454.022\">\r\n\t<stop  offset=\"0\"
+    style=\"stop-color:#FFFFFF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#000000\"/>\r\n</linearGradient>\r\n<rect
+    x=\"135.5\" y=\"335.3\" fill=\"url(#SVGID_3_)\" stroke=\"#000000\" stroke-miterlimit=\"10\"
+    width=\"185.7\" height=\"237.4\"/>\r\n<linearGradient id=\"SVGID_4_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"228.4066\" y1=\"383.6923\" x2=\"558.6264\" y2=\"383.6923\">\r\n\t<stop  offset=\"0\"
+    style=\"stop-color:#FFFFFF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#000000\"/>\r\n</linearGradient>\r\n<rect
+    x=\"228.4\" y=\"321.1\" fill=\"url(#SVGID_4_)\" stroke=\"#000000\" stroke-miterlimit=\"10\"
+    width=\"330.2\" height=\"125.3\"/>\r\n<linearGradient id=\"SVGID_5_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"285.5494\" y1=\"258.4176\" x2=\"398.1868\" y2=\"258.4176\">\r\n\t<stop  offset=\"0\"
+    style=\"stop-color:#FFFFFF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#000000\"/>\r\n</linearGradient>\r\n<ellipse
+    fill=\"url(#SVGID_5_)\" stroke=\"#000000\" stroke-miterlimit=\"10\" cx=\"341.9\"
+    cy=\"258.4\" rx=\"56.3\" ry=\"51.6\"/>\r\n<linearGradient id=\"SVGID_6_\" gradientUnits=\"userSpaceOnUse\"
+    x1=\"398.1868\" y1=\"384.7912\" x2=\"469.6154\" y2=\"384.7912\">\r\n\t<stop  offset=\"0\"
+    style=\"stop-color:#FFFFFF\"/>\r\n\t<stop  offset=\"1\" style=\"stop-color:#000000\"/>\r\n</linearGradient>\r\n<ellipse
+    fill=\"url(#SVGID_6_)\" stroke=\"#000000\" stroke-miterlimit=\"10\" cx=\"433.9\"
+    cy=\"384.8\" rx=\"35.7\" ry=\"29.7\"/>\r\n<ellipse fill=\"#FFFFFF\" stroke=\"#000000\"
+    stroke-miterlimit=\"10\" cx=\"241\" cy=\"505.7\" rx=\"38.5\" ry=\"44\"/>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

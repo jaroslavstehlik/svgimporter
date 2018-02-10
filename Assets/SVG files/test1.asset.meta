@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 5ac37174bc709f244a718cfc50fdcec9
+timeCreated: 1489448334
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \n  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg
+    width=\"1000\" height=\"1000\" viewBox=\"0 0 1000 1000\" version=\"1.1\"\n     xmlns=\"http://www.w3.org/2000/svg\">\n
+    \ <desc>Example radgrad01 - fill a rectangle by referencing a \n           radial
+    gradient paint server</desc>\n  <g>\n    <defs>\n      <radialGradient id=\"MyGradient1\"
+    cx=\"400\" cy=\"200\" r=\"100\" fx=\"250\" fy=\"200\" spreadMethod=\"repeat\">\n
+    \       <stop offset=\"0%\" stop-color=\"red\" />\n        <stop offset=\"50%\"
+    stop-color=\"yellow\" />\n        <stop offset=\"100%\" stop-color=\"green\" />\n
+    \     </radialGradient>\n      \n      <radialGradient id=\"MyGradient2\" cx=\"400\"
+    cy=\"600\" r=\"100\" fx=\"350\" fy=\"600\" spreadMethod=\"repeat\">\n        <stop
+    offset=\"0%\" stop-color=\"red\" />\n        <stop offset=\"50%\" stop-color=\"yellow\"
+    />\n        <stop offset=\"100%\" stop-color=\"green\" />\n      </radialGradient>\n
+    \   </defs>\n    <rect fill=\"url(#MyGradient1)\" stroke=\"black\" stroke-width=\"6\"
+    \ \n          x=\"100\" y=\"100\" width=\"600\" height=\"200\"/>\n  </g>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

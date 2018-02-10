@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: ad6aa67ebccbc584c9b4c139a90c1942
+timeCreated: 1461053481
+licenseType: Free
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\" width=\"137.3px\"\r\n\t height=\"111.3px\" viewBox=\"0 0 137.3
+    111.3\" enable-background=\"new 0 0 137.3 111.3\" xml:space=\"preserve\">\r\n<g
+    id=\"RECURSOS\" display=\"none\">\r\n</g>\r\n<g id=\"FONDO\">\r\n</g>\r\n<g id=\"PIRAMIDE\">\r\n</g>\r\n<g
+    id=\"KEYBOARD\">\r\n</g>\r\n<g id=\"CIELO_1_\">\r\n</g>\r\n<g id=\"ASSETS\">\r\n\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"68.6738\" y1=\"110.4712\"
+    x2=\"68.6738\" y2=\"0.7954\">\r\n\t\t<stop  offset=\"0.1181\" style=\"stop-color:#220E25\"/>\r\n\t\t<stop
+    \ offset=\"0.2971\" style=\"stop-color:#2E1241\"/>\r\n\t\t<stop  offset=\"0.6104\"
+    style=\"stop-color:#42196C\"/>\r\n\t\t<stop  offset=\"0.8553\" style=\"stop-color:#4E1D86\"/>\r\n\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#521F90\"/>\r\n\t</linearGradient>\r\n\t<path
+    fill=\"url(#SVGID_1_)\" d=\"M136.4,71.6c0,0-10,0.5-23.4,4.4c4.7-6.2,7-10.7,7-10.7c-6,1.4-11.6,3.4-16.8,5.9\r\n\t\tc8.4-14.3,11.5-26.3,11.5-26.3c-6.6,3.2-12.5,7.2-17.7,11.5c3.3-9.5,5.6-20.1,5.8-31.4c0,0-12.8,10.5-24.2,28.3\r\n\t\tc1.4-29.3-6.5-52.5-6.5-52.5C61.6,18.8,57.2,37.9,55.9,55c-6.6-16.1-15-26.5-15-26.5c-2.7,14.9-1.3,29.1,1.9,41.4\r\n\t\tC31.6,56.5,19.6,49.4,19.6,49.4c1.9,10.7,5.9,20.1,10.7,28.1C15,68.2,1,65.3,1,65.3c18.1,33,55.4,43.8,60.2,45.1c0,0,0,0.1,0,0.1\r\n\t\tc0,0,0,0,0,0c0,0,0,0,0,0c0,0,0,0,0,0l0,0c0,0,0,0,0.1,0c0,0,0,0,0,0c0,0,0,0,0,0c0,0,0.1,0,0.2,0c0.2,0,0.2,0.1,0.2,0.1\r\n\t\tc0,0,0,0,0,0l0,0l0,0c0,0,0-0.1,0-0.1C67,109.9,110.4,104.8,136.4,71.6z\"/>\r\n</g>\r\n<g
+    id=\"TIME__x26__SCORE\">\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

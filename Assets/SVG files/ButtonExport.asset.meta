@@ -1,0 +1,64 @@
+fileFormatVersion: 2
+guid: 79a0d802cf03b724aa1a977444592c61
+timeCreated: 1489448348
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    19.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg version=\"1.1\"
+    baseProfile=\"basic\" id=\"Layer_1\"\r\n\t xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" width=\"399.35px\"\r\n\t
+    height=\"182.34px\" viewBox=\"0 0 399.35 182.34\" xml:space=\"preserve\">\r\n<title>ButtonExport</title>\r\n<g>\r\n\t\r\n\t\t<linearGradient
+    id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"74.734\" y1=\"-618.6808\"
+    x2=\"142.7118\" y2=\"-550.7029\" gradientTransform=\"matrix(0.9827 0.1853 0.1853
+    -0.9827 296.2506 -555.6823)\">\r\n\t\t<stop  offset=\"0\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t<stop
+    \ offset=\"0.1\" style=\"stop-color:#FFFFFF;stop-opacity:0.82\"/>\r\n\t\t<stop
+    \ offset=\"0.23\" style=\"stop-color:#FFFFFF;stop-opacity:0.6\"/>\r\n\t\t<stop
+    \ offset=\"0.37\" style=\"stop-color:#FFFFFF;stop-opacity:0.42\"/>\r\n\t\t<stop
+    \ offset=\"0.5\" style=\"stop-color:#FFFFFF;stop-opacity:0.27\"/>\r\n\t\t<stop
+    \ offset=\"0.63\" style=\"stop-color:#FFFFFF;stop-opacity:0.15\"/>\r\n\t\t<stop
+    \ offset=\"0.76\" style=\"stop-color:#FFFFFF;stop-opacity:0.07\"/>\r\n\t\t<stop
+    \ offset=\"0.88\" style=\"stop-color:#FFFFFF;stop-opacity:0.02\"/>\r\n\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#FFFFFF;stop-opacity:0\"/>\r\n\t</linearGradient>\r\n\t<path
+    opacity=\"0.4\" fill=\"url(#SVGID_1_)\" d=\"M286.82,62.69c9.25-27.77,26.28-42.23,52.76-43.22c-2.32-0.72-4.68-1.3-7.07-1.75\r\n\t\tc-34.8-6.56-68.33,16.33-74.89,51.13c0,0,0,0,0,0c-0.05,0.28-0.1,0.57-0.15,0.85C257.48,69.69,268.74,60.93,286.82,62.69z\"/>\r\n\t\r\n\t\t<linearGradient
+    id=\"SVGID_2_\" gradientUnits=\"userSpaceOnUse\" x1=\"-1200.9362\" y1=\"1350.4185\"
+    x2=\"-1121.7261\" y2=\"1338.6385\" gradientTransform=\"matrix(-0.47 -0.89 -0.9
+    0.47 979.0701 -1555.4299)\">\r\n\t\t<stop  offset=\"0\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t<stop
+    \ offset=\"0.01\" style=\"stop-color:#FFFFFF;stop-opacity:0.99\"/>\r\n\t\t<stop
+    \ offset=\"0.3\" style=\"stop-color:#FFFFFF;stop-opacity:0.64\"/>\r\n\t\t<stop
+    \ offset=\"0.55\" style=\"stop-color:#FFFFFF;stop-opacity:0.37\"/>\r\n\t\t<stop
+    \ offset=\"0.76\" style=\"stop-color:#FFFFFF;stop-opacity:0.17\"/>\r\n\t\t<stop
+    \ offset=\"0.91\" style=\"stop-color:#FFFFFF;stop-opacity:0.05\"/>\r\n\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#FFFFFF;stop-opacity:0\"/>\r\n\t</linearGradient>\r\n\t<path
+    opacity=\"0.45\" fill=\"url(#SVGID_2_)\" d=\"M320.68,83.28c-38.06,4.46-49.81,19.26-65.52,9.49c1.27,12.6,8.83,25.12,10.42,27.89\r\n\t\tc15.8,27.53,61.24,46,101.19,13.14c0,0,9.59-7.49,5.58-16.24C372.32,117.54,360.09,79.23,320.68,83.28z\"/>\r\n\t<path
+    fill=\"#FFFFFF\" d=\"M241.18,44.51c-21.81,40.94-6.3,91.82,34.64,113.63c40.94,21.81,91.82,6.3,113.63-34.64\r\n\t\tc21.8-40.93,6.32-91.78-34.6-113.61c-40.93-21.83-91.82-6.35-113.65,34.58C241.19,44.48,241.19,44.5,241.18,44.51z
+    M385.88,119.01\r\n\t\tc-19,35.69-63.34,49.22-99.03,30.21c-35.69-19-49.22-63.34-30.21-99.03s63.34-49.22,99.03-30.21c0.02,0.01,0.04,0.02,0.05,0.03\r\n\t\tc35.65,19.02,49.14,63.33,30.15,99H385.88z\"/>\r\n\t<path
+    fill=\"#FFFFFF\" d=\"M355.25,89.37l0.21-1.71c0.37-2.97-1.7-5.7-4.66-6.15l-22.11-3.36l3.22-21.23c0.46-3.02-1.62-5.84-4.64-6.3\r\n\t\tc-0.05-0.01-0.1-0.01-0.15-0.02l-1.56-0.19c-3.03-0.38-5.79,1.78-6.17,4.81c0,0,0,0,0,0l-2.61,21.12l-22-3.34\r\n\t\tc-3.02-0.46-5.84,1.62-6.3,4.64c-0.01,0.05-0.01,0.1-0.02,0.15l-0.21,1.71c-0.37,2.97,1.7,5.7,4.66,6.15l22.3,3.39l-2.77,22.38\r\n\t\tc-0.42,3.04,1.71,5.84,4.74,6.26s5.84-1.71,6.26-4.74l0,0l3.36-22.14l22.16,3.37c3.02,0.44,5.83-1.65,6.27-4.67\r\n\t\tC355.24,89.45,355.24,89.41,355.25,89.37z\"/>\r\n</g>\r\n<g>\r\n\t<path
+    fill=\"#4DCFCD\" fill-opacity=\"0.3\" d=\"M181.85,100.57c-5.21,50.09-50.04,86.47-100.12,81.26c-4.9-0.51-9.74-1.41-14.5-2.71\r\n\t\tC24.44,167.58-4.18,125.83,0.51,81.75C5.72,31.66,50.55-4.72,100.63,0.49c4.9,0.51,9.74,1.41,14.5,2.71\r\n\t\tC157.92,14.74,186.54,56.5,181.85,100.57z\"/>\r\n\t<path
+    fill=\"#39B8B2\" d=\"M82.53,163.33L82.53,163.33c-41.33-7.57-68.84-46.92-61.12-87.45l0,0c7.72-40.53,47.85-67.49,89.19-59.93\r\n\t\tl0,0c41.33,7.57,68.84,46.92,61.12,87.45l0,0C164,143.93,123.86,170.9,82.53,163.33z\"/>\r\n\t<g>\r\n\t\t\r\n\t\t\t<linearGradient
+    id=\"SVGID_3_\" gradientUnits=\"userSpaceOnUse\" x1=\"-144.4777\" y1=\"-664.6242\"
+    x2=\"-76.505\" y2=\"-596.6416\" gradientTransform=\"matrix(0.9827 0.1853 0.1853
+    -0.9827 296.2506 -555.6823)\">\r\n\t\t\t<stop  offset=\"0\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t\t<stop
+    \ offset=\"0.1\" style=\"stop-color:#FFFFFF;stop-opacity:0.82\"/>\r\n\t\t\t<stop
+    \ offset=\"0.23\" style=\"stop-color:#FFFFFF;stop-opacity:0.6\"/>\r\n\t\t\t<stop
+    \ offset=\"0.37\" style=\"stop-color:#FFFFFF;stop-opacity:0.42\"/>\r\n\t\t\t<stop
+    \ offset=\"0.5\" style=\"stop-color:#FFFFFF;stop-opacity:0.27\"/>\r\n\t\t\t<stop
+    \ offset=\"0.63\" style=\"stop-color:#FFFFFF;stop-opacity:0.15\"/>\r\n\t\t\t<stop
+    \ offset=\"0.76\" style=\"stop-color:#FFFFFF;stop-opacity:0.07\"/>\r\n\t\t\t<stop
+    \ offset=\"0.88\" style=\"stop-color:#FFFFFF;stop-opacity:0.02\"/>\r\n\t\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#FFFFFF;stop-opacity:0\"/>\r\n\t\t</linearGradient>\r\n\t\t<path
+    opacity=\"0.4\" fill=\"url(#SVGID_3_)\" d=\"M62.89,67.21c9.25-27.77,26.28-42.23,52.76-43.22c-2.32-0.72-4.68-1.3-7.07-1.75\r\n\t\t\tc-34.8-6.56-68.33,16.33-74.89,51.13c0,0,0,0,0,0c-0.05,0.28-0.1,0.57-0.15,0.85C33.54,74.21,44.8,65.45,62.89,67.21z\"/>\r\n\t\t\r\n\t\t\t<linearGradient
+    id=\"SVGID_4_\" gradientUnits=\"userSpaceOnUse\" x1=\"-1101.369\" y1=\"1547.4452\"
+    x2=\"-1022.1485\" y2=\"1535.6752\" gradientTransform=\"matrix(-0.47 -0.89 -0.9
+    0.47 979.0701 -1555.4299)\">\r\n\t\t\t<stop  offset=\"0\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t\t<stop
+    \ offset=\"0.01\" style=\"stop-color:#FFFFFF;stop-opacity:0.99\"/>\r\n\t\t\t<stop
+    \ offset=\"0.3\" style=\"stop-color:#FFFFFF;stop-opacity:0.64\"/>\r\n\t\t\t<stop
+    \ offset=\"0.55\" style=\"stop-color:#FFFFFF;stop-opacity:0.37\"/>\r\n\t\t\t<stop
+    \ offset=\"0.76\" style=\"stop-color:#FFFFFF;stop-opacity:0.17\"/>\r\n\t\t\t<stop
+    \ offset=\"0.91\" style=\"stop-color:#FFFFFF;stop-opacity:0.05\"/>\r\n\t\t\t<stop
+    \ offset=\"1\" style=\"stop-color:#FFFFFF;stop-opacity:0\"/>\r\n\t\t</linearGradient>\r\n\t\t<path
+    opacity=\"0.45\" fill=\"url(#SVGID_4_)\" d=\"M96.74,87.8c-38.06,4.46-49.81,19.26-65.52,9.49c1.27,12.6,8.83,25.12,10.42,27.89\r\n\t\t\tc15.8,27.53,61.24,46,101.19,13.14c0,0,9.59-7.49,5.58-16.24C148.41,122.07,136.16,83.75,96.74,87.8z\"/>\r\n\t\t<path
+    fill=\"#FFFFFF\" d=\"M17.24,49.07c-21.81,40.94-6.3,91.82,34.64,113.63c40.94,21.81,91.82,6.3,113.63-34.64\r\n\t\t\tc21.8-40.93,6.32-91.78-34.6-113.61C89.98-7.38,39.09,8.1,17.26,49.03C17.25,49.04,17.25,49.06,17.24,49.07z
+    M161.94,123.57\r\n\t\t\tc-19,35.69-63.34,49.22-99.03,30.21c-35.69-19-49.22-63.34-30.21-99.03s63.34-49.22,99.03-30.21c0.02,0.01,0.04,0.02,0.05,0.03\r\n\t\t\tc35.62,19.02,49.12,63.29,30.16,98.95V123.57z\"/>\r\n\t\t<path
+    fill=\"#FFFFFF\" d=\"M131.32,93.89l0.21-1.71c0.37-2.97-1.7-5.7-4.66-6.15l-22.11-3.36l3.22-21.23\r\n\t\t\tc0.46-3.02-1.62-5.84-4.64-6.3c-0.05-0.01-0.1-0.01-0.15-0.02l-1.56-0.19c-3.03-0.38-5.79,1.78-6.17,4.81c0,0,0,0,0,0l-2.61,21.12\r\n\t\t\tl-22-3.34c-3.02-0.46-5.84,1.62-6.3,4.64c-0.01,0.05-0.01,0.1-0.02,0.15l-0.21,1.76c-0.37,2.97,1.7,5.7,4.66,6.15l22.3,3.39\r\n\t\t\tl-2.77,22.38c-0.42,3.04,1.71,5.84,4.74,6.26s5.84-1.71,6.26-4.74l3.36-22.14l22.16,3.37c3.02,0.44,5.83-1.65,6.27-4.68\r\n\t\t\tC131.31,94,131.31,93.94,131.32,93.89z\"/>\r\n\t</g>\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

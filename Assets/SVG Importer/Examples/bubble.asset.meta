@@ -1,0 +1,25 @@
+fileFormatVersion: 2
+guid: 10338d914897e47738be9c3e889b1082
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 612 792\" enable-background=\"new 0 0
+    612 792\" xml:space=\"preserve\">\r\n<g opacity=\"0.78\">\r\n\t\r\n\t\t<radialGradient
+    id=\"SVGID_1_\" cx=\"-11026.7627\" cy=\"8677.4629\" r=\"3668.668\" gradientTransform=\"matrix(9.711914e-02
+    -1.613672e-03 -1.613672e-03 -9.711914e-02 1271.3811 1158.4922)\" gradientUnits=\"userSpaceOnUse\">\r\n\t\t<stop
+    \ offset=\"0\" style=\"stop-color:#FFFFFF\"/>\r\n\t\t<stop  offset=\"2.032712e-02\"
+    style=\"stop-color:#FFFFFF;stop-opacity:0.9601\"/>\r\n\t\t<stop  offset=\"0.5092\"
+    style=\"stop-color:#FFFFFF;stop-opacity:0\"/>\r\n\t\t<stop  offset=\"0.5539\"
+    style=\"stop-color:#F8FCFF;stop-opacity:3.276151e-02\"/>\r\n\t\t<stop  offset=\"0.6157\"
+    style=\"stop-color:#E9F6F9;stop-opacity:7.812478e-02\"/>\r\n\t\t<stop  offset=\"0.6876\"
+    style=\"stop-color:#D1ECF3;stop-opacity:0.1309\"/>\r\n\t\t<stop  offset=\"0.7671\"
+    style=\"stop-color:#B1E1EB;stop-opacity:0.1892\"/>\r\n\t\t<stop  offset=\"0.8529\"
+    style=\"stop-color:#8ED5E3;stop-opacity:0.2521\"/>\r\n\t\t<stop  offset=\"0.9425\"
+    style=\"stop-color:#75CEDE;stop-opacity:0.3178\"/>\r\n\t\t<stop  offset=\"1\"
+    style=\"stop-color:#70CDDD;stop-opacity:0.36\"/>\r\n\t</radialGradient>\r\n\t<path
+    fill=\"url(#SVGID_1_)\" d=\"M535.8,391.8c-2.2-127.2-106.9-228.3-234.1-226.1C174.4,167.8,73.4,272.5,75.5,399.8\r\n\t\tC77.7,527,182.4,628.1,309.7,625.9C436.9,623,538,518.3,535.8,391.8z\"/>\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

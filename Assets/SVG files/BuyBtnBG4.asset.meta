@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+guid: 37255e6f791bd5447b5f629e12d5ad58
+timeCreated: 1489448355
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg width=\"75px\"
+    height=\"50px\" viewBox=\"0 0 75 50\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\">\n
+    \   <!-- Generator: Sketch 3.4.2 (15855) - http://www.bohemiancoding.com/sketch
+    -->\n    <title>BuyBtnBG</title>\n    <desc>Created with Sketch.</desc>\n    <defs>\n
+    \       <linearGradient x1=\"50%\" y1=\"0%\" x2=\"50%\" y2=\"100%\" id=\"linearGradient-1\">\n
+    \           <stop stop-color=\"#000000\" stop-opacity=\"0\" offset=\"0%\"></stop>\n
+    \           <stop stop-color=\"#000000\" offset=\"100%\"></stop>\n        </linearGradient>\n
+    \       <rect id=\"path-2\" x=\"175\" y=\"0\" width=\"75\" height=\"50\"></rect>\n
+    \   </defs>\n    <g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\"
+    fill-rule=\"evenodd\" sketch:type=\"MSPage\">\n        <g id=\"Artboard-1\" sketch:type=\"MSArtboardGroup\"
+    transform=\"translate(-720.000000, -138.000000)\">\n            <g id=\"Finance-&amp;-Risk-Teams\"
+    sketch:type=\"MSLayerGroup\" transform=\"translate(540.000000, 103.000000)\">\n
+    \               <g id=\"Group\" transform=\"translate(5.000000, 35.000000)\">\n
+    \                   <g id=\"BuyBtnBG\">\n                        <use fill=\"none\"
+    sketch:type=\"MSShapeGroup\" xlink:href=\"#path-2\"></use>\n                        <use
+    fill=\"#F7CA18\" fill-rule=\"evenodd\" xlink:href=\"#path-2\"></use>\n                        <use
+    fill=\"none\" xlink:href=\"#path-2\"></use>\n                        <use fill=\"url(#linearGradient-1)\"
+    fill-rule=\"evenodd\" xlink:href=\"#path-2\"></use>\n                    </g>\n
+    \               </g>\n            </g>\n        </g>\n    </g>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

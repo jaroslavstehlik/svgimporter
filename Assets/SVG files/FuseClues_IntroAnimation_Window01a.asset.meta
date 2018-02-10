@@ -1,0 +1,50 @@
+fileFormatVersion: 2
+guid: cbe76086680f3d44cb0a3f2ff41cc060
+timeCreated: 1489448352
+licenseType: Pro
+NativeFormatImporter:
+  userData: '<svg id="Layer_3" data-name="Layer 3" xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 99.5 19.94"><title>FuseClues_IntroAnimation_Window01a</title><path
+    d="
+
+    M351.06,1266.89
+
+    l-5.79-5.79
+
+    a10.52,10.52,0,0,0-7.44-3.08
+
+    H285.3
+
+    a10.52,10.52,0,0,0-7.44,3.08
+
+    l-5.79,5.79
+
+    H261.81
+
+    L262,1270
+
+    a8.22,8.22,0,0,0,5.32,7.3,10.51,10.51,0,0,0,3.58.63
+
+    h7.88
+
+    a10.52,10.52,0,0,0,4-.81,6.43,6.43,0,0,0,3.78-5.1
+
+    l0.09-.65
+
+    h49.75
+
+    l0.09,0.65
+
+    a6.43,6.43,0,0,0,3.78,5.1,10.52,10.52,0,0,0,4,.81
+
+    h7.88
+
+    a10.51,10.51,0,0,0,4.19-.87,8.1,8.1,0,0,0,4.71-7
+
+    l0.18-3.17
+
+    H351.06
+
+    Z" transform="translate(-261.81 -1258.02)" fill="#2d5b51"/></svg>'
+  assetBundleName: 
+  assetBundleVariant: 

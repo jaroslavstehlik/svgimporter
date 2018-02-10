@@ -1,0 +1,25 @@
+fileFormatVersion: 2
+guid: e6db7f635cc772c4aa70aae4667fa783
+timeCreated: 1489448334
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\r\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<!--Generator:
+    Xara Designer (www.xara.com), SVG filter version: 6.0.0.4-->\r\n<svg stroke-width=\"0.501\"
+    stroke-linejoin=\"bevel\" fill-rule=\"evenodd\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" overflow=\"visible\" width=\"841.891pt\"
+    height=\"595.277pt\" viewBox=\"0 0 841.891 595.277\">\r\n <defs>\r\n\t</defs>\r\n
+    <g id=\"Document\" fill=\"none\" stroke=\"black\" font-family=\"Times New Roman\"
+    font-size=\"16\" transform=\"scale(1 -1)\">\r\n  <g id=\"Spread\" transform=\"translate(0
+    -595.277)\">\r\n   <g id=\"Layer 1\">\r\n    <path d=\"M -326.892,618.691 C -297.783,638.744
+    -257.883,631.394 -237.83,602.285 C -217.777,573.176 -225.127,533.276 -254.236,513.223
+    C -283.345,493.17 -323.245,500.52 -343.298,529.629 C -363.351,558.738 -356.001,598.638
+    -326.892,618.691 Z\" stroke-linejoin=\"miter\" stroke-linecap=\"round\" stroke=\"none\"
+    stroke-width=\"0.5\" fill=\"#ffffff\" marker-start=\"none\" marker-end=\"none\"
+    stroke-miterlimit=\"79.8403193612775\"/>\r\n    <path d=\"M -313.662,525.054 L
+    -279.602,544.719 L -245.542,564.384 L -279.602,584.05 L -313.663,603.714 L -313.663,564.384
+    L -313.662,525.054 Z\" stroke-linejoin=\"miter\" stroke-linecap=\"round\" stroke=\"none\"
+    stroke-width=\"0.5\" fill=\"#ff0084\" marker-start=\"none\" marker-end=\"none\"
+    stroke-miterlimit=\"79.8403193612775\"/>\r\n   </g>\r\n  </g>\r\n </g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 

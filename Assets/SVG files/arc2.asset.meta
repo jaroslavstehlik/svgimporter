@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 7b36303164651bd4a8b2353d398c98e0
+timeCreated: 1489448338
+licenseType: Pro
+NativeFormatImporter:
+  userData: "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD
+    SVG 1.1//EN\" \n  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg
+    width=\"1000\" height=\"1000\" viewBox=\"0 0 1000 1000\"\n     xmlns=\"http://www.w3.org/2000/svg\"
+    version=\"1.1\">\n  <title>Example arcs01 - arc commands in path data</title>\n
+    \ <desc>Picture of a pie chart with two pie wedges and\n        a picture of a
+    line with arc blips</desc>\n    <path d=\"M600,300 L800,400 h-500 v-300 z\"/>\n</svg>"
+  assetBundleName: 
+  assetBundleVariant: 

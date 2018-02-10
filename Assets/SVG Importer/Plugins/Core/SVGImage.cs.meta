@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 17e34ae2138a4405182984330823b51b
+labels:
+- Image
+- Ui
+- Mask
+- Rendering
+- Canvas
+- Graphic
+timeCreated: 1433197512
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 2e806b41565ae4eb1bcdd2b42212a623, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

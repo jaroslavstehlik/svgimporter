@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 61cb3e21297634232ac720eddda87319
+timeCreated: 1468264961
+licenseType: Pro
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!-- Generator: Adobe Illustrator
+    15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg
+    PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
+    version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    x=\"0px\" y=\"0px\"\r\n\t width=\"1024px\" height=\"768px\" viewBox=\"0 0 1024
+    768\" enable-background=\"new 0 0 1024 768\" xml:space=\"preserve\">\r\n<g>\r\n\t<path
+    fill=\"#675A53\" d=\"M498.069,158.5c0-6.6,5.4-12,12-12h7.667c6.6,0,12,5.4,12,12v451c0,6.6-5.4,12-12,12h-7.667\r\n\t\tc-6.6,0-12-5.4-12-12V158.5z\"/>\r\n\t<circle
+    fill=\"#675A53\" cx=\"514.322\" cy=\"294.194\" r=\"129.177\"/>\r\n\t<circle fill=\"#F0DEBE\"
+    cx=\"514.322\" cy=\"294.193\" r=\"100.129\"/>\r\n\t<polygon fill=\"#45B86F\" points=\"468.903,275.613
+    451.871,290.064 507.613,351.483 579.354,263.742 562.839,246.193 507.613,310.71
+    \r\n\t\t\t\"/>\r\n</g>\r\n</svg>\r\n"
+  assetBundleName: 
+  assetBundleVariant: 
