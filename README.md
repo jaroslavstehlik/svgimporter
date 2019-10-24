@@ -1,5 +1,9 @@
 Unity Plugin for importing SVG files and creating a GPU friendly mesh representation of them.
 
+feature video
+
+[<img src="https://img.youtube.com/vi/XDEVNreEWYU/maxresdefault.jpg" width="50%">](https://www.youtube.com/watch?v=XDEVNreEWYU)
+
 # Compatible with
 • Adobe Illustrator
 
