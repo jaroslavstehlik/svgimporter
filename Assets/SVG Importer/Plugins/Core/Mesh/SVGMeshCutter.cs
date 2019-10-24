@@ -1,6 +1,7 @@
-﻿// Copyright (C) 2015 Jaroslav Stehlik - All Rights Reserved
-// This code can only be used under the standard Unity Asset Store End User License Agreement
-// A Copy of the EULA APPENDIX 1 is available at http://unity3d.com/company/legal/as_terms
+﻿// Copyright (C) 2019 Jaroslav Stehlik
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using UnityEngine;
 using System.Collections;
@@ -11,141 +12,7 @@ namespace SVGImporter.Geometry
     using Utils;
 
     public class SVGMeshCutter {
-
-        /*
-        public static void MeshSplit(SVGMesh mesh, Vector2 origin, Vector2 direction)
-        {
-            Mesh inputMesh = new Mesh();
-            inputMesh.vertices = mesh.vertices;
-            inputMesh.triangles = mesh.triangles;
-            inputMesh.colors32 = mesh.colors;
-            inputMesh.uv = (Vector2[])mesh.uvs;
-            inputMesh.uv2 = (Vector2[])mesh.uvs2;
-
-            MeshSplit(inputMesh, origin, direction);
-            SVGMeshUtils.AutoWeldVertices(inputMesh, 0f);
-
-            mesh.vertices = inputMesh.vertices;
-            mesh.triangles = inputMesh.triangles;
-            mesh.colors = inputMesh.colors32;
-            mesh.uvs = inputMesh.uv;
-            mesh.uvs2 = inputMesh.uv2;
-        }
-
-        // Cut a mesh by the line origin->d and split it into two objects if necessary
-        public static void MeshSplit(Mesh mesh, Vector2 origin, Vector2 direction)
-        {
-            Vector3[] vertices = mesh.vertices;
-            MeshBuilder leftSide = new MeshBuilder(mesh, vertices);
-            MeshBuilder rightSide = new MeshBuilder(mesh, vertices);
-            
-            // which side my vertices at?
-            bool[] side = new bool[vertices.Length];
-            bool allOnTheLeft = true, allOnTheRight = true;
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                side [i] = direction.x * (vertices [i].y - origin.y) > direction.y * (vertices [i].x - origin.x);
-                if (side [i])
-                    allOnTheRight = false;
-                else
-                    allOnTheLeft = false;
-            }
-
-            if (allOnTheLeft || allOnTheRight)
-                return;
-            
-            // build the mesh by adding triangles (possibly cut)
-            for (int i = 0; i < mesh.triangles.Length; i += 3)
-            {
-                int i1 = mesh.triangles [i], i2 = mesh.triangles [i + 1], i3 = mesh.triangles [i + 2];
-                
-                switch ((side [i1] ? 1 : 0) | (side [i2] ? 2 : 0) | (side [i3] ? 4 : 0))
-                {
-                    case 0 | 0 | 0:
-                        leftSide.AddTri(i1, i2, i3);
-                        break;
-                    case 0 | 0 | 1:
-                        MeshBuilder.AddCutTri(rightSide, leftSide, i1, i2, i3, origin, direction);
-                        break;
-                    case 0 | 2 | 0:
-                        MeshBuilder.AddCutTri(rightSide, leftSide, i2, i3, i1, origin, direction);
-                        break;
-                    case 4 | 0 | 0:
-                        MeshBuilder.AddCutTri(rightSide, leftSide, i3, i1, i2, origin, direction);
-                        break;
-                    case 4 | 2 | 0:
-                        MeshBuilder.AddCutTri(leftSide, rightSide, i1, i2, i3, origin, direction);
-                        break;
-                    case 4 | 0 | 1:
-                        MeshBuilder.AddCutTri(leftSide, rightSide, i2, i3, i1, origin, direction);
-                        break;
-                    case 0 | 2 | 1:
-                        MeshBuilder.AddCutTri(leftSide, rightSide, i3, i1, i2, origin, direction);
-                        break;
-                    case 4 | 2 | 1:
-                        rightSide.AddTri(i1, i2, i3);
-                        break;
-                }
-            }
-            
-            // degenerate?
-            if (leftSide.IsDegenerate(origin, direction))
-                return;
-            if (rightSide.IsDegenerate(origin, direction))
-                return;
-
-            mesh.Clear();
-
-            int finLength = leftSide.pos.Count + rightSide.pos.Count;
-            int finTrianglesLength = leftSide.tri.Count + rightSide.tri.Count;
-            int leftSideLength = leftSide.pos.Count;
-            int rightSideLength = rightSide.pos.Count;
-            int leftSideTrianglesLength = leftSide.tri.Count;
-            int rightSideTrianglesLength = rightSide.tri.Count;
-
-            Vector3[] finVertices = new Vector3[finLength];
-            Color32[] finColors = new Color32[finLength];
-            Vector2[] finUv = new Vector2[finLength];
-            Vector2[] finUv2 = new Vector2[finLength];
-            int[] finTriangles = new int[finTrianglesLength];
-
-            for(int i = 0; i < leftSideLength; i++)
-            {
-                finVertices[i] = leftSide.pos[i];
-                finColors[i] = leftSide.col[i];
-                finUv[i] = leftSide.uv[i];
-                finUv2[i] = leftSide.uv2[i];
-            }
-
-            int offsetIndex;
-            for(int i = 0; i < rightSideLength; i++)
-            {
-                offsetIndex = leftSideLength + i;
-                finVertices[offsetIndex] = rightSide.pos[i];
-                finColors[offsetIndex] = rightSide.col[i];
-                finUv[offsetIndex] = rightSide.uv[i];
-                finUv2[offsetIndex] = rightSide.uv2[i];
-            }
-
-            for(int i = 0; i < leftSideTrianglesLength; i++)
-            {
-                finTriangles[i] = leftSide.tri[i];
-            }
-
-            for(int i = 0; i < rightSideTrianglesLength; i++)
-            {
-                finTriangles[leftSideTrianglesLength + i] = leftSideLength + rightSide.tri[i];
-            }
-
-            mesh.vertices = finVertices;
-            mesh.colors32 = finColors;
-            mesh.uv = finUv;
-            mesh.uv2 = finUv2;
-            mesh.triangles = finTriangles;
-            mesh.RecalculateBounds();
-        }
-        */
-
+       
         struct MeshBuilder
         {
             public List<Vector3> pos;
