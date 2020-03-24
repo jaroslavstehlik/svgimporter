@@ -47,7 +47,7 @@ namespace SVGImporter.Rendering
         public const string DEFAULT_GRADIENT_HASH = "GC999FFFFFFC000FFFFFFA999999A000999";
     	public CCGradientColorKey[] colorKeys;
     	public CCGradientAlphaKey[] alphaKeys;
-    	
+
     	public string hash {
     		get {
                 string hash = "G";

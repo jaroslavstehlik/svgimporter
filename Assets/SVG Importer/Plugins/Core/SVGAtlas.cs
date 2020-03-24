@@ -13,6 +13,7 @@ namespace SVGImporter
     {
         public CCGradient[] gradients;
         public Dictionary<string, CCGradient> gradientCache;
+        private static readonly CCGradient DefaultGradient = GetDefaultGradient();
 
         public void Init(int length)
             {
@@ -57,6 +58,38 @@ namespace SVGImporter
                 new CCGradientAlphaKey(1f, 0f), new CCGradientAlphaKey(1f, 1f)
             };            
             return new CCGradient(colorKeys, alphaKeys);
+        }
+
+        public bool isDefaultGradient(CCGradient gradient)
+        {
+            if (gradient == null)
+            {
+                return false;
+            }
+            if (gradient.colorKeys == null || gradient.colorKeys.Length != DefaultGradient.colorKeys.Length ||
+                gradient.alphaKeys == null || gradient.alphaKeys.Length != DefaultGradient.alphaKeys.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < gradient.colorKeys.Length; i++)
+            {
+                if (gradient.colorKeys[i].color != DefaultGradient.colorKeys[i].color ||
+                    gradient.colorKeys[i].time != DefaultGradient.colorKeys[i].time)
+                {
+                    return false;
+
+                }
+            }
+            for (int i = 0; i < gradient.alphaKeys.Length; i++)
+            {
+                if (gradient.alphaKeys[i].color != DefaultGradient.alphaKeys[i].color ||
+                    gradient.alphaKeys[i].time != DefaultGradient.alphaKeys[i].time)
+                {
+                    return false;
+
+                }
+            }
+            return true;
         }
 
         public CCGradient AddGradient(CCGradient gradient)
