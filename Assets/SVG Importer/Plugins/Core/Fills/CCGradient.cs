@@ -314,6 +314,45 @@ namespace SVGImporter.Rendering
             return output;
         }
 
+        private static bool CompareRGBA(Color32 a, Color32 b)
+        {
+	        return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+        }
+
+        public bool GradientEquals(CCGradient gradient)
+        {
+	        if (gradient == null)
+	        {
+		        return false;
+	        }
+
+	        if (gradient.colorKeys == null || gradient.colorKeys.Length != colorKeys.Length ||
+	            gradient.alphaKeys == null || gradient.alphaKeys.Length != alphaKeys.Length)
+	        {
+		        return false;
+	        }
+
+	        for (int i = 0; i < gradient.colorKeys.Length; i++)
+	        {
+		        if (!CompareRGBA(gradient.colorKeys[i].color, colorKeys[i].color) ||
+		            gradient.colorKeys[i].time != this.colorKeys[i].time)
+		        {
+			        return false;
+		        }
+	        }
+
+	        for (int i = 0; i < gradient.alphaKeys.Length; i++)
+	        {
+		        if (gradient.alphaKeys[i].alpha != alphaKeys[i].alpha ||
+		            gradient.alphaKeys[i].time != alphaKeys[i].time)
+		        {
+			        return false;
+		        }
+	        }
+
+	        return true;
+        }
+
         // Note that Color32 and Color implictly convert to each other. You may pass a Color object to this method without first casting it.
         public static string ColorToHex (Color32 color)
         {
