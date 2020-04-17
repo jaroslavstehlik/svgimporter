@@ -1080,7 +1080,7 @@ namespace SVGImporter
                 if(_sharedGradients == null || _sharedGradients.Length == 0) return false;
                 if(_sharedGradients.Length == 1)
                 {
-                    if(_sharedGradients[0].hash == CCGradient.DEFAULT_GRADIENT_HASH) return false;
+                    if(SVGAtlasData.IsDefaultGradient(_sharedGradients[0])) return false;
                 }
                 return true;
             }

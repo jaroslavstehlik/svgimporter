@@ -13,6 +13,7 @@ namespace SVGImporter
     {
         public CCGradient[] gradients;
         public Dictionary<string, CCGradient> gradientCache;
+        private static readonly CCGradient DefaultGradient = GetDefaultGradient();
 
         public void Init(int length)
             {
@@ -57,6 +58,11 @@ namespace SVGImporter
                 new CCGradientAlphaKey(1f, 0f), new CCGradientAlphaKey(1f, 1f)
             };            
             return new CCGradient(colorKeys, alphaKeys);
+        }
+
+        public static bool IsDefaultGradient(CCGradient gradient)
+        {
+            return DefaultGradient.GradientEquals(gradient);
         }
 
         public CCGradient AddGradient(CCGradient gradient)
