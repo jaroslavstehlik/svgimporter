@@ -25,7 +25,7 @@ struct vertex_input_normal
 
 struct vertex_output
 {
-    float4 vertex : POSITION;			    
+    float4 vertex : SV_POSITION;			    
     float4 uv0 : TEXCOORD0;
     float4 uv1 : TEXCOORD1;
     half4 color : COLOR;
@@ -73,14 +73,14 @@ vertex_output vertexGradientsAntialiased(vertex_input_normal v)
     return o;
 }
 
-float4 fragmentGradientsOpaque(vertex_output i) : COLOR
+float4 fragmentGradientsOpaque(vertex_output i) : SV_Target
 {
 	float gradient = dot(tex2D(_GradientShape, i.uv0), i.uv1) ;
 	float2 gradientColorUV = float2(i.uv0.z + gradient, i.uv0.w);
 	return float4(tex2D(_GradientColor, gradientColorUV).rgb * i.color.rgb, 1.0);
 }
 
-float4 fragmentGradientsAlphaBlended(vertex_output i) : COLOR
+float4 fragmentGradientsAlphaBlended(vertex_output i) : SV_Target
 {	
 	float gradient = dot(tex2D(_GradientShape, i.uv0), i.uv1) ;
 	float2 gradientColorUV = float2(i.uv0.z + gradient, i.uv0.w);

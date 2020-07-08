@@ -52,7 +52,7 @@ Shader "SVG Importer/SolidColor/SolidColorTexOverlayAlphaBlendedAntialiased" {
 			    return o;
 			}
 			
-			half4 fragmentColor(vertex_output i) : COLOR
+			half4 fragmentColor(vertex_output i) : SV_Target
 			{
 				return i.color * tex2D(_MainTex, i.uv);
 			}

@@ -37,7 +37,7 @@ vertex_output vertexColorAntialiased(vertex_input_normal v)
 	return o;
 }
 
-half4 fragmentColor(vertex_output i) : COLOR
+half4 fragmentColor(vertex_output i) : SV_Target
 {
 	return i.color;
 }
