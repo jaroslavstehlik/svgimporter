@@ -145,7 +145,7 @@ namespace SVGImporter
 		static void OnLastRectClick(Action action)
 		{
 			Rect lastRect = GUILayoutUtility.GetLastRect();
-			if(Event.current.type == EventType.mouseDown && lastRect.Contains(Event.current.mousePosition))
+			if(Event.current.type == EventType.MouseDown && lastRect.Contains(Event.current.mousePosition))
 			{
 				if(action == null)
 					return;

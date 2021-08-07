@@ -329,12 +329,12 @@ namespace SVGImporter
 					{
 						switch (current.type)
 						{						
-						case EventType.mouseDown:
+						case EventType.MouseDown:
                                 int controlID = GUIUtility.GetControlID(controlIDHash, FocusType.Passive);
                                 GUIUtility.hotControl = controlID;
                                 clickGUIPosition = current.mousePosition;
 							break;
-						case EventType.mouseUp:
+						case EventType.MouseUp:
 							if((current.mousePosition - clickGUIPosition).sqrMagnitude < 0.1f)
 							{
 								layerIndex = GetHighestLayerAtPoint(svgAsset.layers, localMousePosition);
@@ -369,7 +369,7 @@ namespace SVGImporter
 
 				if (GUI.changed) EditorUtility.SetDirty(target);
 
-				if(current.type == EventType.repaint)
+				if(current.type == EventType.Repaint)
 				{
 					Color handlesColor = Handles.color;
 					Handles.color = new Color(1f, 1f, 1f, 0.5f);
