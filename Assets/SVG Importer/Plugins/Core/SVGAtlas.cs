@@ -3,6 +3,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 namespace SVGImporter
 {
@@ -382,7 +383,9 @@ namespace SVGImporter
             _beingDestroyed = false;
             AddFakeCamera();
 
-            Camera.onPreRender += OnAtlasPreRender;
+
+            RenderPipelineManager.beginCameraRendering += OnAtlasPreRender;
+
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.update += EditorUpdate;
 #endif
@@ -402,7 +405,8 @@ namespace SVGImporter
         protected void OnDestroy()
         {
             _beingDestroyed = true;
-            Camera.onPreRender -= OnAtlasPreRender;
+             RenderPipelineManager.beginCameraRendering -= OnAtlasPreRender;
+
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.update -= EditorUpdate;
 #endif
@@ -419,6 +423,12 @@ namespace SVGImporter
                 camera.useOcclusionCulling = false;
         }
         
+
+        public void OnAtlasPreRender(ScriptableRenderContext context, Camera camera = null)
+        {
+            OnAtlasPreRender(camera);
+        }
+
         public void OnAtlasPreRender(Camera camera = null)
         {
             SVGImporterSettings.UpdateAntialiasing();

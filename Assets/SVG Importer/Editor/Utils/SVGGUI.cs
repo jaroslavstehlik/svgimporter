@@ -101,7 +101,7 @@ namespace SVGImporter.Utils
 			if(rect.Contains(Event.current.mousePosition))
 			{
 				hilightedLayer = Mathf.Clamp(Mathf.FloorToInt((Event.current.mousePosition.y - rect.y) / itemHeight), 0, layers.Length);
-				if(Event.current.type == EventType.scrollWheel)
+				if(Event.current.type == EventType.ScrollWheel)
 				{
 					scrollIndex = Mathf.Clamp(scrollIndex + (int)Mathf.Sign(Event.current.delta.y), 0, layers.Length);
 					Event.current.Use();
