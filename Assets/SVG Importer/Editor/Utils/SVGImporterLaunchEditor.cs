@@ -1,11 +1,9 @@
-// Copyright (C) 2015 Jaroslav Stehlik - All Rights Reserved
-// This code can only be used under the standard Unity Asset Store End User License Agreement
-// A Copy of the EULA APPENDIX 1 is available at http://unity3d.com/company/legal/as_terms
+// Copyright (C) 2015 Jaroslav Stehlik
+// Released under the license found in the LICENSE file.
 
 using UnityEngine;
 using UnityEditor;
 
-using System.Net;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -17,7 +15,6 @@ namespace SVGImporter
 	internal class DelayedCall
     {
         public System.Action callback;
-        public System.Action<UnityEngine.WWW> wwwCallback;
         public DelayedCall(System.Action callback = null)
         {
             this.callback = callback;
@@ -30,38 +27,10 @@ namespace SVGImporter
                 this.callback();
         }
 
-		public IEnumerator WWW(string request)
-		{
-            UnityEngine.WWW www = new UnityEngine.WWW(request);
-            yield return www;
-            if(this.callback != null)
-            {
-                this.callback();
-            }
-            if(this.wwwCallback != null)
-            {
-                this.wwwCallback(www);
-            }
-		}
     }
 
     [InitializeOnLoad]
     public class SVGImporterLaunchEditor {
-
-		public static void OpenAboutWindow()
-		{
-			//Analytics.TrackEvent("Open About Window", "app/about");
-		}
-
-		public static void OpenSettingsWindow()
-		{
-			//Analytics.TrackEvent("Open Settings Window", "app/settings");
-		}
-		
-		public static void OpenReportBugWindow()
-		{
-			//Analytics.TrackEvent("Open Report Bug", "app/ReportBug");
-		}
 
         static DelayedCall initCall;
 
@@ -90,7 +59,6 @@ namespace SVGImporter
             SVGPostprocessor.Init();
             UpdateDelegates();
 
-			//Analytics.TrackEvent("Start App, Version: "+SVGImporterSettings.version, "app/start");
             EditorCoroutine.StartCoroutine(initCall.Delay(0.5f), initCall);
         }
 
@@ -438,59 +406,4 @@ namespace SVGImporter
             }
         }
     }
-	
-	internal class Analytics
-	{
-        internal const string LAST_IP_ADDRESS_KEY = "SVG_Importer_Last_IPAddress";
-        internal static string ipAdress;
-        const string ClickySiteID = "100849007";
-        const string ClickySiteAdminKey = "5d1829818bd7c05ca2c5b5188697948c";
-        
-        static DelayedCall wwwCall;
-        static DelayedCall wwwIPCall;
-        
-        internal static void TrackEvent(string title, string eventValue)
-        {
-            GetLocalIPAddressString();
-            if(ipAdress != null)
-            {
-                string request = "http://in.getclicky.com/in.php?" +
-                    "site_id=" + ClickySiteID +  //click site id , found in preferences
-                        "&sitekey_admin=" + ClickySiteAdminKey + //clicky site admin key, found in preferences
-                        "&ip_address=" + ipAdress + //ip address of the user - used for mapping action trails
-                        "&type=custom" +
-                        "&href=" + "/"+eventValue.Replace(" ", "_") + //string that contains whatever event you want to track/log
-                        "&title="+UnityEngine.WWW.EscapeURL(title)+
-                        "&type=click";
-                
-                wwwCall = new DelayedCall();
-                EditorCoroutine.StartCoroutine(wwwCall.WWW(request), wwwCall);
-            }
-        }
-        
-        internal static string GetLocalIPAddressString()
-        {
-            if(ipAdress == null)
-            {
-                wwwIPCall = new DelayedCall();
-                wwwIPCall.wwwCallback = delegate(WWW obj) 
-                {
-                    if(!string.IsNullOrEmpty(obj.text))
-                    {
-                        EditorPrefs.SetString(LAST_IP_ADDRESS_KEY, ipAdress);
-                        ipAdress = obj.text;
-                    }
-                };
-                EditorCoroutine.StartCoroutine(wwwIPCall.WWW("https://api.ipify.org"), wwwIPCall);
-                
-                if(EditorPrefs.HasKey(LAST_IP_ADDRESS_KEY))
-                {
-                    return EditorPrefs.GetString(LAST_IP_ADDRESS_KEY);
-                }
-            }       
-            
-            return ipAdress;
-        }
-	}
 }
-

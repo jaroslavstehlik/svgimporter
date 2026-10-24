@@ -1,6 +1,5 @@
-// Copyright (C) 2015 Jaroslav Stehlik - All Rights Reserved
-// This code can only be used under the standard Unity Asset Store End User License Agreement
-// A Copy of the EULA APPENDIX 1 is available at http://unity3d.com/company/legal/as_terms
+// Copyright (C) 2015 Jaroslav Stehlik
+// Released under the license found in the LICENSE file.
 
 using UnityEngine;
 using UnityEditor;
@@ -602,14 +601,10 @@ namespace SVGImporter
             GUILayout.FlexibleSpace();
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(new GUIContent("Report Import!")))
+            if (GUILayout.Button(new GUIContent("Report Import Issue", "Opens a new GitHub issue. Please attach the SVG file.")))
             {
-                SVGReportBugWindow.titleField = "Wrong SVG file import!";
-                SVGReportBugWindow.descriptionField = "My file was incorrectly imported. I believe that the file is not corrupted.";
-                SVGReportBugWindow.problemOccurrence = SVGReportBugWindow.PROBLEM_OCCURRENCE.Always;
-                SVGReportBugWindow.problemType = SVGReportBugWindow.PROBLEM_TYPE.FileImport;
-                SVGReportBugWindow.AddSVGAttachment(asset.name, asset.svgFile);
-                SVGReportBugWindow.ShowReportBugWindow();
+                Application.OpenURL("https://github.com/jaroslavstehlik/svgimporter/issues/new?title=" +
+                    System.Uri.EscapeDataString("Wrong SVG file import: " + asset.name));
             }
             GUILayout.EndHorizontal();
         }

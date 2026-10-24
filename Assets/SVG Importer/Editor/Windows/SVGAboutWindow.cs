@@ -1,6 +1,5 @@
-// Copyright (C) 2015 Jaroslav Stehlik - All Rights Reserved
-// This code can only be used under the standard Unity Asset Store End User License Agreement
-// A Copy of the EULA APPENDIX 1 is available at http://unity3d.com/company/legal/as_terms
+// Copyright (C) 2015 Jaroslav Stehlik
+// Released under the license found in the LICENSE file.
 
 using System;
 using UnityEditor;
@@ -76,7 +75,6 @@ namespace SVGImporter
 		[MenuItem("Window/SVG Importer/Help/Documentation")]
 		private static void ShowDocumentation()
 		{
-			Analytics.TrackEvent("Show Documentation", "app/help/documentation");
 			string[] guids = AssetDatabase.FindAssets("SVG Importer - documentation");
 			if(guids != null && guids.Length > 0)
 			{
@@ -87,28 +85,24 @@ namespace SVGImporter
 		[MenuItem("Window/SVG Importer/Help/Website")]
 		private static void ShowWebsite()
 		{
-			Analytics.TrackEvent("Click URL Website", "app/help/website");
-			Application.OpenURL("http://svgimporter.com/");
+			Application.OpenURL("https://svgimporter.com/");
 		}
 
 		[MenuItem("Window/SVG Importer/Help/Youtube")]
 		private static void ShowYoutube()
 		{
-			Analytics.TrackEvent("Click URL Youtube", "app/help/youtube");
-			Application.OpenURL("https://www.youtube.com/channel/UCfS37PIF9fhUC-saiBHZE-g");
+			Application.OpenURL("https://www.youtube.com/@Svgimporter");
 		}
 
 		[MenuItem("Window/SVG Importer/Help/Facebook")]
 		private static void ShowFacebook()
 		{
-			Analytics.TrackEvent("Click URL Facebook", "app/help/facebook");
 			Application.OpenURL("https://www.facebook.com/svgimporter");
 		}
 
 		[MenuItem("Window/SVG Importer/Help/Twitter")]
 		private static void ShowTwitter()
 		{
-			Analytics.TrackEvent("Click URL Twitter", "app/help/twitter");
 			Application.OpenURL("https://twitter.com/svgimporter");
 		}
         
@@ -132,7 +126,6 @@ namespace SVGImporter
 		public void OnEnable()
 		{
 			AboutWindow.LoadLogos();
-			SVGImporterLaunchEditor.OpenAboutWindow();
 			//EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.UpdateScroll));
 			//this.m_LastScrollUpdate = EditorApplication.timeSinceStartup;
 		}
