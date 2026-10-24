@@ -362,10 +362,10 @@ The existing samples are kept as the Showcase until the focused ones exist.
 | 3. Parity and beyond | Clip paths, dashes, text, masks-as-clips, diagnostics in the Inspector | Native support percentage ≥ legacy on every category; native becomes the default |
 | 4. Release 3.0 | Signing, CI release pipeline, legacy C# engine removed | Clean install from git on Windows, Linux and macOS Editors; runtime import works in iOS and Android builds |
 | A. Antialiasing | New fringe and shaders (7.2), with lyon-generated fringes from the native core; *Hardware* (MSAA) option | Antialiasing tests pass in Built-in, URP and UI, on desktop and devices |
-| I. Unity integration | Sprite import target; UI Toolkit element (16.1) | SVGs work with SpriteRenderer and Sprite Atlas, and render in UI Toolkit |
-| L. 2D lighting | *SVG Lit (2D)* shaders (16.2) | 2D lights and normal maps affect SVG shapes in the URP 2D Renderer |
-| O. Group opacity | Overlap test and group flattening (16.3) | Group opacity matches a browser rendering, including overlapping children |
-| R. Raster fallback | resvg rasterization of unsupported groups (16.4) | Files with filters, masks and images import with those parts rasterized and reported |
+| I. Unity integration | Sprite import target; UI Toolkit element (section 16, item 1) | SVGs work with SpriteRenderer and Sprite Atlas, and render in UI Toolkit |
+| L. 2D lighting | *SVG Lit (2D)* shaders (section 16, item 2) | 2D lights and normal maps affect SVG shapes in the URP 2D Renderer |
+| O. Group opacity | Overlap test and group flattening (section 16, item 3) | Group opacity matches a browser rendering, including overlapping children |
+| R. Raster fallback | resvg rasterization of unsupported groups (section 16, item 4) | Files with filters, masks and images import with those parts rasterized and reported |
 | G. Gradients | New gradient rendering (7.1) | Gradient tests pass on desktop, with emulated mobile precision, and on Android and iOS devices |
 | 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in |
 | 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site |
