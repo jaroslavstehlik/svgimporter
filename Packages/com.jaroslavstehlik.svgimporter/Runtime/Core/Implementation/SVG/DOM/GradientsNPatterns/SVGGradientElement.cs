@@ -62,7 +62,7 @@ namespace SVGImporter.Rendering
             _stopList = new List<SVGStopElement>();
             _id = _attrList.GetValue("id");
             _gradientUnits = SVGGradientUnit.ObjectBoundingBox;
-            if (_attrList.GetValue("gradiantUnits") == "userSpaceOnUse")
+            if (_attrList.GetValue("gradientUnits").Trim() == "userSpaceOnUse")
             {
                 _gradientUnits = SVGGradientUnit.UserSpaceOnUse;
             }

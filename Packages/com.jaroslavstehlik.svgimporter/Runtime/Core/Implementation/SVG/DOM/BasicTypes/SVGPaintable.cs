@@ -449,10 +449,10 @@ namespace SVGImporter.Rendering
                         string clipPathUnitsString = clipPathNode.attributes.GetValue("clipPathUnits");
                         switch(clipPathUnitsString.ToLower())
                         {
-                            case "userSpaceOnUse":
+                            case "userspaceonuse":
                                 _clipPathUnits = SVGClipPathUnits.UserSpaceOnUse;
                                 break;
-                            case "objectBoundingBox":
+                            case "objectboundingbox":
                                 _clipPathUnits = SVGClipPathUnits.ObjectBoundingBox;
                                 break;
                         }
@@ -917,28 +917,28 @@ namespace SVGImporter.Rendering
             }
         }
 
-        public SVGLinearGradientBrush GetLinearGradientBrush(Rect bounds, SVGMatrix matrix, Rect viewport)
+        public SVGLinearGradientBrush GetLinearGradientBrush(Rect bounds, Rect localBounds, SVGMatrix matrix, Rect viewport)
         {
             if(!_linearGradList.ContainsKey(this._gradientID))
                 return null;
 
-            return new SVGLinearGradientBrush(_linearGradList[this._gradientID], bounds, matrix, viewport);
+            return new SVGLinearGradientBrush(_linearGradList[this._gradientID], bounds, localBounds, matrix, viewport);
         }
 
-        public SVGRadialGradientBrush GetRadialGradientBrush(Rect bounds, SVGMatrix matrix, Rect viewport)
+        public SVGRadialGradientBrush GetRadialGradientBrush(Rect bounds, Rect localBounds, SVGMatrix matrix, Rect viewport)
         {
             if(!_radialGradList.ContainsKey(this._gradientID))
                 return null;
             
-            return new SVGRadialGradientBrush(_radialGradList[this._gradientID], bounds, matrix, viewport);
+            return new SVGRadialGradientBrush(_radialGradList[this._gradientID], bounds, localBounds, matrix, viewport);
         }
 
-        public SVGConicalGradientBrush GetConicalGradientBrush(Rect bounds, SVGMatrix matrix, Rect viewport)
+        public SVGConicalGradientBrush GetConicalGradientBrush(Rect bounds, Rect localBounds, SVGMatrix matrix, Rect viewport)
         {
             if(!_conicalGradList.ContainsKey(this._gradientID))
                 return null;
             
-            return new SVGConicalGradientBrush(_conicalGradList[this._gradientID], bounds, matrix, viewport);
+            return new SVGConicalGradientBrush(_conicalGradList[this._gradientID], bounds, localBounds, matrix, viewport);
         }
     }
 }

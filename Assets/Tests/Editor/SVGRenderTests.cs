@@ -48,6 +48,28 @@ public static class SVGRenderTests
         "<path d=\"M190 20 L210 75 L268 75 L221 110 L239 165 L190 131 L141 165 L159 110 L112 75 L170 75 Z\" fill=\"#27ccc0\"/>" +
         "<rect x=\"20\" y=\"170\" width=\"260\" height=\"20\" fill=\"#ffffff\" fill-opacity=\"0.5\"/></svg>";
 
+    // Gradient coordinates in the different unit systems. Each one must render red on the left
+    // and blue on the right of the rectangle, wherever the rectangle sits on the canvas.
+    const string GradientBoundingBoxSvg =
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"200\">" +
+        "<defs><linearGradient id=\"g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\">" +
+        "<stop offset=\"0\" stop-color=\"#ff0000\"/><stop offset=\"1\" stop-color=\"#0000ff\"/>" +
+        "</linearGradient></defs><rect x=\"150\" y=\"0\" width=\"200\" height=\"200\" fill=\"url(#g)\"/></svg>";
+
+    const string GradientUserSpaceSvg =
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"200\">" +
+        "<defs><linearGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" x1=\"150\" y1=\"0\" x2=\"350\" y2=\"0\">" +
+        "<stop offset=\"0\" stop-color=\"#ff0000\"/><stop offset=\"1\" stop-color=\"#0000ff\"/>" +
+        "</linearGradient></defs><rect x=\"150\" y=\"0\" width=\"200\" height=\"200\" fill=\"url(#g)\"/></svg>";
+
+    // A radial gradient with the default r="50%" on a circle away from the canvas origin:
+    // yellow in the center, pink at the edge.
+    const string RadialOffsetSvg =
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"200\">" +
+        "<defs><radialGradient id=\"r\"><stop offset=\"0\" stop-color=\"#ffff00\"/>" +
+        "<stop offset=\"1\" stop-color=\"#ff00ff\"/></radialGradient></defs>" +
+        "<circle cx=\"300\" cy=\"100\" r=\"80\" fill=\"url(#r)\"/></svg>";
+
     struct Variant
     {
         public string name, svg;
@@ -68,6 +90,9 @@ public static class SVGRenderTests
         new Variant("gray_lit", GraySvg, SVGAssetFormat.Opaque, normals: true),
         new Variant("gradient_transparent", GradientSvg, SVGAssetFormat.Transparent),
         new Variant("shapes_transparent", ShapesSvg, SVGAssetFormat.Transparent, antialiasing: true),
+        new Variant("gradient_bounding_box", GradientBoundingBoxSvg, SVGAssetFormat.Transparent),
+        new Variant("gradient_user_space", GradientUserSpaceSvg, SVGAssetFormat.Transparent),
+        new Variant("radial_offset", RadialOffsetSvg, SVGAssetFormat.Transparent),
         new Variant("gray_ui", GraySvg, SVGAssetFormat.uGUI),
         new Variant("gradient_ui", GradientSvg, SVGAssetFormat.uGUI),
     };
@@ -165,6 +190,9 @@ public static class SVGRenderTests
             { "gray_lit", CreateRenderer(assets["gray_lit"], new Vector3(3f, 2.5f), litMaterial) },
             { "gradient_transparent", CreateRenderer(assets["gradient_transparent"], new Vector3(6f, 2.5f)) },
             { "shapes_transparent", CreateRenderer(assets["shapes_transparent"], new Vector3(-5f, -2.5f)) },
+            { "gradient_bounding_box", CreateRenderer(assets["gradient_bounding_box"], new Vector3(-6f, 0f)) },
+            { "gradient_user_space", CreateRenderer(assets["gradient_user_space"], new Vector3(-3f, 0f)) },
+            { "radial_offset", CreateRenderer(assets["radial_offset"], new Vector3(0f, 0f)) },
         };
 
         var canvas = new GameObject("Canvas").AddComponent<Canvas>();
@@ -222,6 +250,22 @@ public static class SVGRenderTests
             Sample(pixels, camera, gradientBounds.center - new Vector3(gradientBounds.extents.x * 0.8f, 0f)),
             Sample(pixels, camera, gradientBounds.center),
             Sample(pixels, camera, gradientBounds.center + new Vector3(gradientBounds.extents.x * 0.8f, 0f)));
+
+        foreach (string name in new[] { "gradient_bounding_box", "gradient_user_space" })
+        {
+            Bounds b = renderers[name].GetComponent<Renderer>().bounds;
+            CheckGradient(Check, name,
+                Sample(pixels, camera, b.center - new Vector3(b.extents.x * 0.8f, 0f)),
+                Sample(pixels, camera, b.center),
+                Sample(pixels, camera, b.center + new Vector3(b.extents.x * 0.8f, 0f)));
+        }
+
+        Bounds radial = renderers["radial_offset"].GetComponent<Renderer>().bounds;
+        Color32 radialCenter = Sample(pixels, camera, radial.center);
+        Color32 radialEdge = Sample(pixels, camera, radial.center + new Vector3(radial.extents.x * 0.95f, 0f));
+        Check("radial_offset", radialCenter.r > 230 && radialCenter.g > 200 && radialCenter.b < 60
+            && radialEdge.r > 230 && radialEdge.g < 60 && radialEdge.b > 180,
+            "expected yellow center and magenta edge, got " + radialCenter + " / " + radialEdge);
 
         Color32 grayUi = SampleUI(pixels, camera, images["gray_ui"], 0f);
         Check("gray_ui", Near(grayUi, Gray), "expected " + Gray + ", got " + grayUi);

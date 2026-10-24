@@ -18,6 +18,11 @@ To pin a specific version, append a tag, for example `#v2.0.0`.
 
 Example scenes can be imported from the **Samples** tab of the package in the Package Manager.
 
+## Known limitations
+
+- Masks, text (convert it to curves), filter effects, SVG animation and embedded images are not supported.
+- `clipPathUnits="objectBoundingBox"` is not supported; clip paths are always in user space.
+
 ## Documentation
 
 See [svgimporter.com](https://svgimporter.com/) and the [YouTube channel](https://www.youtube.com/@Svgimporter).

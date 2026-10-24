@@ -16,6 +16,10 @@
 - The plugin no longer creates an `Assets/Gizmos` folder in your project.
 - Only SVG files inside the `Assets` folder are converted. Previously the importer also tried to convert, and delete, SVG files that other packages ship.
 - Samples are re-saved in the Unity 6 format, without the removed GUILayer component.
+- Fixed gradients that use bounding box units, the SVG default: coordinates such as `x2="1"` now span the shape instead of one pixel, and `gradientTransform` applies inside the bounding box.
+- Fixed `gradientUnits="userSpaceOnUse"` never being recognised (the attribute name was misspelled).
+- Fixed the radius of radial gradients with a percentage radius on shapes away from the canvas origin.
+- Reimport existing SVG assets to apply these gradient fixes.
 
 ## Legacy releases
 

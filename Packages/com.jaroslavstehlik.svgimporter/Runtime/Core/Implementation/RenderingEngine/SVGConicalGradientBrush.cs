@@ -44,13 +44,13 @@ namespace SVGImporter.Rendering
             CreateFill();
         }
 
-        public SVGConicalGradientBrush(SVGConicalGradientElement conicalGradElement, Rect bounds, SVGMatrix matrix, Rect viewport)
+        public SVGConicalGradientBrush(SVGConicalGradientElement conicalGradElement, Rect bounds, Rect localBounds, SVGMatrix matrix, Rect viewport)
         {
             _viewport = viewport;
             _transform = matrix;
             _conicalGradElement = conicalGradElement;
             Initialize();
-            CreateFill(bounds);
+            CreateFill(bounds, localBounds);
         }
         
         protected Color GetColor(SVGColor svgColor)
@@ -105,10 +105,10 @@ namespace SVGImporter.Rendering
             */
         }
         
-        private void CreateFill(Rect bounds)
+        private void CreateFill(Rect bounds, Rect localBounds)
         {        
             CreateFill();
-            _fill.transform = SVGSimplePath.GetFillTransform(_fill, bounds, new SVGLength[]{_cx, _cy}, new SVGLength[]{_r, _r}, _transform, _gradientTransform);
+            _fill.transform = SVGSimplePath.GetFillTransform(_fill, bounds, localBounds, _conicalGradElement.gradientUnits == SVGGradientUnit.ObjectBoundingBox, new SVGLength[]{_cx, _cy}, new SVGLength[]{_r, _r}, _transform, _gradientTransform);
         }
 
         public CCGradient ParseGradientColors()

@@ -286,21 +286,21 @@ namespace SVGImporter.Rendering
                     case SVGPaintMethod.LinearGradientFill:      
                     {
                         layer.type = SVGShapeType.FILL;
-                        SVGLinearGradientBrush linearGradBrush = paintable.GetLinearGradientBrush(bounds, matrix, viewport);
+                        SVGLinearGradientBrush linearGradBrush = paintable.GetLinearGradientBrush(bounds, GetLocalBounds(simplifiedShapes, matrix), matrix, viewport);
                         paintable.svgFill = linearGradBrush.fill;
                     }
                         break;
                     case SVGPaintMethod.RadialGradientFill:
                     {
                         layer.type = SVGShapeType.FILL;
-                        SVGRadialGradientBrush radialGradBrush = paintable.GetRadialGradientBrush(bounds, matrix, viewport);
+                        SVGRadialGradientBrush radialGradBrush = paintable.GetRadialGradientBrush(bounds, GetLocalBounds(simplifiedShapes, matrix), matrix, viewport);
                         paintable.svgFill = radialGradBrush.fill;
                     }
                         break;
                     case SVGPaintMethod.ConicalGradientFill:
                     {
                         layer.type = SVGShapeType.FILL;
-                        SVGConicalGradientBrush conicalGradBrush = paintable.GetConicalGradientBrush(bounds, matrix, viewport);
+                        SVGConicalGradientBrush conicalGradBrush = paintable.GetConicalGradientBrush(bounds, GetLocalBounds(simplifiedShapes, matrix), matrix, viewport);
                         paintable.svgFill = conicalGradBrush.fill;
                     }
                         break;
@@ -589,6 +589,36 @@ namespace SVGImporter.Rendering
 
         }
 
+        // The bounding box of the shapes in the element's own coordinate system, before its transform.
+        // objectBoundingBox gradients are defined relative to this box.
+        static Rect GetLocalBounds(List<List<Vector2>> shapes, SVGMatrix matrix)
+        {
+            SVGMatrix inverse;
+            try {
+                inverse = matrix.Inverse();
+            } catch(SVGException) {
+                return GetRect(shapes);
+            }
+
+            List<List<Vector2>> localShapes = new List<List<Vector2>>(shapes.Count);
+            for(int i = 0; i < shapes.Count; i++)
+            {
+                List<Vector2> localShape = new List<Vector2>(shapes[i].Count);
+                for(int j = 0; j < shapes[i].Count; j++)
+                {
+                    localShape.Add(inverse.Transform(shapes[i][j]));
+                }
+                localShapes.Add(localShape);
+            }
+            return GetRect(localShapes);
+        }
+
+        // A coordinate in objectBoundingBox units: 0..1, where percentages map 100% to 1.
+        static float GetUnitValue(SVGLength length)
+        {
+            return length.unitType == SVGLengthType.Percentage ? length.value / 100f : length.value;
+        }
+
         protected static Vector2 GetGradientVector(SVGLength posX, SVGLength posY, Rect bounds)
         {
             Vector2 point = Vector2.zero;
@@ -611,9 +641,19 @@ namespace SVGImporter.Rendering
         }
 
         //const float defaultViewportScale = 800f;
-        public static SVGMatrix GetFillTransform(SVGFill svgFill, Rect bounds, SVGLength[] gradientStart, SVGLength[] gradientEnd, SVGMatrix fillTransform, SVGMatrix gradientTransform)
+        public static SVGMatrix GetFillTransform(SVGFill svgFill, Rect bounds, Rect localBounds, bool objectBoundingBox, SVGLength[] gradientStart, SVGLength[] gradientEnd, SVGMatrix fillTransform, SVGMatrix gradientTransform)
         {
             SVGMatrix transform = SVGMatrix.identity;
+
+            // objectBoundingBox (the SVG default): gradient coordinates are fractions of the element's
+            // bounding box, and gradientTransform applies inside that box. A box with no width or
+            // height cannot be used, so such shapes fall back to user space.
+            bool useBoundingBox = objectBoundingBox && localBounds.width > 0f && localBounds.height > 0f;
+            SVGMatrix boundingBoxInverse = SVGMatrix.identity;
+            if(useBoundingBox)
+            {
+                boundingBoxInverse = SVGMatrix.identity.Translate(localBounds.x, localBounds.y).Scale(localBounds.width, localBounds.height).Inverse();
+            }
 
             SVGLength gradientStartX = gradientStart[0];
             SVGLength gradientStartY = gradientStart[1];
@@ -630,8 +670,15 @@ namespace SVGImporter.Rendering
                 {
                     case GRADIENT_TYPE.LINEAR:
                     {
-                        Vector2 startPoint = GetGradientVector(gradientStartX, gradientStartY, bounds);
-                        Vector2 endPoint = GetGradientVector(gradientEndX, gradientEndY, bounds);
+                        Vector2 startPoint, endPoint;
+                        if(useBoundingBox)
+                        {
+                            startPoint = new Vector2(GetUnitValue(gradientStartX), GetUnitValue(gradientStartY));
+                            endPoint = new Vector2(GetUnitValue(gradientEndX), GetUnitValue(gradientEndY));
+                        } else {
+                            startPoint = GetGradientVector(gradientStartX, gradientStartY, bounds);
+                            endPoint = GetGradientVector(gradientEndX, gradientEndY, bounds);
+                        }
 
                         Vector2 gradientVector = endPoint - startPoint;        
                         Vector2 normalizedVector = Vector2.zero;
@@ -653,15 +700,24 @@ namespace SVGImporter.Rendering
                         transform = transform.Translate(-posDiff);
 
                         transform = transform.Multiply(gradientTransform.Inverse());
+                        transform = transform.Multiply(boundingBoxInverse);
                         transform = transform.Multiply(fillTransform.Inverse());
 
                         break;
                     }
                     case GRADIENT_TYPE.RADIAL:
                     {
-                        Vector2 point = GetGradientVector(gradientStartX, gradientStartY, bounds);
-                        float radius = GetGradientVector(gradientEndX, gradientEndY, bounds).x;
-                        if(gradientEndX.unitType == SVGLengthType.Percentage) radius *= 0.5f;
+                        Vector2 point;
+                        float radius;
+                        if(useBoundingBox)
+                        {
+                            point = new Vector2(GetUnitValue(gradientStartX), GetUnitValue(gradientStartY));
+                            radius = GetUnitValue(gradientEndX);
+                        } else {
+                            point = GetGradientVector(gradientStartX, gradientStartY, bounds);
+                            radius = GetGradientVector(gradientEndX, gradientEndY, bounds).x;
+                            if(gradientEndX.unitType == SVGLengthType.Percentage) radius *= 0.5f;
+                        }
 
                         float radiusTimesTwo = radius * 2f;
 
@@ -678,15 +734,24 @@ namespace SVGImporter.Rendering
                         transform = transform.Translate(-point);
                         
                         transform = transform.Multiply(gradientTransform.Inverse());
+                        transform = transform.Multiply(boundingBoxInverse);
                         transform = transform.Multiply(fillTransform.Inverse());
 
                         break;
                     }
                     case GRADIENT_TYPE.CONICAL:
                     {
-                        Vector2 point = GetGradientVector(gradientStartX, gradientStartY, bounds);
-                        float radius = GetGradientVector(gradientEndX, gradientEndY, bounds).x;
-                        if(gradientEndX.unitType == SVGLengthType.Percentage) radius *= 0.5f;
+                        Vector2 point;
+                        float radius;
+                        if(useBoundingBox)
+                        {
+                            point = new Vector2(GetUnitValue(gradientStartX), GetUnitValue(gradientStartY));
+                            radius = GetUnitValue(gradientEndX);
+                        } else {
+                            point = GetGradientVector(gradientStartX, gradientStartY, bounds);
+                            radius = GetGradientVector(gradientEndX, gradientEndY, bounds).x;
+                            if(gradientEndX.unitType == SVGLengthType.Percentage) radius *= 0.5f;
+                        }
 
                         float radiusTimesTwo = radius * 2f;
                         
@@ -703,6 +768,7 @@ namespace SVGImporter.Rendering
                         transform = transform.Translate(-point);
                         
                         transform = transform.Multiply(gradientTransform.Inverse());
+                        transform = transform.Multiply(boundingBoxInverse);
                         transform = transform.Multiply(fillTransform.Inverse());
                         
                         break;

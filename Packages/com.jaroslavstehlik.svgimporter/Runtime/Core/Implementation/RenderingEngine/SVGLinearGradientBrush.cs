@@ -50,13 +50,13 @@ namespace SVGImporter.Rendering
             CreateFill();
         }
 
-        public SVGLinearGradientBrush(SVGLinearGradientElement linearGradElement, Rect bounds, SVGMatrix matrix, Rect viewport)
+        public SVGLinearGradientBrush(SVGLinearGradientElement linearGradElement, Rect bounds, Rect localBounds, SVGMatrix matrix, Rect viewport)
         {
             _viewport = viewport;
             _transform = matrix;
             _linearGradElement = linearGradElement;
             Initialize();
-            CreateFill(bounds);
+            CreateFill(bounds, localBounds);
         }
 
         /*********************************************************************************/
@@ -99,10 +99,10 @@ namespace SVGImporter.Rendering
             */
         }
 
-        private void CreateFill(Rect bounds)
+        private void CreateFill(Rect bounds, Rect localBounds)
         {
             CreateFill();
-            _fill.transform = SVGSimplePath.GetFillTransform(_fill, bounds, new SVGLength[]{_x1, _y1}, new SVGLength[]{_x2, _y2}, _transform, _gradientTransform);
+            _fill.transform = SVGSimplePath.GetFillTransform(_fill, bounds, localBounds, _linearGradElement.gradientUnits == SVGGradientUnit.ObjectBoundingBox, new SVGLength[]{_x1, _y1}, new SVGLength[]{_x2, _y2}, _transform, _gradientTransform);
         }
 
         public CCGradient ParseGradientColors()
