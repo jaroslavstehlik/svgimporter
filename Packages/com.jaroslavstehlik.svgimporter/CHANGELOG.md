@@ -14,6 +14,8 @@
 - Removed the "Standard SVG" materials, which referenced a shader that was never included.
 - Importer settings now live in the project (Window > SVG Importer > Settings creates `Assets/SVG Importer/Resources/svgImporterSettings.asset`), because packages installed from git are read-only. Without that asset the defaults are used.
 - The plugin no longer creates an `Assets/Gizmos` folder in your project.
+- Only SVG files inside the `Assets` folder are converted. Previously the importer also tried to convert, and delete, SVG files that other packages ship.
+- Samples are re-saved in the Unity 6 format, without the removed GUILayer component.
 
 ## Legacy releases
 

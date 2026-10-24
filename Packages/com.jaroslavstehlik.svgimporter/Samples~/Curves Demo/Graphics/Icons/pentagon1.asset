@@ -3,20 +3,22 @@
 --- !u!43 &4342100
 Mesh:
   m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: pentagon1
-  serializedVersion: 8
+  serializedVersion: 12
   m_SubMeshes:
   - serializedVersion: 2
     firstByte: 0
     indexCount: 105
     topology: 0
+    baseVertex: 0
     firstVertex: 0
     vertexCount: 39
     localAABB:
-      m_Center: {x: 0, y: 1.49011612e-08, z: 0}
-      m_Extent: {x: .382735014, y: .364009976, z: 0}
+      m_Center: {x: 0, y: 0.000000014901161, z: 0}
+      m_Extent: {x: 0.382735, y: 0.36400998, z: 0}
   m_Shapes:
     vertices: []
     shapes: []
@@ -25,20 +27,27 @@ Mesh:
   m_BindPose: []
   m_BoneNameHashes: 
   m_RootBoneNameHash: 0
+  m_BonesAABB: []
+  m_VariableBoneCountWeights:
+    m_Data: 
   m_MeshCompression: 0
   m_IsReadable: 1
-  m_KeepVertices: 1
-  m_KeepIndices: 1
-  m_IndexBuffer: 0000010002000000030001000000040003000400000005000100060002000700060001000800060007000800090006000400090008000900040005000c000d000a000a000b000c000e000d000c000f0010000d000d000e000f00110010000f001200130010001000110012001400130012001500160013001300140015001700160015001800190016001600170018001a00190018001b001d001e001b001e001c001d001f0020001d0020001e001f00210022001f0022002000210023002400210024002200230025002600230026002400
-  m_Skin: []
+  m_KeepVertices: 0
+  m_KeepIndices: 0
+  m_IndexFormat: 0
+  m_IndexBuffer: 0000010002000000030001000000040003000400000005000100060002000700060001000800060007000800090006000400090008000900040005000c000d000a000a000b000c000e000d000c000f0010000d000d000e000f00110010000f001200130010001000110012001400130012001500160013001300140015001700160015001800190016001600170018001a00190018001b001d001e001b001e001c001d001f0020001d0020001e001f00210022001f0022002000210023002400210024002200230025002600230026002400y
   m_VertexData:
-    m_CurrentChannels: 61
+    serializedVersion: 3
     m_VertexCount: 39
     m_Channels:
     - stream: 0
       offset: 0
       format: 0
       dimension: 3
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
     - stream: 0
       offset: 0
       format: 0
@@ -59,6 +68,26 @@ Mesh:
       offset: 32
       format: 0
       dimension: 2
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
     - stream: 0
       offset: 0
       format: 0
@@ -122,17 +151,40 @@ Mesh:
       m_BitSize: 0
     m_UVInfo: 0
   m_LocalAABB:
-    m_Center: {x: 0, y: 1.49011612e-08, z: 0}
-    m_Extent: {x: .382735014, y: .364009976, z: 0}
-  m_MeshUsageFlags: 0
+    m_Center: {x: 0, y: 0.000000014901161, z: 0}
+    m_Extent: {x: 0.382735, y: 0.36400998, z: 0}
+  m_CookingOptions: 30
+  m_PreBakeConvexCollisionMesh: 0
+  m_PreBakeTriangleCollisionMesh: 0
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  m_MeshOptimized: 0
+  'm_MeshMetrics[0]': 1
+  'm_MeshMetrics[1]': 1
+  m_MeshOptimizationFlags: -1
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_MeshLodInfo:
+    serializedVersion: 2
+    m_LodSelectionCurve:
+      serializedVersion: 1
+      m_LodSlope: 0
+      m_LodBias: 0
+    m_NumLevels: 1
+    m_SubMeshes:
+    - serializedVersion: 2
+      m_Levels:
+      - serializedVersion: 1
+        m_IndexStart: 0
+        m_IndexCount: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -153,11 +205,11 @@ MonoBehaviour:
   _optimizeMesh: 1
   _generateNormals: 0
   _generateTangents: 0
-  _scale: .00999999978
+  _scale: 0.01
   _vpm: 1000
-  _depthOffset: .00999999978
+  _depthOffset: 0.01
   _compressDepth: 1
-  _pivotPoint: {x: .5, y: .5}
+  _pivotPoint: {x: 0.5, y: 0.5}
   _customPivotPoint: 0
   _border: {x: 0, y: 0, z: 0, w: 0}
   _sliceMesh: 0
@@ -183,15 +235,16 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: .765479922
-    height: .765479922
+    width: 0.7654799
+    height: 0.7654799
   _useLayers: 0
   _layers: []
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -199,13 +252,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _errors: 
-  _svgFile: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<!-- Generator: Adobe
-    Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE
-    svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg
-    version=\"1.1\" id=\"Capa_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
-    x=\"0px\" y=\"0px\"\r\n\t width=\"76.548px\" height=\"76.548px\" viewBox=\"0 0
-    76.548 76.548\" style=\"enable-background:new 0 0 76.548 76.548;\"\r\n\t xml:space=\"preserve\">\r\n\t\t<path
-    fill=\"#FFFFFF\" d=\"M61.929,74.675h-47.31L0,29.68L38.274,1.873l38.274,27.808L61.929,74.675z
-    M16.799,71.675h42.95l13.272-40.849\r\n\t\t\tL38.274,5.582L3.526,30.827L16.799,71.675z\"/>\t\r\n</svg>\r\n"
+  _svgFile: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\r\n<svg version=\"1.1\" id=\"Capa_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\r\n\t width=\"76.548px\" height=\"76.548px\" viewBox=\"0 0 76.548 76.548\" style=\"enable-background:new 0 0 76.548 76.548;\"\r\n\t xml:space=\"preserve\">\r\n\t\t<path fill=\"#FFFFFF\" d=\"M61.929,74.675h-47.31L0,29.68L38.274,1.873l38.274,27.808L61.929,74.675z M16.799,71.675h42.95l13.272-40.849\r\n\t\t\tL38.274,5.582L3.526,30.827L16.799,71.675z\"/>\t\r\n</svg>\r\n"
   _title: 
   _description: 

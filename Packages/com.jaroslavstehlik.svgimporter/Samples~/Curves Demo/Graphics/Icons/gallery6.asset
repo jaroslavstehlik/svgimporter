@@ -3,20 +3,22 @@
 --- !u!43 &4337856
 Mesh:
   m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: gallery6
-  serializedVersion: 8
+  serializedVersion: 12
   m_SubMeshes:
   - serializedVersion: 2
     firstByte: 0
     indexCount: 168
     topology: 0
+    baseVertex: 0
     firstVertex: 0
     vertexCount: 72
     localAABB:
-      m_Center: {x: 0, y: -7.4505806e-09, z: 0}
-      m_Extent: {x: .134970009, y: .134959996, z: 0}
+      m_Center: {x: 0, y: -0.000000007450581, z: 0}
+      m_Extent: {x: 0.13497001, y: 0.13496, z: 0}
   m_Shapes:
     vertices: []
     shapes: []
@@ -25,20 +27,27 @@ Mesh:
   m_BindPose: []
   m_BoneNameHashes: 
   m_RootBoneNameHash: 0
+  m_BonesAABB: []
+  m_VariableBoneCountWeights:
+    m_Data: 
   m_MeshCompression: 0
   m_IsReadable: 1
-  m_KeepVertices: 1
-  m_KeepIndices: 1
-  m_IndexBuffer: 000001000200010000000300040005000600050004000700080009000a00090008000b000c000d000e000d000c000f001200130010001000110012001400130012001500160013001300140015001700160015001800190016001600170018001a00190018001b001c00190019001a001b001d001c001b00200021001e001e001f00200022002100200023002400210021002200230025002400230026002700240024002500260028002700260029002a0027002700280029002b002a0029002e002f002c002c002d002e0030002f002e00310032002f002f00300031003300320031003400350032003200330034003600350034003700380035003500360037003900380037003c003d003a003a003b003c003e003d003c003f0040003d003d003e003f00410040003f00420043004000400041004200440043004200450046004300430044004500470046004500
-  m_Skin: []
+  m_KeepVertices: 0
+  m_KeepIndices: 0
+  m_IndexFormat: 0
+  m_IndexBuffer: 000001000200010000000300040005000600050004000700080009000a00090008000b000c000d000e000d000c000f001200130010001000110012001400130012001500160013001300140015001700160015001800190016001600170018001a00190018001b001c00190019001a001b001d001c001b00200021001e001e001f00200022002100200023002400210021002200230025002400230026002700240024002500260028002700260029002a0027002700280029002b002a0029002e002f002c002c002d002e0030002f002e00310032002f002f00300031003300320031003400350032003200330034003600350034003700380035003500360037003900380037003c003d003a003a003b003c003e003d003c003f0040003d003d003e003f00410040003f00420043004000400041004200440043004200450046004300430044004500470046004500y
   m_VertexData:
-    m_CurrentChannels: 61
+    serializedVersion: 3
     m_VertexCount: 72
     m_Channels:
     - stream: 0
       offset: 0
       format: 0
       dimension: 3
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
     - stream: 0
       offset: 0
       format: 0
@@ -59,6 +68,26 @@ Mesh:
       offset: 32
       format: 0
       dimension: 2
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
     - stream: 0
       offset: 0
       format: 0
@@ -122,17 +151,40 @@ Mesh:
       m_BitSize: 0
     m_UVInfo: 0
   m_LocalAABB:
-    m_Center: {x: 0, y: -7.4505806e-09, z: 0}
-    m_Extent: {x: .134970009, y: .134959996, z: 0}
-  m_MeshUsageFlags: 0
+    m_Center: {x: 0, y: -0.000000007450581, z: 0}
+    m_Extent: {x: 0.13497001, y: 0.13496, z: 0}
+  m_CookingOptions: 30
+  m_PreBakeConvexCollisionMesh: 0
+  m_PreBakeTriangleCollisionMesh: 0
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  m_MeshOptimized: 0
+  'm_MeshMetrics[0]': 1
+  'm_MeshMetrics[1]': 1
+  m_MeshOptimizationFlags: -1
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_MeshLodInfo:
+    serializedVersion: 2
+    m_LodSelectionCurve:
+      serializedVersion: 1
+      m_LodSlope: 0
+      m_LodBias: 0
+    m_NumLevels: 1
+    m_SubMeshes:
+    - serializedVersion: 2
+      m_Levels:
+      - serializedVersion: 1
+        m_IndexStart: 0
+        m_IndexCount: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -153,11 +205,11 @@ MonoBehaviour:
   _optimizeMesh: 1
   _generateNormals: 0
   _generateTangents: 0
-  _scale: .00999999978
+  _scale: 0.01
   _vpm: 1000
-  _depthOffset: .00999999978
+  _depthOffset: 0.01
   _compressDepth: 1
-  _pivotPoint: {x: .5, y: .5}
+  _pivotPoint: {x: 0.5, y: 0.5}
   _customPivotPoint: 0
   _border: {x: 0, y: 0, z: 0, w: 0}
   _sliceMesh: 0
@@ -183,15 +235,16 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: .269950002
-    height: .269950002
+    width: 0.26995
+    height: 0.26995
   _useLayers: 0
   _layers: []
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -199,12 +252,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _errors: 
-  _svgFile: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<!-- Generator: Adobe
-    Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg
-    version=\"1.1\" id=\"Capa_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
-    x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 26.995 26.995\" style=\"enable-background:new
-    0 0 26.995 26.995;\" xml:space=\"preserve\">\r\n\r\n\t<path fill=\"#FFFFFF\" d=\"M0,11.808h11.811V0.001H0V11.808z
-    M15.184,0.001v11.807h11.811V0.001H15.184z M15.184,26.993h11.811V15.185H15.184V26.993z\r\n\t\t
-    M0,26.993h11.811V15.185H0V26.993z\"/>\r\n</svg>\r\n"
+  _svgFile: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\r\n<svg version=\"1.1\" id=\"Capa_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\r\n\t viewBox=\"0 0 26.995 26.995\" style=\"enable-background:new 0 0 26.995 26.995;\" xml:space=\"preserve\">\r\n\r\n\t<path fill=\"#FFFFFF\" d=\"M0,11.808h11.811V0.001H0V11.808z M15.184,0.001v11.807h11.811V0.001H15.184z M15.184,26.993h11.811V15.185H15.184V26.993z\r\n\t\t M0,26.993h11.811V15.185H0V26.993z\"/>\r\n</svg>\r\n"
   _title: 
   _description: 

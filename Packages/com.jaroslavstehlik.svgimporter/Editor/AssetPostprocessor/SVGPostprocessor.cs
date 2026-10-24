@@ -87,9 +87,11 @@ namespace SVGImporter
             if(!active)
                 return;
 
+			// Only convert SVG files in the project's Assets folder. Packages (Unity's own
+			// included) ship .svg files that are read-only and used by other importers.
+			string[] svgs = Array.FindAll (importedAssets, str => str.StartsWith ("Assets/") && str.EndsWith (".svg", StringComparison.OrdinalIgnoreCase));
 			// Hotfix: Joonas Nissinen 13.6.16 find all already imported assets and
 			// remove them from the imported assets array
-			string[] svgs = Array.FindAll (importedAssets, str => str.EndsWith (".svg"));
 			string[] assets = Array.FindAll (importedAssets, str => str.EndsWith (".asset"));
 			importedAssets = svgs.Where (str => !assets.Contains (str.Replace (".svg", ".asset"))).ToArray ();
 
