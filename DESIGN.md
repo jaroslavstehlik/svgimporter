@@ -184,6 +184,47 @@ usvg converts text to paths using fonts. In the Editor we pass the system font d
 - **Engine setting:** during the transition, a project setting *Import Engine: Native / Legacy* selects the core. The importer version is bumped when the default changes, so every `.svg` reimports once. The legacy engine is removed after phase 3.
 - **Legacy `.asset` SVG Assets:** unaffected. They keep their baked meshes and can still be reimported with the legacy engine until it is removed. The converter (`Window > SVG Importer > Convert SVG Assets to SVG Files`) moves them to the new path.
 
+### 7.1 Gradient rendering
+
+All gradients in loaded SVG Assets share one atlas texture, filled on demand, so that every SVG mesh can use the same material and batch. The idea stays; the implementation is replaced, because gradients render with visible artefacts on some hardware, especially Android.
+
+**Problems in the current implementation (2.0 and earlier):**
+
+| Symptom | Cause |
+|---|---|
+| Colours of other gradients bleed in | The colour atlas packs 128×4 gradient tiles edge to edge, four per row. The shader samples tiles 0, 4, 8… on the top texel row of their 4-texel strip and tiles 3, 7, 11… on the bottom row, right on the border with the neighbouring strip. Any coordinate imprecision, more common on mobile GPUs, blends in the neighbouring gradient. |
+| Bleeding at the ends of a gradient | The shader samples from the centre of a tile's first texel to the centre of its last. The 1-texel gutter repeated by `RenderGradient` lies inside that range, not outside it, so it gives no protection against the next tile. |
+| Gradients are not smooth | The position along a gradient comes from a 512×512 lookup texture ("gradient shape texture") with 8 bits per channel: only 256 distinct positions, so large gradients show steps. |
+| Shimmering on small objects | The lookup texture has no mipmaps (despite trilinear filtering), so it aliases under minification, which is typical on phone screens. |
+| A seam in conical gradients | The angle stored in the lookup texture wraps from 255 to 0, and bilinear filtering blends across the wrap. |
+| Wrong gradients in large scenes | The atlas is a fixed 512×512 texture (512 gradients). Materials only reference the first atlas texture, so further gradients sample outside it. |
+
+Vertex compression is not a cause: Unity 6's default mask (`VertexChannelCompressionMask: 4054`) compresses TexCoord1, which holds the gradient index, to 16-bit floats, but integers below 2048 stay exact.
+
+**New design:**
+
+1. **Compute the gradient position analytically, with no lookup texture.** Each vertex stores its position in the gradient's own normalised space (TexCoord0, 32-bit float). Gradient space is an affine transform of the shape, so interpolating it across a triangle is exact. The fragment shader computes the gradient parameter `t` in full precision (`float`):
+   - linear: `t = g.x`
+   - radial: `t = length(g)`, using the SVG focal-point formula when the focal point differs from the centre
+   - conical: `t = atan2(g.y, g.x) / 2π + 0.5`, computed per pixel, so there is no seam
+
+   This removes the 8-bit steps, the minification aliasing and the conical seam. It also makes the SVG `spreadMethod` (pad, reflect, repeat) possible, applied to `t` in the shader. Today only pad is effectively supported.
+2. **One gradient per atlas row, with margins.** Each gradient is a 256-texel ramp that fills the whole atlas width and occupies 4 identical rows. The shader samples the middle of the 4 rows, which leaves a margin of 1.5 texels to the neighbouring gradient. `u` is clamped to the centres of the first and last texels, so horizontal sampling never leaves the ramp. Ramps are sampled with `tex2Dlod` at level 0, so mipmap selection can't pick wrong rows.
+3. **An exact gradient index per vertex.** TexCoord1 holds the ramp index and the gradient type and spread as small integers, which are exact even when Unity compresses the channel to 16 bits. The vertex shader turns the index into the row coordinate.
+4. **A growable atlas.** The atlas starts at 256×64 (16 gradients) and doubles its height when full, up to 256×4096 (1024 gradients). All gradient materials are updated to the new texture. Identical gradients are shared by content hash. Each gradient is reference-counted by the SVG Assets that use it, so rows can be reused; only changed rows are uploaded.
+5. **Colours match browsers.** Stops are interpolated in sRGB when the ramp is generated on the CPU, as browsers do. The ramp is an sRGB texture, so it's correct in both Gamma and Linear projects.
+
+The native core produces exactly this per-vertex data (gradient-space position, ramp index), so this part of the design doesn't change in phase 2.
+
+**Compatibility:** the mesh data changes, so the importer version is bumped and every `.svg` file reimports automatically. SVG Assets stored as `.asset` files (1.x) keep the old encoding until they are reimported; the SVG Asset Inspector offers *Reimport*, and converting them to `.svg` files (section 7) updates them too. The old shaders and the gradient shape texture are removed.
+
+**Tests:**
+- Neighbouring gradients with contrasting colours (for example alternating black and white ramps), sampled at `t` = 0 and 1 for every row position: no bleeding.
+- Smoothness: along a large gradient, adjacent pixels may differ by at most a small amount, so steps are caught.
+- Spread methods, focal radial gradients and the conical seam.
+- Atlas growth past 16, 256 and 1024 gradients.
+- Mobile precision: the same render tests with TexCoord channels forced to 16-bit floats, to emulate devices. Then on Android (Mali and Adreno GPUs) and iOS with the phase 1 test app.
+
 ## 8. Runtime import
 
 `SVGAsset.Load(string)` imports an SVG in a player build. It uses the same native core as the Editor, so runtime and Editor imports give the same result.
@@ -257,10 +298,11 @@ The existing samples are kept as the Showcase until the focused ones exist.
 | 2. Integration | C# wrapper and converter to `SVGLayer[]`, gradients, AA fringe, *Import Engine* setting (default Legacy) | Render tests, samples and layer parity pass with the native engine |
 | 3. Parity and beyond | Clip paths, dashes, text, masks-as-clips, diagnostics in the Inspector | Native support percentage ≥ legacy on every category; native becomes the default |
 | 4. Release 3.0 | Signing, CI release pipeline, legacy C# engine removed | Clean install from git on Windows, Linux and macOS Editors; runtime import works in iOS and Android builds |
+| G. Gradients | New gradient rendering (7.1) | Gradient tests pass on desktop, with emulated mobile precision, and on Android and iOS devices |
 | 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in |
 | 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site |
 
-Phases 5 and 6 don't depend on the native core and can start right away.
+Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1.
 
 ## 14. Risks
 
@@ -282,6 +324,7 @@ Decided:
 - Targets: Windows x64, Linux x64, macOS universal (arm64 + x64), iOS arm64, Android arm64 (section 3).
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
+- Gradients keep one shared, on-demand atlas, with the rendering replaced (7.1).
 
 Open:
 1. Should text conversion use only system fonts in the Editor, or also fonts in the project? At runtime, only project fonts are reliable (6.5).
