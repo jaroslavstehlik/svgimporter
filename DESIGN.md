@@ -388,7 +388,7 @@ Decided:
 - Targets: Windows x64, Linux x64, macOS universal (arm64 + x64), iOS arm64, Android arm64 (section 3).
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
-- Antialiasing uses a fringe centred on the edge with bevelled sharp corners, extruded in screen pixels in the vertex shader and with coverage computed per pixel; MSAA is offered as an alternative (7.2).
+- Antialiasing uses a fringe centred on the edge with bevelled sharp corners, extruded in screen pixels in the vertex shader and with coverage computed per pixel; MSAA is offered as an alternative (7.2). Coverage uses the distance to the nearest edge, as Skia's GPU convex-path renderer does. Exact-area coverage (Skia's CPU "analytic AA") was rejected: it only improves sharp corners and sub-pixel details and needs compute or CPU work per frame.
 - Gradient shapes are computed, not looked up, and colours are evaluated exactly from stops kept in a shared data texture, as in Skia/Chromium. Gradients never add tessellation. Linear gradients use vertex colours when every triangle of the shape passes an exact error test (7.1).
 
 Open:
