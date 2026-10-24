@@ -70,6 +70,10 @@ namespace SVGImporter.Native
             public int vertexOffset, vertexCount;
             /// <summary>Range in <see cref="Result.indices"/>; indices are relative to <see cref="vertexOffset"/>.</summary>
             public int indexOffset, indexCount;
+            /// <summary>Index of the source element in painting order; a path's fill and stroke share it.</summary>
+            public int element;
+            /// <summary>Closed outlines in SVG user units. Outer boundaries have a positive signed area, holes a negative one.</summary>
+            public Vector2[][] contours;
         }
 
         public struct Stop
@@ -162,7 +166,20 @@ namespace SVGImporter.Native
                     vertexCount = (int)l.vertex_count,
                     indexOffset = (int)l.index_offset,
                     indexCount = (int)l.index_count,
+                    element = (int)l.element,
+                    contours = new Vector2[l.contour_count][],
                 };
+                for (int c = 0; c < l.contour_count; c++)
+                {
+                    SvgiContour contour = r->contours[l.contour_offset + c];
+                    var points = new Vector2[contour.point_count];
+                    for (int p = 0; p < points.Length; p++)
+                    {
+                        uint k = (contour.point_offset + (uint)p) * 2;
+                        points[p] = new Vector2(r->contour_points[k], r->contour_points[k + 1]);
+                    }
+                    result.layers[i].contours[c] = points;
+                }
             }
 
             result.paints = new Paint[r->paint_count];

@@ -126,6 +126,113 @@ public static class NativeCoreTests
         return mesh;
     }
 
+    // Layer parity between the engines: for each SVG in Assets/Samples, the layer count and names
+    // that modifiers rely on must match.
+    //   Unity -batchmode -projectPath . -executeMethod NativeCoreTests.Parity -out <dir>
+    public static void Parity()
+    {
+        string output = Arg("-out") ?? "Temp/NativeCoreTests";
+        Directory.CreateDirectory(output);
+        var lines = new List<string>();
+        int mismatches = 0, files = 0;
+        long legacyVertices = 0, nativeVertices = 0;
+        var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+        var import = typeof(SVGAsset).GetMethod("_editor_Import", flags);
+        var created = new List<UnityEngine.Object>();
+        Action<string, UnityEngine.Object> add = (id, obj) => created.Add(obj);
+        SVGImportEngine original = SVGImporterSettings.Get.importEngine;
+        try
+        {
+            foreach (string path in Directory.GetFiles("Assets/Samples", "*.svg", SearchOption.AllDirectories).OrderBy(f => f))
+            {
+                files++;
+                string text = File.ReadAllText(path);
+                List<Rect> legacyBounds, nativeBounds;
+                var legacy = Layers(import, text, SVGImportEngine.Legacy, add, created, out legacyBounds);
+                var native = Layers(import, text, SVGImportEngine.Native, add, created, out nativeBounds);
+                legacyVertices += lastVertices[SVGImportEngine.Legacy];
+                nativeVertices += lastVertices[SVGImportEngine.Native];
+                bool countMatches = legacy.Count == native.Count;
+                bool namesMatch = legacy.Zip(native, SameName).All(same => same);
+                if (!countMatches || !namesMatch)
+                {
+                    mismatches++;
+                    lines.Add("MISMATCH " + path + ": legacy " + legacy.Count + " layers, native " + native.Count
+                        + "; first difference: " + FirstDifference(legacy, native));
+                    // Layers only one engine produced, matched by bounds.
+                    foreach (string extra in Unmatched(nativeBounds, legacyBounds, native)) lines.Add("  native only: " + extra);
+                    foreach (string extra in Unmatched(legacyBounds, nativeBounds, legacy)) lines.Add("  legacy only: " + extra);
+                }
+            }
+        }
+        finally
+        {
+            SVGImporterSettings.Get.importEngine = original;
+        }
+        lines.Insert(0, files + " files, " + mismatches + " with different layers; vertices: legacy " + legacyVertices + ", native " + nativeVertices);
+        File.WriteAllLines(Path.Combine(output, "parity.txt"), lines);
+        foreach (string line in lines.Take(40)) Debug.Log("[NativeCoreTests] " + line);
+        EditorApplication.Exit(0);
+    }
+
+    static readonly Dictionary<SVGImportEngine, long> lastVertices = new Dictionary<SVGImportEngine, long>();
+
+    static List<string> Layers(MethodInfo import, string svg, SVGImportEngine engine, Action<string, UnityEngine.Object> add, List<UnityEngine.Object> created, out List<Rect> bounds)
+    {
+        SVGImporterSettings.Get.importEngine = engine;
+        var asset = ScriptableObject.CreateInstance<SVGAsset>();
+        typeof(SVGAsset).GetField("_useLayers", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asset, true);
+        import.Invoke(asset, new object[] { svg, add });
+        var names = asset.layers == null ? new List<string>() : asset.layers.Select(l => l.name ?? "").ToList();
+        lastVertices[engine] = asset.layers == null ? 0 : asset.layers.Sum(l => l.shapes.Sum(sh => (long)sh.vertexCount));
+        bounds = asset.layers == null ? new List<Rect>() : asset.layers.Select(LayerBounds).ToList();
+        foreach (var obj in created) UnityEngine.Object.DestroyImmediate(obj);
+        created.Clear();
+        UnityEngine.Object.DestroyImmediate(asset);
+        return names;
+    }
+
+    // Without an id, legacy names a layer after its element ("Circle Element"); native output is all paths.
+    static bool SameName(string legacy, string native)
+    {
+        return legacy == native || (native == "Path Element" && legacy.EndsWith(" Element"));
+    }
+
+    static Rect LayerBounds(SVGLayer layer)
+    {
+        if (layer.shapes == null || layer.shapes.Length == 0) return new Rect();
+        Rect r = layer.shapes[0].bounds;
+        foreach (SVGShape shape in layer.shapes)
+            r = Rect.MinMaxRect(Mathf.Min(r.xMin, shape.bounds.xMin), Mathf.Min(r.yMin, shape.bounds.yMin),
+                Mathf.Max(r.xMax, shape.bounds.xMax), Mathf.Max(r.yMax, shape.bounds.yMax));
+        return r;
+    }
+
+    static IEnumerable<string> Unmatched(List<Rect> a, List<Rect> b, List<string> names)
+    {
+        var used = new bool[b.Count];
+        for (int i = 0; i < a.Count; i++)
+        {
+            float tolerance = Mathf.Max(0.01f, 0.05f * Mathf.Max(a[i].width, a[i].height));
+            int j = Enumerable.Range(0, b.Count).FirstOrDefault(k => !used[k]
+                && Vector2.Distance(a[i].min, b[k].min) < tolerance && Vector2.Distance(a[i].max, b[k].max) < tolerance) ;
+            if (b.Count > 0 && !used[j] && Vector2.Distance(a[i].min, b[j].min) < tolerance && Vector2.Distance(a[i].max, b[j].max) < tolerance)
+                used[j] = true;
+            else
+                yield return "layer " + i + " '" + names[i] + "' bounds " + a[i];
+        }
+    }
+
+    static string FirstDifference(List<string> a, List<string> b)
+    {
+        for (int i = 0; i < Math.Max(a.Count, b.Count); i++)
+        {
+            string x = i < a.Count ? a[i] : "(none)", y = i < b.Count ? b[i] : "(none)";
+            if (!SameName(x, y)) return "layer " + i + ": legacy '" + x + "', native '" + y + "'";
+        }
+        return "none";
+    }
+
     static string Arg(string name)
     {
         string[] args = Environment.GetCommandLineArgs();

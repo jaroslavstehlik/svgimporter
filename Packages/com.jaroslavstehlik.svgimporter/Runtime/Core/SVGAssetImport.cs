@@ -38,6 +38,8 @@ namespace SVGImporter
         public static float minDepthOffset = 0.001f;
         public static SVGAssetFormat format = SVGAssetFormat.Opaque;
         public static bool compressDepth = true;
+        /// <summary>Which implementation parses and tessellates; falls back to Legacy where the native core is unavailable.</summary>
+        public static SVGImportEngine engine = SVGImportEngine.Legacy;
 
         private string _SVGFile;
         private Texture2D _texture = null;
@@ -89,7 +91,20 @@ namespace SVGImporter
             atlasData.Init(SVGAtlas.defaultAtlasTextureWidth * SVGAtlas.defaultAtlasTextureHeight);
             atlasData.AddGradient(SVGAtlasData.GetDefaultGradient());
             SVGElement _rootSVGElement = null;
+            bool native = engine == SVGImportEngine.Native && Native.SVGNativeCore.isSupported && Native.SVGNativeImport.CanImport(_SVGFile);
+            Rect nativeViewport = new Rect();
 
+            if(native)
+            {
+                if(!Native.SVGNativeImport.Populate(_SVGFile, out nativeViewport))
+                {
+                    Debug.LogError("SVG Document is corrupted! "+UnityEditor.AssetDatabase.GetAssetPath(asset), asset);
+                    _importingSVG = false;
+                    return;
+                }
+            }
+            else
+            {
 #if IGNORE_EXCEPTIONS
             try {
 #else
@@ -112,13 +127,21 @@ namespace SVGImporter
                 _importingSVG = false;
                 return;
             }
+            }
 
 #if IGNORE_EXCEPTIONS
             try {
 #endif
-                _rootSVGElement.Render();
-
-                Rect viewport = _rootSVGElement.paintable.viewport;
+                Rect viewport;
+                if(native)
+                {
+                    viewport = nativeViewport;
+                }
+                else
+                {
+                    _rootSVGElement.Render();
+                    viewport = _rootSVGElement.paintable.viewport;
+                }
                 viewport.x *= SVGAssetImport.meshScale;
                 viewport.y *= SVGAssetImport.meshScale;
                 viewport.size *= SVGAssetImport.meshScale;

@@ -25,6 +25,8 @@
 - Fixed `gradientUnits="userSpaceOnUse"` never being recognised (the attribute name was misspelled).
 - Fixed the radius of radial gradients with a percentage radius on shapes away from the canvas origin.
 - Reimport existing SVG assets to apply these gradient fixes.
+- New: **Import Engine** project setting (Window > SVG Importer > Settings). **Native** imports with a new native core (usvg and lyon) that is about 15 times faster and supports more of SVG, such as gradient strokes. It is available in the macOS Editor for now; other platforms use **Legacy**, the default. Changing the setting reimports all SVG files. Documents that use `conicalGradient` are still imported by the legacy parser.
+- Fixed shape and mesh bounds that could miss their right or bottom edge.
 
 ## Legacy releases
 

@@ -6,7 +6,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use crate::import::{self, ImportOptions, Output};
 
 /// Increment whenever the ABI changes. C# checks it before using the library.
-pub const SVGI_ABI_VERSION: u32 = 1;
+pub const SVGI_ABI_VERSION: u32 = 2;
 
 pub const SVGI_OK: i32 = 0;
 /// The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -67,6 +67,22 @@ pub struct SvgiLayer {
     /// The element's `id`, UTF-8, as a range in `strings`. Empty if the element has none.
     pub name_offset: u32,
     pub name_length: u32,
+    /// Index of the source element, counted in painting order. A path's fill and stroke share it.
+    pub element: u32,
+    /// The layer's outline (outer boundaries and holes), as a range in `contours`.
+    pub contour_offset: u32,
+    pub contour_count: u32,
+}
+
+/// A closed outline: a range in `contour_points` (pairs of floats, the same coordinates as
+/// `vertices`). Outer boundaries have a positive signed area (shoelace formula on these
+/// coordinates) and holes a negative one; with y pointing down, the shape lies to the right of
+/// the direction of travel.
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct SvgiContour {
+    pub point_offset: u32,
+    pub point_count: u32,
 }
 
 #[repr(C)]
@@ -115,6 +131,11 @@ pub struct SvgiResult {
     pub stop_count: u32,
     pub strings: *const u8,
     pub string_length: u32,
+    pub contours: *const SvgiContour,
+    pub contour_count: u32,
+    pub contour_points: *const f32,
+    /// Number of floats in `contour_points` (two per point).
+    pub contour_point_float_count: u32,
     /// `SVGI_DIAG_*` flags.
     pub diagnostics: u32,
     /// UTF-8 message for `SVGI_ERROR_PARSE` and `SVGI_ERROR_INTERNAL`; empty otherwise.
@@ -148,6 +169,10 @@ fn into_raw(output: Output, error_message: String) -> *mut SvgiResult {
             stop_count: 0,
             strings: std::ptr::null(),
             string_length: 0,
+            contours: std::ptr::null(),
+            contour_count: 0,
+            contour_points: std::ptr::null(),
+            contour_point_float_count: 0,
             diagnostics: output.diagnostics,
             error_message: std::ptr::null(),
             error_message_length: 0,
@@ -172,6 +197,10 @@ fn into_raw(output: Output, error_message: String) -> *mut SvgiResult {
         stop_count: o.stops.len() as u32,
         strings: o.strings.as_ptr(),
         string_length: o.strings.len() as u32,
+        contours: o.contours.as_ptr(),
+        contour_count: o.contours.len() as u32,
+        contour_points: o.contour_points.as_ptr(),
+        contour_point_float_count: o.contour_points.len() as u32,
         diagnostics: o.diagnostics,
         error_message: owned.error_message.as_ptr(),
         error_message_length: owned.error_message.len() as u32,

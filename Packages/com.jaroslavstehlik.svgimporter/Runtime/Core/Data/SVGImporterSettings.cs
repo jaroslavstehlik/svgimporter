@@ -6,6 +6,15 @@ using System.Collections;
 
 namespace SVGImporter
 {
+    /// <summary>Which implementation parses and tessellates SVG files.</summary>
+    public enum SVGImportEngine
+    {
+        /// <summary>The C# parser and tessellator of SVG Importer 1.x and 2.x.</summary>
+        Legacy,
+        /// <summary>The native core (usvg and lyon). See DESIGN.md.</summary>
+        Native,
+    }
+
     public class SVGImporterSettings : ScriptableObject 
     {
         public const string resourceName = "svgImporterSettings";
@@ -47,6 +56,9 @@ namespace SVGImporter
 
         [Tooltip("Import SVG files added to the project with SVG Importer. Turn this off when the project uses Unity's own SVG import, for example for UI Toolkit. Individual files can still be switched in the Inspector.")]
         public bool importNewSVGFiles = true;
+
+        [Tooltip("Native: parse and tessellate with the native core (usvg and lyon), which is faster and supports more of SVG. Currently available on macOS. Legacy: the C# implementation of SVG Importer 2.x.")]
+        public SVGImportEngine importEngine = SVGImportEngine.Legacy;
 
         public SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;
         public SVGUseGradients defaultUseGradients = SVGUseGradients.Auto;

@@ -22,7 +22,7 @@ namespace SVGImporter.Native
         /// <summary>
         ///  Increment whenever the ABI changes. C# checks it before using the library.
         /// </summary>
-        internal const uint SVGI_ABI_VERSION = 1;
+        internal const uint SVGI_ABI_VERSION = 2;
         internal const int SVGI_OK = 0;
         /// <summary>
         ///  The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -135,6 +135,28 @@ namespace SVGImporter.Native
         /// </summary>
         public uint name_offset;
         public uint name_length;
+        /// <summary>
+        ///  Index of the source element, counted in painting order. A path's fill and stroke share it.
+        /// </summary>
+        public uint element;
+        /// <summary>
+        ///  The layer's outline (outer boundaries and holes), as a range in `contours`.
+        /// </summary>
+        public uint contour_offset;
+        public uint contour_count;
+    }
+
+    /// <summary>
+    ///  A closed outline: a range in `contour_points` (pairs of floats, the same coordinates as
+    ///  `vertices`). Outer boundaries have a positive signed area (shoelace formula on these
+    ///  coordinates) and holes a negative one; with y pointing down, the shape lies to the right of
+    ///  the direction of travel.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe partial struct SvgiContour
+    {
+        public uint point_offset;
+        public uint point_count;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -204,6 +226,13 @@ namespace SVGImporter.Native
         public uint stop_count;
         public byte* strings;
         public uint string_length;
+        public SvgiContour* contours;
+        public uint contour_count;
+        public float* contour_points;
+        /// <summary>
+        ///  Number of floats in `contour_points` (two per point).
+        /// </summary>
+        public uint contour_point_float_count;
         /// <summary>
         ///  `SVGI_DIAG_*` flags.
         /// </summary>

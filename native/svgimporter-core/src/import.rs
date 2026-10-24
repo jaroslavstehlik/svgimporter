@@ -33,6 +33,8 @@ pub struct Output {
     pub paints: Vec<SvgiPaint>,
     pub stops: Vec<SvgiStop>,
     pub strings: Vec<u8>,
+    pub contours: Vec<SvgiContour>,
+    pub contour_points: Vec<f32>,
     pub diagnostics: u32,
 }
 
@@ -66,6 +68,7 @@ pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
             ..Output::default()
         },
         paint_ids: HashMap::new(),
+        element: 0,
         fill: FillTessellator::new(),
         stroke: StrokeTessellator::new(),
     };
@@ -78,6 +81,8 @@ struct Importer<'a> {
     output: Output,
     /// Shared gradients, by `Arc` address, so each is output once.
     paint_ids: HashMap<usize, u32>,
+    /// Index of the current path, shared by its fill and stroke layers.
+    element: u32,
     fill: FillTessellator,
     stroke: StrokeTessellator,
 }
@@ -132,6 +137,7 @@ impl Importer<'_> {
         // non-uniform transforms; the tolerance is converted into those coordinates.
         let tolerance = self.options.tolerance / scale;
 
+        self.element += 1;
         let fill_first = path.paint_order() == usvg::PaintOrder::FillAndStroke;
         if fill_first {
             self.fill_layer(path, &transform, tolerance, opacity);
@@ -215,24 +221,64 @@ impl Importer<'_> {
         if buffers.indices.is_empty() {
             return;
         }
+        // Only the vertices triangles use: lyon keeps the points of zero-area spans, which would
+        // otherwise widen the layer's bounds.
+        let mut remap = vec![u32::MAX; buffers.vertices.len()];
+        let mut positions = Vec::with_capacity(buffers.vertices.len());
+        let mut indices = Vec::with_capacity(buffers.indices.len());
+        for &i in &buffers.indices {
+            if remap[i as usize] == u32::MAX {
+                remap[i as usize] = positions.len() as u32;
+                let v = buffers.vertices[i as usize];
+                let (x, y) = apply(transform, v[0], v[1]);
+                positions.push([x, y]);
+            }
+            indices.push(remap[i as usize]);
+        }
+        let loops = boundary_loops(&positions, &indices);
+
         let out = &mut self.output;
+        let contour_offset = out.contours.len() as u32;
+        for contour in &loops {
+            out.contours.push(SvgiContour {
+                point_offset: (out.contour_points.len() / 2) as u32,
+                point_count: contour.len() as u32,
+            });
+            for p in contour {
+                out.contour_points.push(p[0]);
+                out.contour_points.push(p[1]);
+            }
+        }
         let layer = SvgiLayer {
             vertex_offset: (out.vertices.len() / 2) as u32,
-            vertex_count: buffers.vertices.len() as u32,
+            vertex_count: positions.len() as u32,
             index_offset: out.indices.len() as u32,
-            index_count: buffers.indices.len() as u32,
+            index_count: indices.len() as u32,
             paint,
             kind,
             opacity,
             name_offset: out.strings.len() as u32,
             name_length: id.len() as u32,
+            element: self.element - 1,
+            contour_offset,
+            contour_count: loops.len() as u32,
         };
-        for v in &buffers.vertices {
-            let (x, y) = apply(transform, v[0], v[1]);
-            out.vertices.push(x);
-            out.vertices.push(y);
+        for p in &positions {
+            out.vertices.push(p[0]);
+            out.vertices.push(p[1]);
         }
-        out.indices.extend_from_slice(&buffers.indices);
+        // Consistent winding: positive area in these y-down coordinates, which is clockwise on
+        // screen, the front face in Unity. lyon doesn't guarantee an orientation, and shaders
+        // that cull back faces would otherwise drop triangles.
+        for t in indices.chunks_exact(3) {
+            let (a, b, c) = (positions[t[0] as usize], positions[t[1] as usize], positions[t[2] as usize]);
+            let area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+            if area < 0.0 {
+                out.indices.extend_from_slice(&[t[0], t[2], t[1]]);
+            } else {
+                out.indices.extend_from_slice(t);
+            }
+        }
         out.strings.extend_from_slice(id.as_bytes());
         out.layers.push(layer);
     }
@@ -320,6 +366,84 @@ impl Importer<'_> {
     }
 }
 
+/// The outline of a triangle mesh: the edges used by exactly one triangle, chained into closed
+/// loops. Triangles are first oriented to a positive signed area, so outer boundaries come out
+/// with a positive area and holes with a negative one.
+fn boundary_loops(positions: &[[f32; 2]], indices: &[u32]) -> Vec<Vec<[f32; 2]>> {
+    // Weld vertices at identical positions, so duplicates don't hide shared edges.
+    let mut welded: HashMap<(u32, u32), u32> = HashMap::new();
+    let mut points: Vec<[f32; 2]> = Vec::new();
+    let ids: Vec<u32> = positions
+        .iter()
+        .map(|p| {
+            *welded.entry((p[0].to_bits(), p[1].to_bits())).or_insert_with(|| {
+                points.push(*p);
+                (points.len() - 1) as u32
+            })
+        })
+        .collect();
+
+    // Count directed edges; an edge cancels against its reverse, which belongs to the
+    // neighbouring triangle.
+    let mut edges: HashMap<(u32, u32), i32> = HashMap::new();
+    for t in indices.chunks_exact(3) {
+        let (a, mut b, mut c) = (ids[t[0] as usize], ids[t[1] as usize], ids[t[2] as usize]);
+        if a == b || b == c || c == a {
+            continue;
+        }
+        let (pa, pb, pc) = (points[a as usize], points[b as usize], points[c as usize]);
+        let area = (pb[0] - pa[0]) * (pc[1] - pa[1]) - (pb[1] - pa[1]) * (pc[0] - pa[0]);
+        if area == 0.0 {
+            continue;
+        }
+        if area < 0.0 {
+            std::mem::swap(&mut b, &mut c);
+        }
+        for (u, v) in [(a, b), (b, c), (c, a)] {
+            match edges.get_mut(&(v, u)) {
+                Some(count) if *count > 0 => *count -= 1,
+                _ => *edges.entry((u, v)).or_insert(0) += 1,
+            }
+        }
+    }
+
+    let mut outgoing: HashMap<u32, Vec<u32>> = HashMap::new();
+    let mut boundary: Vec<(u32, u32)> = Vec::new();
+    for (&(u, v), &count) in &edges {
+        for _ in 0..count.max(0) {
+            boundary.push((u, v));
+        }
+    }
+    // Deterministic output regardless of hash order.
+    boundary.sort_unstable();
+    for &(u, v) in &boundary {
+        outgoing.entry(u).or_default().push(v);
+    }
+
+    let mut loops = Vec::new();
+    for &(start, _) in &boundary {
+        let Some(first) = outgoing.get_mut(&start).and_then(|o| o.pop()) else { continue };
+        let mut contour = vec![points[start as usize]];
+        let mut current = first;
+        let mut closed = false;
+        for _ in 0..boundary.len() {
+            if current == start {
+                closed = true;
+                break;
+            }
+            contour.push(points[current as usize]);
+            match outgoing.get_mut(&current).and_then(|o| o.pop()) {
+                Some(next) => current = next,
+                None => break,
+            }
+        }
+        if closed && contour.len() >= 3 {
+            loops.push(contour);
+        }
+    }
+    loops
+}
+
 fn key_of(address: usize, t: &Transform) -> usize {
     let mut h = address as u64;
     for v in [t.sx, t.kx, t.ky, t.sy, t.tx, t.ty] {
@@ -380,4 +504,95 @@ fn to_lyon(path: &tiny_skia_path::Path) -> LyonPath {
         builder.end(false);
     }
     builder.build()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn signed_area(c: &[[f32; 2]]) -> f32 {
+        let mut a = 0.0;
+        for i in 0..c.len() {
+            let (p, q) = (c[i], c[(i + 1) % c.len()]);
+            a += p[0] * q[1] - q[0] * p[1];
+        }
+        a * 0.5
+    }
+
+    fn run(svg: &str) -> Output {
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false }).unwrap()
+    }
+
+    fn layer_contours(out: &Output, layer: &SvgiLayer) -> Vec<Vec<[f32; 2]>> {
+        (0..layer.contour_count)
+            .map(|i| {
+                let c = out.contours[(layer.contour_offset + i) as usize];
+                (0..c.point_count)
+                    .map(|j| {
+                        let k = ((c.point_offset + j) * 2) as usize;
+                        [out.contour_points[k], out.contour_points[k + 1]]
+                    })
+                    .collect()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn square_has_one_positive_outline() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect x="10" y="10" width="50" height="50"/></svg>"#);
+        assert_eq!(out.layers.len(), 1);
+        let contours = layer_contours(&out, &out.layers[0]);
+        assert_eq!(contours.len(), 1);
+        assert!((signed_area(&contours[0]) - 2500.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn hole_has_negative_outline() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <path fill-rule="evenodd" d="M0 0H90V90H0Z M30 30H60V60H30Z"/></svg>"#);
+        let mut areas: Vec<f32> = layer_contours(&out, &out.layers[0]).iter().map(|c| signed_area(c)).collect();
+        areas.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert_eq!(areas.len(), 2);
+        assert!((areas[0] + 900.0).abs() < 1e-3, "hole: {}", areas[0]);
+        assert!((areas[1] - 8100.0).abs() < 1e-3, "outer: {}", areas[1]);
+    }
+
+    #[test]
+    fn mirrored_square_keeps_orientation() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <rect transform="scale(-1 1) translate(-100 0)" x="10" y="10" width="50" height="50"/></svg>"#);
+        let contours = layer_contours(&out, &out.layers[0]);
+        assert!(signed_area(&contours[0]) > 0.0);
+    }
+
+    #[test]
+    fn triangles_have_consistent_winding() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <circle cx="50" cy="50" r="40"/><rect transform="scale(-1 1) translate(-100 0)" width="30" height="30"/>
+            <path d="M10 10 L90 90 M90 10 L10 90" stroke="black" stroke-width="5"/></svg>"#);
+        for layer in &out.layers {
+            for t in out.indices[layer.index_offset as usize..(layer.index_offset + layer.index_count) as usize].chunks_exact(3) {
+                let p = |i: u32| {
+                    let k = ((layer.vertex_offset + i) * 2) as usize;
+                    [out.vertices[k], out.vertices[k + 1]]
+                };
+                let (a, b, c) = (p(t[0]), p(t[1]), p(t[2]));
+                let area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+                assert!(area >= 0.0, "triangle with negative area {area}");
+            }
+        }
+    }
+
+    #[test]
+    fn fill_and_stroke_share_element() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <rect id="a" x="10" y="10" width="50" height="50" fill="red" stroke="blue" stroke-width="4"/>
+            <circle id="b" cx="70" cy="70" r="10"/></svg>"#);
+        assert_eq!(out.layers.len(), 3);
+        assert_eq!(out.layers[0].element, out.layers[1].element);
+        assert_ne!(out.layers[1].element, out.layers[2].element);
+        assert_eq!(out.layers[1].kind, SVGI_LAYER_STROKE);
+        // A stroked rectangle is a ring: one outer and one inner outline.
+        assert_eq!(out.layers[1].contour_count, 2);
+    }
 }

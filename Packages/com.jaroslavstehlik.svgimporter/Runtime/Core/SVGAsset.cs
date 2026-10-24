@@ -88,21 +88,10 @@ namespace SVGImporter
             float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
             for(int i = 0; i < length; i++)
             {
-                if(vertices[i].x < minX)
-                {
-                    minX = vertices[i].x;
-                } else if(vertices[i].x > maxX)
-                {
-                    maxX = vertices[i].x;
-                }
-                
-                if(vertices[i].y < minY)
-                {
-                    minY = vertices[i].y;
-                } else if(vertices[i].y > maxY)
-                {
-                    maxY = vertices[i].y;
-                }
+                minX = Mathf.Min(minX, vertices[i].x);
+                maxX = Mathf.Max(maxX, vertices[i].x);
+                minY = Mathf.Min(minY, vertices[i].y);
+                maxY = Mathf.Max(maxY, vertices[i].y);
             }
 
             if(minX != float.MaxValue || maxX != float.MinValue || minY != float.MaxValue || maxY != float.MinValue)
@@ -157,21 +146,10 @@ namespace SVGImporter
             {
                 Vector2 min = svgShapes[i].bounds.min;
                 Vector2 max = svgShapes[i].bounds.max;
-                if(min.x < minX)
-                {
-                    minX = min.x;
-                } else if(max.x > maxX)
-                {
-                    maxX = max.x;
-                }
-                
-                if(min.y < minY)
-                {
-                    minY = min.y;
-                } else if(max.y > maxY)
-                {
-                    maxY = max.y;
-                }
+                minX = Mathf.Min(minX, min.x);
+                maxX = Mathf.Max(maxX, max.x);
+                minY = Mathf.Min(minY, min.y);
+                maxY = Mathf.Max(maxY, max.y);
                 
                 if(svgShapes[i].vertices != null)
                 {
@@ -276,21 +254,10 @@ namespace SVGImporter
                 {
                     Vector2 min = svgLayers[i].shapes[j].bounds.min;
                     Vector2 max = svgLayers[i].shapes[j].bounds.max;
-                    if(min.x < minX)
-                    {
-                        minX = min.x;
-                    } else if(max.x > maxX)
-                    {
-                        maxX = max.x;
-                    }
-
-                    if(min.y < minY)
-                    {
-                        minY = min.y;
-                    } else if(max.y > maxY)
-                    {
-                        maxY = max.y;
-                    }
+                    minX = Mathf.Min(minX, min.x);
+                    maxX = Mathf.Max(maxX, max.x);
+                    minY = Mathf.Min(minY, min.y);
+                    maxY = Mathf.Max(maxY, max.y);
 
                     if(svgLayers[i].shapes[j].vertices != null)
                     {
@@ -1721,6 +1688,7 @@ namespace SVGImporter
                 SVGAssetImport.ignoreSVGCanvas = _ignoreSVGCanvas;
                 SVGAssetImport.useGradients = _useGradients;
                 SVGAssetImport.antialiasing = _antialiasing;
+                SVGAssetImport.engine = SVGImporterSettings.Get.importEngine;
                 assetImport = new SVGAssetImport(svgFile, _vpm);
                 assetImport.StartProcess(this, addMesh);
             }

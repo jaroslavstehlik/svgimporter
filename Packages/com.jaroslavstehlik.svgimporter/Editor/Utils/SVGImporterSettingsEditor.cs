@@ -29,10 +29,12 @@ namespace SVGImporter {
         SerializedProperty generateNormals;
         SerializedProperty generateTangents;
         SerializedProperty importNewSVGFiles;
+        SerializedProperty importEngine;
 
         void OnEnable()
         {
             importNewSVGFiles = serializedObject.FindProperty("importNewSVGFiles");
+            importEngine = serializedObject.FindProperty("importEngine");
             format = serializedObject.FindProperty("defaultSVGFormat");
             useGradients = serializedObject.FindProperty("defaultUseGradients");
             antialiasing = serializedObject.FindProperty("defaultAntialiasing");
@@ -59,6 +61,19 @@ namespace SVGImporter {
 			EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField("Import", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(importNewSVGFiles, new GUIContent("Import New SVG Files", importNewSVGFiles.tooltip));
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(importEngine, new GUIContent("Import Engine", importEngine.tooltip));
+            if(EditorGUI.EndChangeCheck())
+            {
+                // Reimport every .svg file with the new engine.
+                serializedObject.ApplyModifiedProperties();
+                SVGImportEngineDependency.Register();
+                AssetDatabase.Refresh();
+            }
+            if(importEngine.enumValueIndex == (int)SVGImportEngine.Native && !SVGImporter.Native.SVGNativeCore.isSupported)
+            {
+                EditorGUILayout.HelpBox("The native engine isn't available on this platform yet; SVG files are imported with the legacy engine.", MessageType.Info);
+            }
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Default Import Settings", EditorStyles.boldLabel);

@@ -12,6 +12,8 @@ use svgimporter_core::ffi::*;
 
 struct Imported {
     code: i32,
+    /// Layers for which no closed outline could be extracted.
+    layers_without_outline: u32,
     layers: u32,
     triangles: u32,
     vertices: u32,
@@ -23,13 +25,18 @@ fn import(data: &[u8], tolerance: f32) -> Imported {
     let options = SvgiOptions { tolerance, dpi: 96.0, convert_text: 1 };
     let mut result: *mut SvgiResult = std::ptr::null_mut();
     let code = unsafe { svgi_import(data.as_ptr(), data.len(), &options, &mut result) };
-    let mut imported = Imported { code, layers: 0, triangles: 0, vertices: 0, diagnostics: 0, error: String::new() };
+    let mut imported = Imported { code, layers_without_outline: 0, layers: 0, triangles: 0, vertices: 0, diagnostics: 0, error: String::new() };
     if !result.is_null() {
         let r = unsafe { &*result };
         imported.layers = r.layer_count;
         imported.triangles = r.index_count / 3;
         imported.vertices = r.vertex_float_count / 2;
         imported.diagnostics = r.diagnostics;
+        for i in 0..r.layer_count as usize {
+            if unsafe { (*r.layers.add(i)).contour_count } == 0 {
+                imported.layers_without_outline += 1;
+            }
+        }
         if r.error_message_length > 0 {
             let bytes = unsafe { std::slice::from_raw_parts(r.error_message, r.error_message_length as usize) };
             imported.error = String::from_utf8_lossy(bytes).into_owned();
@@ -97,7 +104,7 @@ fn main() {
         Some("bench") => {
             let files = collect(&args[1..]);
             let data: Vec<Vec<u8>> = files.iter().map(|f| std::fs::read(f).unwrap_or_default()).collect();
-            let (mut ok, mut parse_errors, mut internal, mut triangles) = (0, 0, 0, 0u64);
+            let (mut ok, mut parse_errors, mut internal, mut triangles, mut no_outline) = (0, 0, 0, 0u64, 0u32);
             let mut internal_files = Vec::new();
             let start = Instant::now();
             for (i, d) in data.iter().enumerate() {
@@ -111,11 +118,12 @@ fn main() {
                     }
                 }
                 triangles += r.triangles as u64;
+                no_outline += r.layers_without_outline;
             }
             let seconds = start.elapsed().as_secs_f64();
             println!(
-                "files {}  ok {}  parse errors {}  internal errors {}  triangles {}  total {:.1} ms  per file {:.3} ms",
-                files.len(), ok, parse_errors, internal, triangles, seconds * 1000.0, seconds * 1000.0 / files.len().max(1) as f64
+                "files {}  ok {}  parse errors {}  internal errors {}  triangles {}  layers without outline {}  total {:.1} ms  per file {:.3} ms",
+                files.len(), ok, parse_errors, internal, triangles, no_outline, seconds * 1000.0, seconds * 1000.0 / files.len().max(1) as f64
             );
             for f in internal_files {
                 println!("internal error: {f}");

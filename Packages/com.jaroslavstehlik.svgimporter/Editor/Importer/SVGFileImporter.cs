@@ -17,7 +17,7 @@ namespace SVGImporter
     /// Registered as an override importer for .svg, because Unity's own Vector Graphics
     /// importer also claims the extension. SVGPostprocessor assigns it to new files.
     /// </summary>
-    [ScriptedImporter(1, null, new[] { "svg" })]
+    [ScriptedImporter(2, null, new[] { "svg" })]
     public class SVGFileImporter : ScriptedImporter
     {
         // The field names match SVGAsset's serialized fields, so the settings are copied by
@@ -47,6 +47,9 @@ namespace SVGImporter
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            // Reimport when the Import Engine setting changes.
+            ctx.DependsOnCustomDependency(SVGImportEngineDependency.name);
+
             SVGAsset asset = ScriptableObject.CreateInstance<SVGAsset>();
             asset.name = Path.GetFileNameWithoutExtension(ctx.assetPath);
             ApplySettings(this, asset);
