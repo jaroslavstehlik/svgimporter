@@ -377,6 +377,12 @@ The existing samples are kept as the Showcase until the focused ones exist.
 | 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in |
 | 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site |
 
+**Progress.** Phase 1 is done for macOS (2026-10-24): `native/` contains `svgimporter-core` (usvg + lyon fills, strokes and dashes, gradients as paint data, diagnostics) and the internal `svgimporter-cli`; `native/build-macos.sh` builds the universal library into the package; csbindgen generates `Runtime/Native/NativeMethods.g.cs`, wrapped by `SVGNativeCore`. Results:
+- resvg test suite: 1,748 files, no crashes; 1,745 imported and 3 rejected as invalid (negative size, zero size, not UTF-8), 0.24 ms per file on average including text.
+- Package samples (166 files), native core plus building a Unity mesh, against the legacy importer: about 30× faster (48 ms against 1,451 ms in Unity 6000.6; the tiger: 4.6 ms against 138 ms).
+- Unity 6000.0 LTS and 6000.6: the package compiles without warnings, the library loads, and all render tests pass in Gamma and Linear colour space.
+Other platforms follow later; the native core isn't used by the importer until phase 2.
+
 Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phase O is C# and shader work and can ship in 2.x. Phase F needs the fringe from phase A. Phase R needs resvg and follows phase 3; phase I can start with solid fills and grow with them.
 
 ## 14. Risks

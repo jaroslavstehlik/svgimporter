@@ -1,0 +1,6 @@
+# macOS: give the library a relocatable install name instead of the build machine's path.
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-Wl,-install_name,@rpath/libsvgimporter_core.dylib"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-Wl,-install_name,@rpath/libsvgimporter_core.dylib"]

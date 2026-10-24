@@ -201,6 +201,10 @@ public static class SVGRenderTests
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
 
+        // Neutral, fixed ambient light, so lit results don't depend on the project's sky.
+        RenderSettings.ambientMode = AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.2f, 0.2f, 0.2f, 1f);
+
         var light = new GameObject("Light").AddComponent<Light>();
         light.type = LightType.Directional;
         light.color = Color.white;

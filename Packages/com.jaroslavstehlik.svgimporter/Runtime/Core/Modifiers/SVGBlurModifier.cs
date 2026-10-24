@@ -14,7 +14,11 @@ namespace SVGImporter
     [AddComponentMenu("Rendering/SVG Modifiers/Blur Modifier", 22)]
     public class SVGBlurModifier : SVGModifier 
     {
+    // Unity 6.0 still has the obsolete Component.camera, which this field hides (CS0108);
+    // later versions removed it, where `new` would warn instead (CS0109).
+#pragma warning disable CS0108, CS0109
     public Camera camera;
+#pragma warning restore CS0108, CS0109
         public bool useCameraVelocity;
 
         public float radius = 20f;

@@ -70,7 +70,11 @@ public static class SampleMaintenance
         foreach (string scenePath in AssetDatabase.FindAssets("t:Scene", new[] { "Assets/Samples" }).Select(AssetDatabase.GUIDToAssetPath))
         {
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+#if UNITY_6000_5_OR_NEWER
+            var camera = UnityEngine.Object.FindObjectsByType<Camera>()
+#else
             var camera = UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)
+#endif
                 .Where(c => c.enabled && c.gameObject.activeInHierarchy).OrderBy(c => c.depth).LastOrDefault();
             if (camera == null) continue;
 

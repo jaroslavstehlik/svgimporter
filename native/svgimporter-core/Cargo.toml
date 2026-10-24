@@ -1,0 +1,19 @@
+[package]
+name = "svgimporter-core"
+description = "SVG parsing and tessellation for SVG Importer, exposed through a C ABI."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "svgimporter_core"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+usvg = "0.49.0"
+lyon_tessellation = "1.0.23"
+# The version usvg uses, so its path types match.
+tiny-skia-path = "0.12.0"
+
+[build-dependencies]
+csbindgen = "1.9.8"

@@ -1,0 +1,13 @@
+[package]
+name = "svgimporter-cli"
+description = "Internal tool: imports SVG files with svgimporter-core outside Unity, for testing and benchmarks."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "svgimporter-cli"
+
+[dependencies]
+svgimporter-core = { path = "../svgimporter-core" }
