@@ -3,11 +3,20 @@
 //! Each fill or stroke becomes one layer, in painting order. Vertices are in SVG user units with
 //! all transforms applied (y pointing down). Unity-specific processing (scaling, pivot, render
 //! formats, gradients in the mesh) happens in C#.
+//!
+//! Clip paths are applied to the geometry: a clipped fill or stroke is intersected with the clip
+//! region in document space and tessellated again.
 
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
+use i_overlay::core::fill_rule::FillRule as OverlayFillRule;
+use i_overlay::core::overlay_rule::OverlayRule;
+use i_overlay::float::simplify::SimplifyShape;
+use i_overlay::float::single::SingleFloatOverlay;
 use lyon_tessellation::math::point;
+use lyon_tessellation::path::iterator::PathIterator;
+use lyon_tessellation::path::PathEvent;
 use lyon_tessellation::path::Path as LyonPath;
 use lyon_tessellation::{
     BuffersBuilder, FillOptions, FillTessellator, FillVertex, StrokeOptions, StrokeTessellator,
@@ -71,6 +80,7 @@ pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
         element: 0,
         fill: FillTessellator::new(),
         stroke: StrokeTessellator::new(),
+        clip: None,
     };
     importer.group(tree.root(), 1.0);
     Ok(importer.output)
@@ -85,16 +95,46 @@ struct Importer<'a> {
     element: u32,
     fill: FillTessellator,
     stroke: StrokeTessellator,
+    /// The clip region of the current group in document space, or None if nothing clips it.
+    clip: Option<Region>,
 }
+
+/// An area in document space: closed contours, without overlaps, holes wound opposite to their
+/// outer contour, so it can be filled with either fill rule.
+type Region = Vec<Vec<[f64; 2]>>;
 
 impl Importer<'_> {
     fn group(&mut self, group: &usvg::Group, opacity: f32) {
-        if group.clip_path().is_some() {
-            self.output.diagnostics |= SVGI_DIAG_CLIP_PATH;
+        // A clip path clips the group's content in the group's coordinates, and so does a mask
+        // that is a plain shape. Nested clips intersect.
+        let mut region = group.clip_path().map(|clip_path| self.clip_region(clip_path, &group.abs_transform()));
+        if let Some(mask) = group.mask() {
+            match self.mask_region(mask, &group.abs_transform()) {
+                Some(mask_region) => {
+                    region = Some(match region {
+                        Some(r) => intersect(&r, &mask_region),
+                        None => mask_region,
+                    })
+                }
+                // Not representable as geometry: drawn unmasked.
+                None => self.output.diagnostics |= SVGI_DIAG_MASK,
+            }
         }
-        if group.mask().is_some() {
-            self.output.diagnostics |= SVGI_DIAG_MASK;
+        let outer_clip = region.map(|region| {
+            let region = match &self.clip {
+                Some(outer) => intersect(outer, &region),
+                None => region,
+            };
+            std::mem::replace(&mut self.clip, Some(region))
+        });
+        if self.clip.as_ref().map_or(false, |c| c.is_empty()) {
+            // Clipped away entirely.
+            if let Some(outer) = outer_clip {
+                self.clip = outer;
+            }
+            return;
         }
+
         if !group.filters().is_empty() {
             self.output.diagnostics |= SVGI_DIAG_FILTER;
         }
@@ -122,6 +162,150 @@ impl Importer<'_> {
                 }
             }
         }
+
+        if let Some(outer) = outer_clip {
+            self.clip = outer;
+        }
+    }
+
+    /// The area a clip path lets through, in document space. `transform` is the absolute
+    /// transform of the element the clip path is applied to.
+    fn clip_region(&mut self, clip_path: &usvg::ClipPath, transform: &Transform) -> Region {
+        let mut contours = Vec::new();
+        self.clip_contours(clip_path.root(), &transform.pre_concat(clip_path.transform()), &mut contours);
+        // Each child was simplified with its own clip rule; their union is the clip region.
+        let mut region = flatten_shapes(contours.simplify_shape(OverlayFillRule::NonZero));
+        // A clip path can itself be clipped, in the same coordinates as the element.
+        if let Some(inner) = clip_path.clip_path() {
+            let inner = self.clip_region(inner, transform);
+            region = intersect(&region, &inner);
+        }
+        region
+    }
+
+    /// The area a mask lets through, if the mask is a plain shape: its content is opaque and,
+    /// for a luminance mask, white, so it passes everything it covers. None for other masks,
+    /// which would need per-pixel alpha.
+    fn mask_region(&mut self, mask: &usvg::Mask, transform: &Transform) -> Option<Region> {
+        let mut contours = Vec::new();
+        if !self.mask_contours(mask.root(), mask.kind(), transform, &mut contours) {
+            return None;
+        }
+        let r = mask.rect();
+        let rect = vec![[r.left(), r.top()], [r.right(), r.top()], [r.right(), r.bottom()], [r.left(), r.bottom()]]
+            .into_iter()
+            .map(|[x, y]| {
+                let (x, y) = apply(transform, x, y);
+                [x as f64, y as f64]
+            })
+            .collect::<Vec<_>>();
+        let mut region = intersect(&flatten_shapes(contours.simplify_shape(OverlayFillRule::NonZero)), &vec![rect]);
+        // A mask can itself be masked, in the same coordinates as the element.
+        if let Some(inner) = mask.mask() {
+            let inner = self.mask_region(inner, transform)?;
+            region = intersect(&region, &inner);
+        }
+        Some(region)
+    }
+
+    /// Adds the outlines of a mask's content; false if the content isn't a plain opaque shape.
+    fn mask_contours(&mut self, group: &usvg::Group, kind: usvg::MaskType, transform: &Transform, contours: &mut Region) -> bool {
+        for node in group.children() {
+            match node {
+                usvg::Node::Group(child) => {
+                    let plain = child.opacity().get() == 1.0
+                        && child.clip_path().is_none()
+                        && child.mask().is_none()
+                        && child.filters().is_empty()
+                        && child.blend_mode() == usvg::BlendMode::Normal;
+                    if !plain || !self.mask_contours(child, kind, transform, contours) {
+                        return false;
+                    }
+                }
+                usvg::Node::Path(path) => {
+                    if !path.is_visible() {
+                        continue;
+                    }
+                    if path.stroke().is_some() {
+                        return false;
+                    }
+                    let Some(fill) = path.fill() else { continue };
+                    let opaque = match fill.paint() {
+                        usvg::Paint::Color(c) => {
+                            fill.opacity().get() == 1.0
+                                && (kind == usvg::MaskType::Alpha || (c.red == 255 && c.green == 255 && c.blue == 255))
+                        }
+                        _ => false,
+                    };
+                    if !opaque {
+                        return false;
+                    }
+                    let t = transform.pre_concat(path.abs_transform());
+                    let shape = flatten(path.data(), &t, self.options.tolerance).simplify_shape(overlay_rule(fill.rule()));
+                    contours.extend(flatten_shapes(shape));
+                }
+                usvg::Node::Text(_) | usvg::Node::Image(_) => return false,
+            }
+        }
+        true
+    }
+
+    fn clip_contours(&mut self, group: &usvg::Group, transform: &Transform, contours: &mut Region) {
+        let mut own = Vec::new();
+        for node in group.children() {
+            match node {
+                usvg::Node::Group(child) => self.clip_contours(child, transform, &mut own),
+                usvg::Node::Path(path) => {
+                    // usvg gives clip path children a fill with the clip rule.
+                    let Some(fill) = path.fill() else { continue };
+                    if !path.is_visible() {
+                        continue;
+                    }
+                    let t = transform.pre_concat(path.abs_transform());
+                    let shape = flatten(path.data(), &t, self.options.tolerance).simplify_shape(overlay_rule(fill.rule()));
+                    own.extend(flatten_shapes(shape));
+                }
+                usvg::Node::Text(text) => {
+                    if self.options.convert_text {
+                        self.clip_contours(text.flattened(), transform, &mut own);
+                    }
+                }
+                usvg::Node::Image(_) => {}
+            }
+        }
+        match group.clip_path() {
+            // An element inside a clip path can be clipped itself, in its own coordinates.
+            Some(clip_path) => {
+                let region = flatten_shapes(own.simplify_shape(OverlayFillRule::NonZero));
+                let clip = self.clip_region(clip_path, &transform.pre_concat(group.abs_transform()));
+                contours.extend(intersect(&region, &clip));
+            }
+            None => contours.extend(own),
+        }
+    }
+
+    /// Fill tessellation of a region in document space.
+    fn tessellate_region(&mut self, region: &Region) -> Option<VertexBuffers<[f32; 2], u32>> {
+        let mut builder = LyonPath::builder();
+        for contour in region {
+            if contour.len() < 3 {
+                continue;
+            }
+            builder.begin(point(contour[0][0] as f32, contour[0][1] as f32));
+            for p in &contour[1..] {
+                builder.line_to(point(p[0] as f32, p[1] as f32));
+            }
+            builder.end(true);
+        }
+        let mut buffers: VertexBuffers<[f32; 2], u32> = VertexBuffers::new();
+        self.fill
+            .tessellate_path(
+                &builder.build(),
+                &FillOptions::default().with_fill_rule(lyon_tessellation::FillRule::NonZero),
+                &mut BuffersBuilder::new(&mut buffers, |v: FillVertex| v.position().to_array()),
+            )
+            .ok()?;
+        Some(buffers)
     }
 
     fn path(&mut self, path: &usvg::Path, opacity: f32) {
@@ -151,6 +335,15 @@ impl Importer<'_> {
     fn fill_layer(&mut self, path: &usvg::Path, transform: &Transform, tolerance: f32, opacity: f32) {
         let Some(fill) = path.fill() else { return };
         let Some(paint) = self.paint(fill.paint(), transform) else { return };
+
+        if let Some(clip) = &self.clip {
+            let shape = flatten(path.data(), transform, self.options.tolerance).simplify_shape(overlay_rule(fill.rule()));
+            let region = intersect(&flatten_shapes(shape), clip);
+            if let Some(buffers) = self.tessellate_region(&region) {
+                self.push_layer(path.id(), SVGI_LAYER_FILL, paint, opacity * fill.opacity().get(), &buffers, &Transform::identity());
+            }
+            return;
+        }
 
         let lyon_path = to_lyon(path.data());
         let options = FillOptions::tolerance(tolerance).with_fill_rule(match fill.rule() {
@@ -190,7 +383,10 @@ impl Importer<'_> {
         let lyon_path = to_lyon(data);
         let options = StrokeOptions::tolerance(tolerance)
             .with_line_width(stroke.width().get())
-            .with_miter_limit(stroke.miterlimit().get().max(StrokeOptions::MINIMUM_MITER_LIMIT))
+            // lyon bevels when the miter ratio (1 / sin(angle / 2), SVG's definition) exceeds
+            // twice its limit, so it gets half of SVG's. Its minimum of 1 means SVG limits
+            // below 2 behave like 2.
+            .with_miter_limit((stroke.miterlimit().get() * 0.5).max(StrokeOptions::MINIMUM_MITER_LIMIT))
             .with_line_join(match stroke.linejoin() {
                 usvg::LineJoin::Miter => lyon_tessellation::LineJoin::Miter,
                 usvg::LineJoin::MiterClip => lyon_tessellation::LineJoin::MiterClip,
@@ -204,9 +400,37 @@ impl Importer<'_> {
             &options,
             &mut BuffersBuilder::new(&mut buffers, |v: StrokeVertex| v.position().to_array()),
         );
-        if tessellated.is_ok() {
-            self.push_layer(path.id(), SVGI_LAYER_STROKE, paint, opacity * stroke.opacity().get(), &buffers, transform);
+        if tessellated.is_err() {
+            return;
         }
+        if let Some(clip) = &self.clip {
+            // The stroke's triangles, consistently wound so that their union is the stroke's
+            // area, intersected with the clip region.
+            let triangles: Region = buffers
+                .indices
+                .chunks_exact(3)
+                .map(|t| {
+                    let mut triangle: Vec<[f64; 2]> = t
+                        .iter()
+                        .map(|&i| {
+                            let v = buffers.vertices[i as usize];
+                            let (x, y) = apply(transform, v[0], v[1]);
+                            [x as f64, y as f64]
+                        })
+                        .collect();
+                    if signed_area(&triangle) < 0.0 {
+                        triangle.swap(1, 2);
+                    }
+                    triangle
+                })
+                .collect();
+            let region = flatten_shapes(triangles.overlay(clip, OverlayRule::Intersect, OverlayFillRule::NonZero));
+            if let Some(buffers) = self.tessellate_region(&region) {
+                self.push_layer(path.id(), SVGI_LAYER_STROKE, paint, opacity * stroke.opacity().get(), &buffers, &Transform::identity());
+            }
+            return;
+        }
+        self.push_layer(path.id(), SVGI_LAYER_STROKE, paint, opacity * stroke.opacity().get(), &buffers, transform);
     }
 
     fn push_layer(
@@ -444,6 +668,64 @@ fn boundary_loops(positions: &[[f32; 2]], indices: &[u32]) -> Vec<Vec<[f32; 2]>>
     loops
 }
 
+/// The path's outline as closed polygons in document space, flattened to `tolerance` document
+/// units. Every subpath counts as closed, as for filling.
+fn flatten(path: &tiny_skia_path::Path, transform: &Transform, tolerance: f32) -> Region {
+    let scale = transform_scale(transform);
+    if !(scale > 0.0) {
+        return Vec::new();
+    }
+    let mut contours = Vec::new();
+    let mut contour: Vec<[f64; 2]> = Vec::new();
+    for event in to_lyon(path).iter().flattened(tolerance / scale) {
+        match event {
+            PathEvent::Begin { at } => {
+                contour.clear();
+                let (x, y) = apply(transform, at.x, at.y);
+                contour.push([x as f64, y as f64]);
+            }
+            PathEvent::Line { to, .. } => {
+                let (x, y) = apply(transform, to.x, to.y);
+                contour.push([x as f64, y as f64]);
+            }
+            PathEvent::End { .. } => {
+                if contour.len() >= 3 {
+                    contours.push(std::mem::take(&mut contour));
+                }
+            }
+            _ => {}
+        }
+    }
+    contours
+}
+
+fn flatten_shapes(shapes: Vec<Vec<Vec<[f64; 2]>>>) -> Region {
+    shapes.into_iter().flatten().collect()
+}
+
+fn intersect(a: &Region, b: &Region) -> Region {
+    if a.is_empty() || b.is_empty() {
+        return Vec::new();
+    }
+    flatten_shapes(a.overlay(b, OverlayRule::Intersect, OverlayFillRule::NonZero))
+}
+
+fn overlay_rule(rule: usvg::FillRule) -> OverlayFillRule {
+    match rule {
+        usvg::FillRule::NonZero => OverlayFillRule::NonZero,
+        usvg::FillRule::EvenOdd => OverlayFillRule::EvenOdd,
+    }
+}
+
+fn signed_area(c: &[[f64; 2]]) -> f64 {
+    let mut a = 0.0;
+    for i in 0..c.len() {
+        let (p, q) = (c[i], c[(i + 1) % c.len()]);
+        a += p[0] * q[1] - q[0] * p[1];
+    }
+    a * 0.5
+}
+
 fn key_of(address: usize, t: &Transform) -> usize {
     let mut h = address as u64;
     for v in [t.sx, t.kx, t.ky, t.sy, t.tx, t.ty] {
@@ -581,6 +863,92 @@ mod tests {
                 assert!(area >= 0.0, "triangle with negative area {area}");
             }
         }
+    }
+
+    fn layer_area(out: &Output, layer: &SvgiLayer) -> f32 {
+        let mut area = 0.0;
+        for t in out.indices[layer.index_offset as usize..(layer.index_offset + layer.index_count) as usize].chunks_exact(3) {
+            let p = |i: u32| {
+                let k = ((layer.vertex_offset + i) * 2) as usize;
+                [out.vertices[k], out.vertices[k + 1]]
+            };
+            let (a, b, c) = (p(t[0]), p(t[1]), p(t[2]));
+            area += ((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])) * 0.5;
+        }
+        area
+    }
+
+    #[test]
+    fn clip_path_intersects_fill() {
+        // A 100x100 square clipped by a 50x50 square that overlaps it by 25x25.
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+            <clipPath id="c"><rect x="75" y="75" width="50" height="50"/></clipPath>
+            <rect width="100" height="100" clip-path="url(#c)"/></svg>"#);
+        assert_eq!(out.layers.len(), 1);
+        assert!((layer_area(&out, &out.layers[0]) - 625.0).abs() < 1e-2);
+        let contours = layer_contours(&out, &out.layers[0]);
+        assert_eq!(contours.len(), 1);
+    }
+
+    #[test]
+    fn clip_path_uses_element_transform_and_units() {
+        // objectBoundingBox: the clip covers the left half of the shape, in the shape's
+        // transformed coordinates.
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+            <clipPath id="c" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
+            <g transform="translate(50 50) scale(2)"><rect width="40" height="20" clip-path="url(#c)"/></g></svg>"#);
+        assert!((layer_area(&out, &out.layers[0]) - 20.0 * 20.0 * 4.0).abs() < 1e-1);
+    }
+
+    #[test]
+    fn clip_path_clips_strokes_and_nests() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+            <clipPath id="a"><rect width="100" height="200"/></clipPath>
+            <clipPath id="b"><rect width="200" height="100"/></clipPath>
+            <g clip-path="url(#a)"><g clip-path="url(#b)">
+              <path d="M0 50 H200" stroke="black" stroke-width="10"/>
+              <rect x="150" y="150" width="10" height="10"/>
+            </g></g></svg>"#);
+        // The rectangle lies outside the clip; the stroke keeps its left half.
+        assert_eq!(out.layers.len(), 1);
+        assert_eq!(out.layers[0].kind, SVGI_LAYER_STROKE);
+        assert!((layer_area(&out, &out.layers[0]) - 1000.0).abs() < 1e-1);
+    }
+
+    #[test]
+    fn clip_rule_evenodd() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <clipPath id="c"><path clip-rule="evenodd" d="M0 0H90V90H0Z M30 30H60V60H30Z"/></clipPath>
+            <rect width="100" height="100" clip-path="url(#c)"/></svg>"#);
+        assert!((layer_area(&out, &out.layers[0]) - (8100.0 - 900.0)).abs() < 1e-1);
+    }
+
+    #[test]
+    fn clip_path_on_clip_path_child() {
+        // The clip path's rectangle is itself clipped to its left half.
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <clipPath id="inner"><rect width="50" height="100"/></clipPath>
+            <clipPath id="c"><rect width="100" height="100" clip-path="url(#inner)"/></clipPath>
+            <rect width="100" height="100" clip-path="url(#c)"/></svg>"#);
+        assert!((layer_area(&out, &out.layers[0]) - 5000.0).abs() < 1e-1);
+    }
+
+    #[test]
+    fn opaque_mask_clips() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <mask id="m"><rect width="50" height="100" fill="white"/></mask>
+            <rect width="100" height="100" mask="url(#m)"/></svg>"#);
+        assert_eq!(out.diagnostics & SVGI_DIAG_MASK, 0);
+        assert!((layer_area(&out, &out.layers[0]) - 5000.0).abs() < 1e-1);
+    }
+
+    #[test]
+    fn translucent_mask_is_reported() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <mask id="m"><rect width="50" height="100" fill="gray"/></mask>
+            <rect width="100" height="100" mask="url(#m)"/></svg>"#);
+        assert_ne!(out.diagnostics & SVGI_DIAG_MASK, 0);
+        assert!((layer_area(&out, &out.layers[0]) - 10000.0).abs() < 1e-1);
     }
 
     #[test]

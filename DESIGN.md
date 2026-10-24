@@ -381,7 +381,24 @@ The existing samples are kept as the Showcase until the focused ones exist.
 - resvg test suite: 1,748 files, no crashes; 1,745 imported and 3 rejected as invalid (negative size, zero size, not UTF-8), 0.24 ms per file on average including text.
 - Package samples (166 files), native core plus building a Unity mesh, against the legacy importer: about 30× faster (48 ms against 1,451 ms in Unity 6000.6; the tiger: 4.6 ms against 138 ms).
 - Unity 6000.0 LTS and 6000.6: the package compiles without warnings, the library loads, and all render tests pass in Gamma and Linear colour space.
-Other platforms follow later; the native core isn't used by the importer until phase 2.
+Other platforms follow later.
+
+Phase 2 is done for macOS (2026-10-24): the *Import Engine* setting selects the native core, which fills the same `SVGLayer`s as the legacy parser (`Runtime/Native/SVGNativeImport.cs`). Render tests pass with both engines on 6000.0 LTS and 6000.6; 163 of 166 samples produce the same layers (the other 3 because the native core keeps gradient strokes and tiny shapes the legacy parser drops), and sample scenes render the same apart from edges. The gradient atlas and the antialiasing fringe still come from the existing C# code (phases G and A replace them).
+
+Phase 3, macOS (2026-10-24): clip paths (any units, nested, clipped children, `clip-rule`) and masks that are plain opaque shapes are applied as geometry with [i_overlay](https://github.com/iShape-Rust/iOverlay) (MIT or Apache-2.0, pure Rust); unsupported features are listed in the Inspector. The conformance test (`Assets/Tests/Editor/ConformanceTests.cs`, and `svgimporter-cli compare` for the core alone) renders the resvg suite through the importer and compares each file with its reference. Files passing (at most 1% of pixels off by more than 32/255), in Unity 6000.0 and 6000.6:
+
+| | Legacy | Native |
+|---|---|---|
+| shapes | 90 | 132 of 133 |
+| structure | 86 | 187 of 264 |
+| painting | 100 | 254 of 308 |
+| paint servers | 62 | 106 of 155 |
+| masking | 17 | 57 of 94 |
+| filters | 78 | 95 of 408 |
+| text | 35 | 27 of 386 |
+| total | 468 | 858 of 1,748 |
+
+The legacy parser crashes the Editor on 8 files (recursive `use` and `clipPath` references, a stack overflow); they're counted as failures. Native passes at least as many files as legacy in every folder except a few text folders, where legacy, which draws no text, passes files whose text covers less than 1% of the image; the native core draws text with system fonts instead of the suite's. Gradient failures (spread methods, focal radius) are shared by both engines: they're limits of the current gradient shader, which phase G replaces. Native becomes the default once Windows and Linux libraries exist, so that a project imports the same on every Editor.
 
 Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phase O is C# and shader work and can ship in 2.x. Phase F needs the fringe from phase A. Phase R needs resvg and follows phase 3; phase I can start with solid fills and grow with them.
 

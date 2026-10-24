@@ -27,6 +27,9 @@
 - Reimport existing SVG assets to apply these gradient fixes.
 - New: **Import Engine** project setting (Window > SVG Importer > Settings). **Native** imports with a new native core (usvg and lyon) that is about 15 times faster and supports more of SVG, such as gradient strokes. It is available in the macOS Editor for now; other platforms use **Legacy**, the default. Changing the setting reimports all SVG files. Documents that use `conicalGradient` are still imported by the legacy parser.
 - Fixed shape and mesh bounds that could miss their right or bottom edge.
+- The Native import engine applies clip paths as geometry, including `objectBoundingBox` units, nested clip paths and clipped elements inside clip paths, and applies masks that are plain opaque shapes. Strokes now bevel at the right angle for their `stroke-miterlimit`.
+- The Inspector lists more unsupported features found during import: filters, patterns, blend modes, group opacity and skipped text.
+- Fixed meshes placed one canvas height too low when **Ignore SVG Canvas** is off. Reimport affected assets; their pivot now matches the canvas.
 
 ## Legacy releases
 

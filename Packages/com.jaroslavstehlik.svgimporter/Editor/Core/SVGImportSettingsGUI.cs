@@ -130,13 +130,28 @@ namespace SVGImporter
                         EditorGUILayout.HelpBox("Clip paths are experimental", MessageType.Warning);
                         break;
                     case SVGError.Mask:
-                        EditorGUILayout.HelpBox("Masks are not supported", MessageType.Warning);
+                        EditorGUILayout.HelpBox("Masks are not supported, except opaque shapes with the Native import engine. Unsupported masks are ignored.", MessageType.Warning);
                         break;
                     case SVGError.Symbol:
                         EditorGUILayout.HelpBox("Re-import for working symbols", MessageType.Warning);
                         break;
                     case SVGError.Image:
-                        EditorGUILayout.HelpBox("Images are not supported", MessageType.Warning);
+                        EditorGUILayout.HelpBox("Images are not supported and are left out", MessageType.Warning);
+                        break;
+                    case SVGError.Filter:
+                        EditorGUILayout.HelpBox("Filters, such as blurs and drop shadows, are not supported and are ignored", MessageType.Warning);
+                        break;
+                    case SVGError.Pattern:
+                        EditorGUILayout.HelpBox("Pattern fills and strokes are not supported and are left out", MessageType.Warning);
+                        break;
+                    case SVGError.BlendMode:
+                        EditorGUILayout.HelpBox("Blend modes are not supported; shapes are blended normally", MessageType.Warning);
+                        break;
+                    case SVGError.GroupOpacity:
+                        EditorGUILayout.HelpBox("Group opacity is applied to each shape in the group, so overlapping shapes show through each other", MessageType.Info);
+                        break;
+                    case SVGError.TextSkipped:
+                        EditorGUILayout.HelpBox("Text was left out", MessageType.Warning);
                         break;
                     case SVGError.Unknown:
                         EditorGUILayout.HelpBox("Unknow error occurred", MessageType.Error);

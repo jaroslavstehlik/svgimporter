@@ -16,7 +16,13 @@ namespace SVGImporter
         Symbol = 4,
         Image = 5,
         Mask = 6,
-        Unknown = 7
+        Unknown = 7,
+        // Reported by the native import engine.
+        Filter = 8,
+        Pattern = 9,
+        BlendMode = 10,
+        GroupOpacity = 11,
+        TextSkipped = 12,
     }
 
     public class SVGDocumentAsset : ScriptableObject {

@@ -231,6 +231,11 @@ namespace SVGImporter.Native
             if ((diagnostics & SVGNativeCore.Diagnostics.ClipPath) != 0) SVGAssetImport.errors.Add(SVGError.ClipPath);
             if ((diagnostics & SVGNativeCore.Diagnostics.Mask) != 0) SVGAssetImport.errors.Add(SVGError.Mask);
             if ((diagnostics & SVGNativeCore.Diagnostics.Image) != 0) SVGAssetImport.errors.Add(SVGError.Image);
+            if ((diagnostics & SVGNativeCore.Diagnostics.Filter) != 0) SVGAssetImport.errors.Add(SVGError.Filter);
+            if ((diagnostics & SVGNativeCore.Diagnostics.Pattern) != 0) SVGAssetImport.errors.Add(SVGError.Pattern);
+            if ((diagnostics & SVGNativeCore.Diagnostics.BlendMode) != 0) SVGAssetImport.errors.Add(SVGError.BlendMode);
+            if ((diagnostics & SVGNativeCore.Diagnostics.GroupOpacity) != 0) SVGAssetImport.errors.Add(SVGError.GroupOpacity);
+            if ((diagnostics & SVGNativeCore.Diagnostics.TextSkipped) != 0) SVGAssetImport.errors.Add(SVGError.TextSkipped);
         }
     }
 }

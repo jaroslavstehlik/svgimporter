@@ -125,8 +125,10 @@ namespace SVGImporter.Rendering
                 offset = new Vector2(bounds.min.x + bounds.size.x * asset.pivotPoint.x,
                                      (bounds.max.y - bounds.size.y * asset.pivotPoint.y));
             } else {
+                // The vertices are flipped to y-up above, the viewport isn't: its top edge is at
+                // -viewport.min.y.
                 offset = new Vector2(viewport.min.x + viewport.size.x * asset.pivotPoint.x,
-                                     (viewport.max.y - viewport.size.y * asset.pivotPoint.y));
+                                     -(viewport.min.y + viewport.size.y * asset.pivotPoint.y));
             }
 
             // update vertices

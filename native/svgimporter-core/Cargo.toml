@@ -14,6 +14,7 @@ usvg = "0.49.0"
 lyon_tessellation = "1.0.23"
 # The version usvg uses, so its path types match.
 tiny-skia-path = "0.12.0"
+i_overlay = "9.1.0"
 
 [build-dependencies]
 csbindgen = "1.9.8"
