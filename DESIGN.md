@@ -411,10 +411,22 @@ Compared with other SVG solutions, the design above gives SVG Importer browser-g
 
 **2. 2D lighting.** With the URP 2D Renderer, SVG shapes are drawn unlit (section 7.2's `Universal2D` pass), so 2D lights, shadows and normal maps don't affect them. Add *SVG Lit (2D)* shaders whose `Universal2D` pass samples URP's 2D light textures, as URP's `Sprite-Lit-Default` does. Normal maps come from the generated normals. The pass uses URP include files, so it sits in a SubShader with a `PackageRequirements` block and projects without URP still compile. This is shader work and doesn't need the native core.
 
-**3. Group opacity.** `opacity` on a group applies to the group's combined result. Applying it to each child, as today, makes overlapping children show through each other. Group opacity is common in exports from Illustrator and Figma. Approach, at import:
-- If the group's children don't overlap, per-child opacity is exact. Overlap is tested with polygon intersection (`i_overlay`).
-- If they overlap and the children are opaque, **flatten the group**: subtract each child's area from the children painted before it, so that no two children overlap, then apply the opacity per child. This is exact, and as a bonus removes hidden geometry, which reduces overdraw on mobile.
-- Groups with overlapping semi-transparent children use the raster fallback (item 4).
+**3. Group opacity.** `opacity` on a group applies to the group's combined result. Browsers and Skia render the group into an offscreen layer (`saveLayer`) and composite it with the opacity. Doing that at runtime costs a render target and an extra pass per group every frame, and breaks batching, so SVG Importer resolves group opacity at import wherever the result is provably identical. Applying it to each child, as today, makes overlapping children show through each other; group opacity is common in exports from Illustrator and Figma.
+
+Why geometry can replace the offscreen layer: for opaque children, the layer holds exactly one child's colour at each pixel, the topmost one. If every child is cut by the children painted above it, no two pieces overlap, and drawing each piece with the group's opacity gives the same pixels as compositing the layer. Only coverage changes, not colours, so this holds for gradient fills too.
+
+| Children of the group | Handling | Exact |
+|---|---|---|
+| Don't overlap (tested with `i_overlay`) | Opacity per child | Yes |
+| Overlap, all opaque (solid or gradient) | Cut each child by the children above it, then opacity per piece. Also removes hidden geometry, which reduces overdraw | Yes |
+| Overlap, semi-transparent solid colours | Split into regions (A only, B only, A∩B); each overlap region gets the colour blended at import | Yes |
+| Overlap, semi-transparent gradients | Blending two gradients isn't a gradient | No: raster fallback (item 4) |
+| Masks, filters or blend modes inside the group | — | No: raster fallback (item 4) |
+
+Limits:
+- **Internal edges.** In the offscreen layer, edges between children are internal, so the background never shows through them. After cutting, the pieces are separate shapes whose antialiasing fringes would let the background bleed through, like touching shapes (section 7.2). The cut edges are known exactly at import, so they get no fringe: pieces meet edge to edge, and only the group's outer edge is antialiased. With *Hardware* antialiasing (MSAA) everything stays exact.
+- **Modifiers.** Cut pieces and pre-blended overlap colours are fixed at import, so per-layer runtime changes (for example the recolour modifier) would be wrong inside a flattened group. Groups in assets that keep layers for modifiers are not flattened; the Inspector warns that their opacity is applied per child.
+- **To evaluate:** for overlapping opaque children, depth testing could do the same on the GPU without polygon operations: draw the group front to back with depth writes and the group's opacity, so each pixel takes only the topmost shape. The Opaque format already layers with depth. Antialiasing fringes conflict with it (a fringe would write depth while partly transparent), so it is not the default.
 
 **4. Raster fallback for what can't become geometry**: filters (drop shadows and blurs are common in exports), masks that aren't simple clips, blend modes, embedded images and patterns. resvg, from the same project as usvg, rasterizes just those groups at import into a mipmapped texture stored in the SVG Asset. The texture is placed in the mesh as a textured quad, in painter's order (`FILL_TYPE.TEXTURE` already exists). The resolution is an import setting, and these parts are no longer resolution-independent; the Inspector shows which elements were rasterized and why. Each asset with rasterized parts needs one extra material, so one more draw call.
 
