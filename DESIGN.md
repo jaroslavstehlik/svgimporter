@@ -203,26 +203,45 @@ Vertex compression is not a cause: Unity 6's default mask (`VertexChannelCompres
 
 **New design:**
 
-1. **Compute the gradient position analytically, with no lookup texture.** Each vertex stores its position in the gradient's own normalised space (TexCoord0, 32-bit float). Gradient space is an affine transform of the shape, so interpolating it across a triangle is exact. The fragment shader computes the gradient parameter `t` in full precision (`float`):
-   - linear: `t = g.x`
-   - radial: `t = length(g)`, using the SVG focal-point formula when the focal point differs from the centre
-   - conical: `t = atan2(g.y, g.x) / 2π + 0.5`, computed per pixel, so there is no seam
+The gradient *shape* (where a pixel lies along the gradient) becomes maths instead of a lookup texture. How the colour is then found depends on the gradient type.
 
-   This removes the 8-bit steps, the minification aliasing and the conical seam. It also makes the SVG `spreadMethod` (pad, reflect, repeat) possible, applied to `t` in the shader. Today only pad is effectively supported.
-2. **One gradient per atlas row, with margins.** Each gradient is a 256-texel ramp that fills the whole atlas width and occupies 4 identical rows. The shader samples the middle of the 4 rows, which leaves a margin of 1.5 texels to the neighbouring gradient. `u` is clamped to the centres of the first and last texels, so horizontal sampling never leaves the ramp. Ramps are sampled with `tex2Dlod` at level 0, so mipmap selection can't pick wrong rows.
-3. **An exact gradient index per vertex.** TexCoord1 holds the ramp index and the gradient type and spread as small integers, which are exact even when Unity compresses the channel to 16 bits. The vertex shader turns the index into the row coordinate.
-4. **A growable atlas.** The atlas starts at 256×64 (16 gradients) and doubles its height when full, up to 256×4096 (1024 gradients). All gradient materials are updated to the new texture. Identical gradients are shared by content hash. Each gradient is reference-counted by the SVG Assets that use it, so rows can be reused; only changed rows are uploaded.
-5. **Colours match browsers.** Stops are interpolated in sRGB when the ramp is generated on the CPU, as browsers do. The ramp is an sRGB texture, so it's correct in both Gamma and Linear projects.
+1. **Linear gradients use vertex colours, with no texture and no atlas.** A linear gradient's colour is linear in position between two neighbouring stops, and vertex colours interpolate linearly across a triangle. So each triangle is exact, provided no stop line crosses it. At import, triangles are split along:
+   - every stop line (`t` equal to a stop offset);
+   - `t = 0` and `t = 1`, beyond which the default *pad* spread keeps the end colours;
+   - every period boundary for the *repeat* and *reflect* spreads.
 
-The native core produces exactly this per-vertex data (gradient-space position, ramp index), so this part of the design doesn't change in phase 2.
+   Splitting a triangle along a line gives at most three triangles, and both sides share the new vertices, so edges stay watertight. Each vertex then gets the gradient's colour at its position. A two-stop gradient whose shape lies within `t ∈ [0, 1]` needs no splitting. Linear gradients then render with the solid-colour shaders and batch with solid shapes. They need no texture read and no gradient index, so they also don't need the per-asset mesh copy that remaps atlas indices. If *repeat* or *reflect* would create more than 64 periods across a shape, that shape uses the ramp path below instead.
+2. **Radial and conical gradients compute `t` analytically.** Each vertex stores its position in the gradient's normalised space (TexCoord0, 32-bit float). Gradient space is an affine transform of the shape, so interpolating it across a triangle is exact. The fragment shader computes `t` in full precision (`float`):
+   - radial: `t = length(g)`, using the SVG focal-point formula when the focal point differs from the centre;
+   - conical: `t = atan2(g.y, g.x) / 2π + 0.5`, per pixel, so there is no seam.
+
+   The spread method (pad, reflect, repeat) is applied to `t` in the shader.
+3. **Their colours come from ramps in a `Texture2DArray`, one slice per gradient.** Each ramp is a 1×N row (1,024 texels by default, so hard stops stay sharp on large gradients). GPUs never filter between slices, so colours can't bleed between gradients. Clamp addressing keeps sampling inside each ramp. Ramps are sampled with an explicit level 0, so mipmap selection can't interfere.
+   - OpenGL ES 3.0 guarantees only 256 slices. When a device reports fewer slices than needed (`SystemInfo.maxTextureArraySlices`), further arrays are added, and each shape stores which array it uses.
+   - Identical gradients are shared by content hash. Each gradient is reference-counted by the SVG Assets that use it, so slices can be reused, and only changed slices are uploaded. The array grows on demand (recreated with `Graphics.CopyTexture`), and all gradient materials are updated.
+4. **The ramp index is an exact integer per vertex.** TexCoord1 holds the slice index, the gradient type and the spread as small integers. These are exact even when Unity compresses the channel to 16 bits (Unity 6's default vertex compression mask, 4054, includes TexCoord1).
+5. **Colours match browsers.** SVG interpolates colours in sRGB. Ramps are generated on the CPU in sRGB and stored as sRGB textures. Vertex colours are converted from sRGB to linear in the *fragment* shader, after interpolation, so linear gradients also interpolate in sRGB in Linear colour space projects. This costs a few arithmetic instructions per pixel and replaces the per-vertex conversion added in 2.0.
+6. **Optional dithering.** A material keyword adds ±½ of one 8-bit step of noise per pixel. It removes the banding that 8-bit output shows on long, subtle gradients.
+
+**Cost per pixel compared with today:**
+
+| | Today | New |
+|---|---|---|
+| Linear | 2 dependent texture reads | none (vertex colour) |
+| Radial | 2 dependent texture reads | `length()` + 1 texture read |
+| Conical | 2 dependent texture reads | `atan2()` + 1 texture read |
+
+The native core (phase 2) outputs the same data: split triangles with colours for linear gradients, and gradient-space positions plus a ramp index for radial and conical ones. This part of the design therefore doesn't change when the core is replaced.
 
 **Compatibility:** the mesh data changes, so the importer version is bumped and every `.svg` file reimports automatically. SVG Assets stored as `.asset` files (1.x) keep the old encoding until they are reimported; the SVG Asset Inspector offers *Reimport*, and converting them to `.svg` files (section 7) updates them too. The old shaders and the gradient shape texture are removed.
 
 **Tests:**
-- Neighbouring gradients with contrasting colours (for example alternating black and white ramps), sampled at `t` = 0 and 1 for every row position: no bleeding.
+- Linear gradients with many stops, hard stops and every spread method: rendered colours match the expected value at sample points, and there are no cracks along split edges.
+- Neighbouring radial gradients with contrasting colours, sampled at `t` = 0 and 1: no bleeding.
 - Smoothness: along a large gradient, adjacent pixels may differ by at most a small amount, so steps are caught.
-- Spread methods, focal radial gradients and the conical seam.
-- Atlas growth past 16, 256 and 1024 gradients.
+- Focal radial gradients and the conical seam.
+- Array growth past 256 and 1,024 gradients, and the fallback to more arrays when a device's slice limit is low.
+- Colours in Gamma and Linear projects match a browser rendering of the same SVG.
 - Mobile precision: the same render tests with TexCoord channels forced to 16-bit floats, to emulate devices. Then on Android (Mali and Adreno GPUs) and iOS with the phase 1 test app.
 
 ## 8. Runtime import
@@ -324,7 +343,7 @@ Decided:
 - Targets: Windows x64, Linux x64, macOS universal (arm64 + x64), iOS arm64, Android arm64 (section 3).
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
-- Gradients keep one shared, on-demand atlas, with the rendering replaced (7.1).
+- Gradient shapes are computed in the shader, not looked up. Linear gradients use vertex colours with triangles split at stop lines; radial and conical gradients use ramps in a shared `Texture2DArray` (7.1).
 
 Open:
 1. Should text conversion use only system fonts in the Editor, or also fonts in the project? At runtime, only project fonts are reliable (6.5).
