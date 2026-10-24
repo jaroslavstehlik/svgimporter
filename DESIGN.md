@@ -305,7 +305,11 @@ Fringes are always drawn with blending. In the *Opaque* format, they go into the
 - **iOS:** built as a static library (`crate-type = ["staticlib"]`), because iOS apps link native code statically. Unity links it into the Xcode project; the C# side imports from `__Internal`.
 - **Android:** built as a shared library for `arm64-v8a`, linked with 16 KB page alignment (`-Wl,-z,max-page-size=16384`), which Google Play requires for apps targeting Android 15 and later.
 - **Release:** a workflow copies the CI binaries into `Packages/com.jaroslavstehlik.svgimporter/Runtime/Plugins/` and opens a pull request. The binaries live in git, so installing from a git URL keeps working without a build step. The package is exempt from Git LFS (see `.gitattributes`), so they are stored as regular git objects.
-- **Signing:** the macOS library is code-signed and notarized, and the Windows DLL is signed, so Gatekeeper and SmartScreen don't block the Editor from loading them. iOS and Android libraries are signed as part of the game's own app signing.
+- **Signing: none for now.** The libraries ship unsigned, to avoid paid Apple and Windows certificates.
+  - macOS: a library installed by the Package Manager from git doesn't get the quarantine flag that browsers add to downloads, so the Editor loads it. Users who download a zip in a browser may see a Gatekeeper warning; the documentation explains how to allow the library (`xattr -d com.apple.quarantine`, or System Settings > Privacy & Security).
+  - Windows: Unity loads unsigned DLLs; SmartScreen applies to downloaded executables, not DLLs.
+  - iOS and Android: native libraries inside a package aren't signed; they're covered by the game's own app signing. Testing on devices is free (Android debug keys; Xcode's Personal Team for iOS, with 7-day provisioning).
+  - Signing can be added later without design changes.
 - **Size:** we expect a few MB per platform. To be confirmed in phase 1, using `opt-level="s"`, LTO and stripping. On mobile this adds to the app size, so text support (the largest dependency) is a Cargo feature that can be left out of the mobile builds if it turns out to be large.
 
 ## 10. Quality and testing
@@ -381,7 +385,7 @@ Phases G, 5 and 6 don't depend on the native core and can start right away. G is
 |---|---|
 | usvg's output loses information the modifiers rely on (for example group structure) | Phase 2 layer-parity test. usvg keeps groups and ids, so we can keep the existing layer granularity. |
 | A native crash takes down the Editor | Safe Rust, `catch_unwind`, input limits, fuzzing (6.6) |
-| Gatekeeper or antivirus blocks the binaries | Signing and notarization (section 9) |
+| Gatekeeper or antivirus blocks the unsigned binaries | Installing from git avoids the quarantine flag; the documentation explains how to allow the library; signing can be added later (section 9) |
 | App store requirements for native code change (for example Android page size) | Mobile builds in CI; a test app built for both stores in phase 1 |
 | Users on untargeted platforms (for example Windows on arm64) can't import SVG files | Documented as a requirement; the importer shows a clear message. Adding a target is a CI change, not a design change |
 | Contributors without Rust can't change the core | Prebuilt binaries in the package; Unity-side work needs no Rust |
@@ -400,9 +404,9 @@ Decided:
 - Antialiasing uses a fringe centred on the edge with bevelled sharp corners, extruded in screen pixels in the vertex shader and with coverage computed per pixel; MSAA is offered as an alternative (7.2). Coverage uses the distance to the nearest edge, as Skia's GPU convex-path renderer does. Exact-area coverage (Skia's CPU "analytic AA") was rejected: it only improves sharp corners and sub-pixel details and needs compute or CPU work per frame.
 - Gradient shapes are computed, not looked up, and colours are evaluated exactly from stops kept in a shared data texture, as in Skia/Chromium. Gradients never add tessellation. Linear gradients use vertex colours when every triangle of the shape passes an exact error test (7.1).
 
-Open:
-1. Should text conversion use only system fonts in the Editor, or also fonts in the project? At runtime, only project fonts are reliable (6.5).
-2. Is a separate `svgimporter-cli` useful as a public tool, for example for CI pipelines that pre-check SVG files?
+- Libraries ship unsigned for now (section 9).
+- Fonts get no special handling: text uses usvg's default system fonts in the Editor, and runtime import skips text.
+- `svgimporter-cli` stays internal: it is used to test and benchmark the core without Unity, and can be published later.
 
 ## 16. Gaps and future work
 
