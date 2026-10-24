@@ -42,11 +42,11 @@ Meshes are baked at import time, so most of the work happens in the Unity Editor
 |---|---|---|---|
 | Windows x64 | `x86_64-pc-windows-msvc` | `svgimporter_core.dll` | Editor, standalone player |
 | Linux x64 | `x86_64-unknown-linux-gnu` | `libsvgimporter_core.so` | Editor, standalone player |
-| macOS arm64 | `aarch64-apple-darwin` | `libsvgimporter_core.dylib` | Editor, standalone player |
+| macOS universal (arm64 + x64) | `aarch64-apple-darwin` + `x86_64-apple-darwin`, merged with `lipo` | `libsvgimporter_core.dylib` | Editor, standalone player |
 | iOS arm64 | `aarch64-apple-ios` | `libsvgimporter_core.a` (static) | Player |
 | Android arm64 | `aarch64-linux-android` | `libsvgimporter_core.so` | Player |
 
-Not targeted: Intel Macs, Windows and Linux on arm64, 32-bit Android (armv7), WebGL and consoles. On these platforms, importing in the Editor isn't available (the importer reports a clear error), and players use the meshes baked at import time, as they always have. Only runtime import is unavailable there (section 8).
+Not targeted: Windows and Linux on arm64, 32-bit Android (armv7), WebGL and consoles. On these platforms, importing in the Editor isn't available (the importer reports a clear error), and players use the meshes baked at import time, as they always have. Only runtime import is unavailable there (section 8).
 
 ## 4. Library selection
 
@@ -189,14 +189,14 @@ usvg converts text to paths using fonts. In the Editor we pass the system font d
 `SVGAsset.Load(string)` imports an SVG in a player build. It uses the same native core as the Editor, so runtime and Editor imports give the same result.
 
 - **Supported** on the five targets in section 3: Windows, Linux and macOS standalone players, iOS and Android.
-- **Not supported** on other platforms (WebGL, consoles, Intel Macs, 32-bit Android). There, `SVGAsset.Load` throws `PlatformNotSupportedException`, and `SVGAsset.isRuntimeImportSupported` lets games check first.
+- **Not supported** on other platforms (WebGL, consoles, 32-bit Android). There, `SVGAsset.Load` throws `PlatformNotSupportedException`, and `SVGAsset.isRuntimeImportSupported` lets games check first.
 - **The legacy C# parser is removed** together with the legacy import engine (phase 4). That removes a second implementation with different results.
 - **Mobile limits:** runtime import uses the same input limits as the Editor (6.6), plus a configurable vertex budget, so a large file can't stall a phone.
 
 ## 9. Build and distribution
 
 - **Location:** `native/` at the repository root, outside the package, as a Cargo workspace: `svgimporter-core` plus a `svgimporter-cli` for testing and benchmarks without Unity.
-- **CI:** GitHub Actions builds the five targets on three runners: Windows (x64), Linux (x64 and Android arm64, using the Android NDK and `cargo-ndk`), and macOS (macOS arm64 and iOS arm64). It runs the Rust tests, the conformance corpus and fuzzing smoke tests, checks that the generated C# bindings are up to date, then uploads the binaries.
+- **CI:** GitHub Actions builds the five targets on three runners: Windows (x64), Linux (x64 and Android arm64, using the Android NDK and `cargo-ndk`), and macOS (both macOS architectures, merged into one universal library with `lipo`, and iOS arm64). It runs the Rust tests, the conformance corpus and fuzzing smoke tests, checks that the generated C# bindings are up to date, then uploads the binaries.
 - **iOS:** built as a static library (`crate-type = ["staticlib"]`), because iOS apps link native code statically. Unity links it into the Xcode project; the C# side imports from `__Internal`.
 - **Android:** built as a shared library for `arm64-v8a`, linked with 16 KB page alignment (`-Wl,-z,max-page-size=16384`), which Google Play requires for apps targeting Android 15 and later.
 - **Release:** a workflow copies the CI binaries into `Packages/com.jaroslavstehlik.svgimporter/Runtime/Plugins/` and opens a pull request. The binaries live in git, so installing from a git URL keeps working without a build step. The package is exempt from Git LFS (see `.gitattributes`), so they are stored as regular git objects.
@@ -270,7 +270,7 @@ Phases 5 and 6 don't depend on the native core and can start right away.
 | A native crash takes down the Editor | Safe Rust, `catch_unwind`, input limits, fuzzing (6.6) |
 | Gatekeeper or antivirus blocks the binaries | Signing and notarization (section 9) |
 | App store requirements for native code change (for example Android page size) | Mobile builds in CI; a test app built for both stores in phase 1 |
-| Users on Intel Macs or other untargeted platforms can't import SVG files | Documented as a requirement; the importer shows a clear message. Adding a target is a CI change, not a design change |
+| Users on untargeted platforms (for example Windows on arm64) can't import SVG files | Documented as a requirement; the importer shows a clear message. Adding a target is a CI change, not a design change |
 | Contributors without Rust can't change the core | Prebuilt binaries in the package; Unity-side work needs no Rust |
 | Different triangulation changes antialiasing slightly | Accept within the threshold; the visual tests decide |
 | usvg API changes between versions | Pin versions; the ABI isolates C# from them |
@@ -279,7 +279,7 @@ Phases 5 and 6 don't depend on the native core and can start right away.
 ## 15. Decisions and open questions
 
 Decided:
-- Targets: Windows x64, Linux x64, macOS arm64, iOS arm64, Android arm64 (section 3).
+- Targets: Windows x64, Linux x64, macOS universal (arm64 + x64), iOS arm64, Android arm64 (section 3).
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
 
