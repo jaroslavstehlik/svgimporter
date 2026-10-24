@@ -45,6 +45,9 @@ namespace SVGImporter
             }
         }
 
+        [Tooltip("Import SVG files added to the project with SVG Importer. Turn this off when the project uses Unity's own SVG import, for example for UI Toolkit. Individual files can still be switched in the Inspector.")]
+        public bool importNewSVGFiles = true;
+
         public SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;
         public SVGUseGradients defaultUseGradients = SVGUseGradients.Auto;
         public bool defaultAntialiasing = true;

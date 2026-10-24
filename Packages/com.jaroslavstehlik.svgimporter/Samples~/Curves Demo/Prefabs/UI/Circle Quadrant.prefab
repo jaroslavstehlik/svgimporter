@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 1
@@ -134,7 +134,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 1
@@ -203,7 +203,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 1
@@ -420,7 +420,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 79149bdfe41b343e8a29895bc3c0356b, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 1

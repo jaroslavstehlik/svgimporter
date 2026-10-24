@@ -1,6 +1,11 @@
 # Changelog
 
 ## [2.0.0] - Unreleased
+- **SVG files are now imported like any other asset.** An `.svg` file stays in the project and is imported as an SVG Asset, with its settings in the Inspector, instead of being converted into an `.asset` file and deleted.
+- SVG Importer takes over SVG files added to the project. Turn off **Import New SVG Files** in the settings to keep Unity's own SVG importer, or switch individual files in the Inspector.
+- New: **Window > SVG Importer > Convert SVG Assets to SVG Files...** converts 1.x SVG Assets back to `.svg` files and keeps their references.
+- The samples now use `.svg` files.
+- Removed the per-user "Asset Postprocessor" on/off switch; use the Import New SVG Files project setting.
 - Converted to a Unity Package Manager package (`com.jaroslavstehlik.svgimporter`), installable from a git URL.
 - Requires Unity 6.0 or newer. Unity 2017 users can use the `legacy/v1` branch (tag `v1.1.6`).
 - Removed analytics tracking and the bug report window.

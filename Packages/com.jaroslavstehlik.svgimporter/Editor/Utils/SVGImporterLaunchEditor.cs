@@ -35,7 +35,6 @@ namespace SVGImporter
             }
 
             //HideGizmos();
-            SVGPostprocessor.Init();
             UpdateDelegates();
 
         }

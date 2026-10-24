@@ -44,6 +44,9 @@ namespace SVGImporter
                 if(string.IsNullOrEmpty(_svgFile))
                 {
                     var svgAssetPath = UnityEditor.AssetDatabase.GetAssetPath(this);
+                    // Imported from an .svg file: the file itself is the source.
+                    if(svgAssetPath.EndsWith(".svg", System.StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(svgAssetPath))
+                        return System.IO.File.ReadAllText(svgAssetPath);
                     var svgAssetImporter = UnityEditor.AssetImporter.GetAtPath(svgAssetPath);
                     return svgAssetImporter != null ? svgAssetImporter.userData : null;
                 }

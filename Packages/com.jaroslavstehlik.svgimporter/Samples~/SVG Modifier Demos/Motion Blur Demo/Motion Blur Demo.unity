@@ -398,7 +398,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _type: 0
   _lastTimeModified: 636372943828977082
-  _vectorGraphics: {fileID: 11400000, guid: 61cb3e21297634232ac720eddda87319, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 61cb3e21297634232ac720eddda87319, type: 3}
   _color: {r: 1, g: 1, b: 1, a: 1}
   _opaqueMaterial: {fileID: 0}
   _transparentMaterial: {fileID: 0}
@@ -572,7 +572,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _type: 0
   _lastTimeModified: 636372943828977082
-  _vectorGraphics: {fileID: 11400000, guid: 61cb3e21297634232ac720eddda87319, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 61cb3e21297634232ac720eddda87319, type: 3}
   _color: {r: 1, g: 1, b: 1, a: 1}
   _opaqueMaterial: {fileID: 0}
   _transparentMaterial: {fileID: 0}

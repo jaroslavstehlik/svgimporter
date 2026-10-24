@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: e9b370d8cacb84a0395fbeec97f4fc5b, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: e9b370d8cacb84a0395fbeec97f4fc5b, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 1
@@ -134,7 +134,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 3c49aca2d38c54cbf95d42e511b4f15c, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 3c49aca2d38c54cbf95d42e511b4f15c, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 0
@@ -203,7 +203,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 84ede6ff4caa944808d42ab2634e644f, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 84ede6ff4caa944808d42ab2634e644f, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 0
@@ -272,7 +272,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 84ede6ff4caa944808d42ab2634e644f, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 84ede6ff4caa944808d42ab2634e644f, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 0
@@ -405,7 +405,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 84ede6ff4caa944808d42ab2634e644f, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 84ede6ff4caa944808d42ab2634e644f, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 0
@@ -474,7 +474,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _vectorGraphics: {fileID: 11400000, guid: 84ede6ff4caa944808d42ab2634e644f, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 84ede6ff4caa944808d42ab2634e644f, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_UsePivot: 0

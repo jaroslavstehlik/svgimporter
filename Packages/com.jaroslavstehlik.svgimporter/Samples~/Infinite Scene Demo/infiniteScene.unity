@@ -318,7 +318,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1080005799}
-  m_Mesh: {fileID: 43721606851156910, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 2}
+  m_Mesh: {fileID: -8670151273213183110, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 3}
 --- !u!114 &1080005802
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,7 +333,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _type: 0
   _lastTimeModified: 636372934587175764
-  _vectorGraphics: {fileID: 11400000, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 3}
   _color: {r: 1, g: 1, b: 1, a: 1}
   _opaqueMaterial: {fileID: 0}
   _transparentMaterial: {fileID: 0}
@@ -432,7 +432,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1382272495}
-  m_Mesh: {fileID: 43721606851156910, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 2}
+  m_Mesh: {fileID: -8670151273213183110, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 3}
 --- !u!114 &1382272498
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -447,7 +447,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _type: 0
   _lastTimeModified: 636372934587175764
-  _vectorGraphics: {fileID: 11400000, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 3}
   _color: {r: 1, g: 1, b: 1, a: 1}
   _opaqueMaterial: {fileID: 0}
   _transparentMaterial: {fileID: 0}
@@ -546,7 +546,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1646486331}
-  m_Mesh: {fileID: 43721606851156910, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 2}
+  m_Mesh: {fileID: -8670151273213183110, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 3}
 --- !u!114 &1646486334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -561,7 +561,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _type: 0
   _lastTimeModified: 636372934587175764
-  _vectorGraphics: {fileID: 11400000, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 8c43ef5fa9e4143c0978c1bf28fcdf61, type: 3}
   _color: {r: 1, g: 1, b: 1, a: 1}
   _opaqueMaterial: {fileID: 0}
   _transparentMaterial: {fileID: 0}

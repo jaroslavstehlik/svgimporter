@@ -265,7 +265,44 @@ namespace SVGImporter
 
         void GetSVGAsset()
         {
-            svgAsset = Selection.activeObject as SVGAsset;
+            SVGAsset selected = Selection.activeObject as SVGAsset;
+            if(selected != svgAsset)
+            {
+                importerOriginalValues.Clear();
+            }
+            svgAsset = selected;
+        }
+
+        // For an asset imported from an .svg file, the settings live on its importer.
+        SVGFileImporter importer
+        {
+            get {
+                return svgAsset != null ? AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(svgAsset)) as SVGFileImporter : null;
+            }
+        }
+
+        // Importer values before the first unapplied change, for Revert.
+        readonly System.Collections.Generic.Dictionary<string, object> importerOriginalValues = new System.Collections.Generic.Dictionary<string, object>();
+
+        /// <summary>Changes a setting on the edited asset (for the preview) and, for an imported .svg file, on its importer.</summary>
+        void SetSetting(string fieldName, object value)
+        {
+            typeof(SVGAsset).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, value);
+
+            SVGFileImporter svgImporter = importer;
+            if(svgImporter != null)
+            {
+                FieldInfo importerField = typeof(SVGFileImporter).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+                if(!importerOriginalValues.ContainsKey(fieldName))
+                {
+                    importerOriginalValues[fieldName] = importerField.GetValue(svgImporter);
+                }
+                importerField.SetValue(svgImporter, value);
+                EditorUtility.SetDirty(svgImporter);
+            } else if(SVGAssetEditor.Instance != null)
+            {
+                SVGAssetEditor.Instance.unappliedChanges = true;
+            }
         }
 
 		void SelectedWrongObject()
@@ -461,11 +498,7 @@ namespace SVGImporter
                 border.z = (-num2 + rect.xMax) / textureOrigRect.size.x;
                 border.y = (rect.yMax - num3) / textureOrigRect.size.y;
                 border.w = (num4 - rect.yMin) / textureOrigRect.size.y;
-                typeof(SVGAsset).GetField("_border", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, ClampSVGBorder(border));
-                if(SVGAssetEditor.Instance != null)
-                {
-                    SVGAssetEditor.Instance.unappliedChanges = true;
-                }
+                SetSetting("_border", ClampSVGBorder(border));
             }
         }
         private void HandleBorderSidePointScalingSliders()
@@ -499,11 +532,7 @@ namespace SVGImporter
                 border.z = (-num2 + rect.xMax) / textureOrigRect.size.x;
                 border.y = (rect.yMax - num3) / textureOrigRect.size.y;
                 border.w = (num4 - rect.yMin) / textureOrigRect.size.y;
-                typeof(SVGAsset).GetField("_border", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, ClampSVGBorder(border));
-                if(SVGAssetEditor.Instance != null)
-                {
-                    SVGAssetEditor.Instance.unappliedChanges = true;
-                }
+                SetSetting("_border", ClampSVGBorder(border));
             }
         }
 
@@ -534,11 +563,7 @@ namespace SVGImporter
                 border.z = (-num2 + rect.xMax) / textureOrigRect.size.x;
                 border.y = (rect.yMax - num3) / textureOrigRect.size.y;
                 border.w = (num4 - rect.yMin) / textureOrigRect.size.y;
-                typeof(SVGAsset).GetField("_border", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, ClampSVGBorder(border));
-                if(SVGAssetEditor.Instance != null)
-                {
-                    SVGAssetEditor.Instance.unappliedChanges = true;
-                }
+                SetSetting("_border", ClampSVGBorder(border));
             }
         }
 
@@ -557,11 +582,7 @@ namespace SVGImporter
                     pivotPoint.y = Mathf.Clamp01(Mathf.RoundToInt(pivotPoint.y * 2) / 2f);
                 }
 
-                typeof(SVGAsset).GetField("_pivotPoint", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, pivotPoint);
-                if(SVGAssetEditor.Instance != null)
-                {
-                    SVGAssetEditor.Instance.unappliedChanges = true;
-                }
+                SetSetting("_pivotPoint", pivotPoint);
             }
         }
         private void HandleBorderPointSlider(ref float x, ref float y, MouseCursor mouseCursor, bool isHidden, GUIStyle dragDot, GUIStyle dragDotActive, Color color)
@@ -704,21 +725,37 @@ namespace SVGImporter
 
 		private void DoApplyRevertGUI()
 		{
+			SVGFileImporter svgImporter = importer;
 			if (GUILayout.Button("Revert", EditorStyles.toolbarButton, new GUILayoutOption[0]))
 			{
-                SVGAssetEditor assetEditor = SVGAssetEditor.Instance;
-                if(assetEditor != null)
+                if(svgImporter != null)
                 {
-                    assetEditor.RevertChanges();
+                    foreach(var original in new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, object>>(importerOriginalValues))
+                    {
+                        SetSetting(original.Key, original.Value);
+                    }
+                    importerOriginalValues.Clear();
+                } else {
+                    SVGAssetEditor assetEditor = SVGAssetEditor.Instance;
+                    if(assetEditor != null)
+                    {
+                        assetEditor.RevertChanges();
+                    }
                 }
                 UpdateOriginalPivotPoint();
 			}
 			if (GUILayout.Button("Apply", EditorStyles.toolbarButton, new GUILayoutOption[0]))
             {
-                SVGAssetEditor assetEditor = SVGAssetEditor.Instance;
-                if(assetEditor != null)
+                if(svgImporter != null)
                 {
-                    assetEditor.ApplyChanges();
+                    importerOriginalValues.Clear();
+                    svgImporter.SaveAndReimport();
+                } else {
+                    SVGAssetEditor assetEditor = SVGAssetEditor.Instance;
+                    if(assetEditor != null)
+                    {
+                        assetEditor.ApplyChanges();
+                    }
                 }
                 UpdateOriginalPivotPoint();
             }
@@ -788,13 +825,9 @@ namespace SVGImporter
             }
             if (EditorGUI.EndChangeCheck())
             {
-                typeof(SVGAsset).GetField("_customPivotPoint", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, customPivotPoint);
-                typeof(SVGAsset).GetField("_pivotPoint", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, pivotPoint);
-                typeof(SVGAsset).GetField("_sliceMesh", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, sliceMesh);
-                if(SVGAssetEditor.Instance != null)
-                {
-                    SVGAssetEditor.Instance.unappliedChanges = true;
-                }
+                SetSetting("_customPivotPoint", customPivotPoint);
+                SetSetting("_pivotPoint", pivotPoint);
+                SetSetting("_sliceMesh", sliceMesh);
             }
         }
 
@@ -826,11 +859,7 @@ namespace SVGImporter
             EditorGUIUtility.labelWidth = 135f;
             if (EditorGUI.EndChangeCheck())
             {
-                typeof(SVGAsset).GetField("_border", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svgAsset, ClampSVGBorder(border));
-                if(SVGAssetEditor.Instance != null)
-                {
-                    SVGAssetEditor.Instance.unappliedChanges = true;
-                }
+                SetSetting("_border", ClampSVGBorder(border));
             }
         }
 

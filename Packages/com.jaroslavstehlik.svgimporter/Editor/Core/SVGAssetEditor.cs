@@ -389,8 +389,22 @@ namespace SVGImporter
             Instance = null;
         }
 
+        /// <summary>True when the asset was imported from an .svg file, whose importer holds the settings.</summary>
+        internal static bool IsImportedFromSVGFile(UnityEngine.Object asset)
+        {
+            return AssetDatabase.GetAssetPath(asset).EndsWith(".svg", System.StringComparison.OrdinalIgnoreCase);
+        }
+
         public override void OnInspectorGUI()
         {
+            if(IsImportedFromSVGFile(asset))
+            {
+                // Shown below the importer's settings: the asset itself is read-only.
+                EditorGUILayout.LabelField(asset._editor_Info, EditorStyles.miniLabel);
+                SVGImportSettingsGUI.DrawErrors(GetEditorErrors(asset));
+                return;
+            }
+
             Instance = this;
             if (filesValid)
             {
@@ -440,73 +454,11 @@ namespace SVGImporter
 
             serializedObject.Update();
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(format, FORMAT_LABEL);
-            EditorGUILayout.PropertyField(useGradients, USE_GRADIENTS_LABEL);
-            EditorGUILayout.PropertyField(antialiasing, ANTIALIASING_LABEL);            
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("Meshes", EditorStyles.boldLabel);
-			EditorGUILayout.PropertyField(meshCompression, MESH_COMPRESSION_LABEL);
-            if(((SVGMeshCompression)meshCompression.enumValueIndex) != SVGMeshCompression.Off)
+            if(SVGImportSettingsGUI.Draw(serializedObject, !serializedObject.isEditingMultipleObjects))
             {
-                EditorGUILayout.HelpBox(MESH_COMPRESSION_HELPBOX_LABEL, MessageType.Warning);
-            }
-            EditorGUILayout.PropertyField(optimizeMesh, OPTIMIZE_MESH_LABEL);
-            EditorGUILayout.PropertyField(scale, SCALE_LABEL);
-            EditorGUILayout.PropertyField(vpm, QUALITY_LABEL);
-
-            if(format.enumValueIndex == (int)SVGAssetFormat.Opaque)
-            {
-                EditorGUILayout.PropertyField(depthOffset, DEPTH_OFFSET_LABEL);
-                EditorGUILayout.PropertyField(compressDepth, COMPRESS_DEPTH_LABEL);
+                SVGEditorWindow.GetWindow();
             }
 
-
-            EditorGUILayout.PropertyField(customPivotPoint, CUSTOM_PIVOT_LABEL);
-            EditorGUILayout.BeginHorizontal();
-            if(customPivotPoint.boolValue)
-            { 
-				EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.PropertyField(pivotPoint, PIVOT_LABEL);
-				EditorGUILayout.EndHorizontal();
-            } else {
-                Vector2 pivotPointVector = pivotPoint.vector2Value;
-                int selectedIndex = GetPivotPointIndex(pivotPointVector);
-                selectedIndex = EditorGUILayout.Popup(PIVOT_LABEL, selectedIndex, anchorPositionContent);
-                pivotPoint.vector2Value = GetPivotPoint(selectedIndex);
-            }
-
-            if(!serializedObject.isEditingMultipleObjects)
-            {
-                if(GUILayout.Button("SVG Editor", EditorStyles.miniButton, GUILayout.Width(70f)))
-                {
-                    SVGEditorWindow.GetWindow();
-                }
-            }
-            
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.PropertyField(generateCollider, GENERATE_COLLIDER_LABEL);
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("Normals & Tangents", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(generateNormals, GENERATE_NORMALS_LABEL);
-            if(!generateNormals.boolValue)  EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.PropertyField(generateTangents, GENERATE_TANGENTS_LABEL);
-            if(!generateNormals.boolValue && generateTangents.boolValue)
-            {
-                generateTangents.boolValue = false;
-            }
-            if(!generateNormals.boolValue)  EditorGUI.EndDisabledGroup();
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("SVG Document", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(keepSVGFile, KEEP_SVG_FILE_LABEL);
-			EditorGUILayout.PropertyField(useLayers, USE_LAYERS_LABEL);
-            EditorGUILayout.PropertyField(ignoreSVGCanvas, IGNORE_SVG_CANVAS_LABEL);
-            EditorGUILayout.Space();
-            
             if(EditorGUI.EndChangeCheck())
             {
                 valueChanged = true;
@@ -566,47 +518,10 @@ namespace SVGImporter
             GUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            SVGError[] errors = GetEditorErrors(asset);
-            if(errors != null && errors.Length > 0)
-            {
-                for(int i = 0; i < errors.Length; i++)
-                {
-                    switch(errors[i])
-                    {
-                        case SVGError.CorruptedFile:
-                            EditorGUILayout.HelpBox("SVG file is corrupted", MessageType.Error);
-                            break;
-                        case SVGError.Syntax:
-                            EditorGUILayout.HelpBox("SVG syntax is invalid", MessageType.Error);
-                            break;
-                        case SVGError.ClipPath:
-                            EditorGUILayout.HelpBox("Clip paths are experimental", MessageType.Warning);
-                            break;
-                        case SVGError.Mask:
-                            EditorGUILayout.HelpBox("Masks are not supported", MessageType.Warning);
-                            break;
-                        case SVGError.Symbol:
-                            EditorGUILayout.HelpBox("Re-import for working symbols", MessageType.Warning);
-                            break;
-                        case SVGError.Image:
-                            EditorGUILayout.HelpBox("Images are not supported", MessageType.Warning);
-                            break;
-                        case SVGError.Unknown:
-                            EditorGUILayout.HelpBox("Unknow error occurred", MessageType.Error);
-                            break;
-                    }
-                }
-            }
+            SVGImportSettingsGUI.DrawErrors(GetEditorErrors(asset));
 
             GUILayout.FlexibleSpace();
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button(new GUIContent("Report Import Issue", "Opens a new GitHub issue. Please attach the SVG file.")))
-            {
-                Application.OpenURL("https://github.com/jaroslavstehlik/svgimporter/issues/new?title=" +
-                    System.Uri.EscapeDataString("Wrong SVG file import: " + asset.name));
-            }
-            GUILayout.EndHorizontal();
+            SVGImportSettingsGUI.DrawReportIssueButton(asset.name);
         }
 
         protected void RecoverSVGFile(SVGAsset recoverAsset)

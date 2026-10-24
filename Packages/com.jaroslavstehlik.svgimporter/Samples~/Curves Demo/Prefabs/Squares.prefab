@@ -157,7 +157,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _type: 0
   _lastTimeModified: 0
-  _vectorGraphics: {fileID: 11400000, guid: 7abd970fc6daa491190749a4c5021ae8, type: 2}
+  _vectorGraphics: {fileID: -6750239444755058063, guid: 7abd970fc6daa491190749a4c5021ae8, type: 3}
   _color: {r: 1, g: 1, b: 1, a: 1}
   _opaqueMaterial: {fileID: 0}
   _transparentMaterial: {fileID: 0}

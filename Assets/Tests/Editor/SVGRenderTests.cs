@@ -1,6 +1,6 @@
 // Render tests for the development project.
 //
-// Imports a few SVG files through the SVG Importer postprocessor, builds a scene
+// Imports a few SVG files with SVG Importer (SVGFileImporter), builds a scene
 // that covers every rendering path (solid, gradient, antialiased, lit and UI),
 // renders it with the Built-in Render Pipeline, URP and the URP 2D Renderer,
 // saves a PNG per pipeline and checks pixel colors.
@@ -109,7 +109,7 @@ public static class SVGRenderTests
         bool passed;
         try
         {
-            var assets = ImportTestAssets();
+            var assets = ImportTestAssets(results);
             passed = true;
             foreach (string pipeline in new[] { "builtin", "urp", "urp2d" })
                 passed &= RenderWithPipeline(pipeline, assets, output, results);
@@ -131,33 +131,59 @@ public static class SVGRenderTests
         EditorApplication.Exit(passed ? 0 : 1);
     }
 
-    static Dictionary<string, SVGAsset> ImportTestAssets()
+    static Dictionary<string, SVGAsset> ImportTestAssets(List<string> results)
     {
         AssetDatabase.DeleteAsset(Root);
         Directory.CreateDirectory(Root);
 
-        var flags = BindingFlags.NonPublic | BindingFlags.Instance;
-        var applyChanges = typeof(SVGAsset).GetMethod("_editor_ApplyChanges", flags);
         var assets = new Dictionary<string, SVGAsset>();
-
         foreach (var v in Variants)
         {
             string svgPath = Root + "/" + v.name + ".svg";
             File.WriteAllText(svgPath, v.svg);
             AssetDatabase.ImportAsset(svgPath, ImportAssetOptions.ForceSynchronousImport);
 
-            var asset = AssetDatabase.LoadAssetAtPath<SVGAsset>(Root + "/" + v.name + ".asset");
-            if (asset == null)
-                throw new Exception("SVG Importer did not create an asset for " + svgPath);
+            // New .svg files must be switched to SVG Importer automatically, and stay in the project.
+            var importer = AssetImporter.GetAtPath(svgPath) as SVGFileImporter;
+            if (importer == null)
+                throw new Exception("New SVG file was not assigned SVG Importer: " + svgPath
+                    + " (importer: " + AssetImporter.GetAtPath(svgPath) + ")");
 
-            typeof(SVGAsset).GetField("_format", flags).SetValue(asset, v.format);
-            typeof(SVGAsset).GetField("_antialiasing", flags).SetValue(asset, v.antialiasing);
-            typeof(SVGAsset).GetField("_generateNormals", flags).SetValue(asset, v.normals);
-            applyChanges.Invoke(asset, new object[] { false });
-            EditorUtility.SetDirty(asset);
+            var settings = new SerializedObject(importer);
+            settings.FindProperty("_format").enumValueIndex = (int)v.format;
+            settings.FindProperty("_antialiasing").boolValue = v.antialiasing;
+            settings.FindProperty("_generateNormals").boolValue = v.normals;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+            importer.SaveAndReimport();
+
+            var asset = AssetDatabase.LoadAssetAtPath<SVGAsset>(svgPath);
+            if (asset == null || asset.sharedMesh == null && v.format != SVGAssetFormat.uGUI)
+                throw new Exception("SVG Importer did not import " + svgPath);
             assets[v.name] = asset;
         }
-        AssetDatabase.SaveAssets();
+
+        // With "Import New SVG Files" off, new files keep Unity's importer.
+        SVGImporterSettings projectSettings = SVGImporterEditor.settings;
+        projectSettings.importNewSVGFiles = false;
+        try
+        {
+            string optOutPath = Root + "/opt_out.svg";
+            File.WriteAllText(optOutPath, GraySvg);
+            AssetDatabase.ImportAsset(optOutPath, ImportAssetOptions.ForceSynchronousImport);
+            AssetImporter optOutImporter = AssetImporter.GetAtPath(optOutPath);
+            results.Add((optOutImporter is SVGFileImporter ? "FAIL" : "PASS")
+                + " import: with Import New SVG Files off, a new file keeps " + optOutImporter.GetType().FullName);
+        }
+        finally
+        {
+            projectSettings.importNewSVGFiles = true;
+        }
+
+        bool sourcesKept = Variants.All(v => File.Exists(Root + "/" + v.name + ".svg"));
+        bool noLegacyAssets = Variants.All(v => !File.Exists(Root + "/" + v.name + ".asset"));
+        results.Add((sourcesKept && noLegacyAssets ? "PASS" : "FAIL") + " import: .svg files kept, no .asset files created");
+        if (!sourcesKept || !noLegacyAssets)
+            throw new Exception("SVG import left the project in the wrong state");
         return assets;
     }
 
@@ -166,7 +192,7 @@ public static class SVGRenderTests
         SetPipeline(CreatePipelineAsset(pipeline));
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         // Opening a scene unloads unreferenced assets, so load them again.
-        assets = Variants.ToDictionary(v => v.name, v => AssetDatabase.LoadAssetAtPath<SVGAsset>(Root + "/" + v.name + ".asset"));
+        assets = Variants.ToDictionary(v => v.name, v => AssetDatabase.LoadAssetAtPath<SVGAsset>(Root + "/" + v.name + ".svg"));
 
         var camera = new GameObject("Camera").AddComponent<Camera>();
         camera.orthographic = true;

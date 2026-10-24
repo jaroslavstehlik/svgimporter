@@ -1554,6 +1554,42 @@ namespace SVGImporter
                 _documentAsset.svgFile = null;
             }
 
+            _editor_ReportErrors();
+
+            UnityEditor.EditorUtility.SetDirty(_documentAsset);
+
+            _svgFile = null;
+
+            _editor_PostProcessMesh();
+
+            _lastTimeModified = System.DateTime.UtcNow.Ticks;
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+
+        /// <summary>
+        /// Builds the asset from SVG text without the AssetDatabase. Used by the .svg ScriptedImporter:
+        /// addObject registers each generated sub-object (identifier, object) with the import context.
+        /// The import settings must already be set on this asset.
+        /// </summary>
+        internal void _editor_Import(string svgText, System.Action<string, Object> addObject)
+        {
+            _documentAsset = ScriptableObject.CreateInstance<SVGDocumentAsset>();
+            _documentAsset.name = this.name + " Document";
+            _documentAsset.hideFlags = HideFlags.HideInHierarchy;
+            addObject("document", _documentAsset);
+
+            _svgFile = svgText;
+            _editor_LoadSVG(mesh => addObject("mesh", mesh));
+            _documentAsset.svgFile = _keepSVGFile ? svgText : null;
+            _editor_ReportErrors();
+            _svgFile = null;
+
+            _editor_PostProcessMesh();
+            _lastTimeModified = System.DateTime.UtcNow.Ticks;
+        }
+
+        void _editor_ReportErrors()
+        {
             if(SVGAssetImport.errors != null && SVGAssetImport.errors.Count > 0)
             {
                 _documentAsset.errors = SVGAssetImport.errors.ToArray();
@@ -1585,16 +1621,15 @@ namespace SVGImporter
 				}
             }
 
-            UnityEditor.EditorUtility.SetDirty(_documentAsset);
-
-            _svgFile = null;
-
             if(SVGAssetImport.errors != null)
             {
                 SVGAssetImport.errors.Clear();
                 SVGAssetImport.errors = null;
             }
+        }
 
+        void _editor_PostProcessMesh()
+        {
             if(_sharedMesh != null && _sharedMesh.vertexCount > 0)
             {
                 _sharedMesh.name = this.name;
@@ -1625,9 +1660,6 @@ namespace SVGImporter
                     }
                 }
             }
-
-            _lastTimeModified = System.DateTime.UtcNow.Ticks;
-            UnityEditor.EditorUtility.SetDirty(this);
         }
 
         internal UnityEditor.ModelImporterMeshCompression GetModelImporterMeshCompression(SVGMeshCompression meshCompression)
@@ -1675,7 +1707,7 @@ namespace SVGImporter
             _layers = layers;
         }
 
-        internal void _editor_LoadSVG()
+        internal void _editor_LoadSVG(System.Action<Mesh> addMesh = null)
         {        
             SVGAssetImport assetImport;
             if (svgFile != null)
@@ -1690,7 +1722,7 @@ namespace SVGImporter
                 SVGAssetImport.useGradients = _useGradients;
                 SVGAssetImport.antialiasing = _antialiasing;
                 assetImport = new SVGAssetImport(svgFile, _vpm);
-                assetImport.StartProcess(this);
+                assetImport.StartProcess(this, addMesh);
             }
         }
 

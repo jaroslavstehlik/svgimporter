@@ -28,9 +28,11 @@ namespace SVGImporter {
         SerializedProperty optimizeMesh;
         SerializedProperty generateNormals;
         SerializedProperty generateTangents;
+        SerializedProperty importNewSVGFiles;
 
         void OnEnable()
         {
+            importNewSVGFiles = serializedObject.FindProperty("importNewSVGFiles");
             format = serializedObject.FindProperty("defaultSVGFormat");
             useGradients = serializedObject.FindProperty("defaultUseGradients");
             antialiasing = serializedObject.FindProperty("defaultAntialiasing");
@@ -55,6 +57,11 @@ namespace SVGImporter {
         {
 			serializedObject.Update();
 			EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("Import", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(importNewSVGFiles, new GUIContent("Import New SVG Files", importNewSVGFiles.tooltip));
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Default Import Settings", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(format, SVGAssetEditor.FORMAT_LABEL);
             EditorGUILayout.PropertyField(useGradients, SVGAssetEditor.USE_GRADIENTS_LABEL);
@@ -118,23 +125,6 @@ namespace SVGImporter {
 			{
 				serializedObject.ApplyModifiedProperties();
 			}
-
-            EditorGUILayout.BeginHorizontal();
-            if(SVGPostprocessor.active)
-            {
-                EditorGUILayout.LabelField("Asset Postprocessor: On");
-                if(GUILayout.Button("Stop"))
-                {
-                    SVGPostprocessor.Stop();
-                }
-            } else {
-                EditorGUILayout.LabelField("Asset Postprocessor: Off");
-                if(GUILayout.Button("Start"))
-                {
-                    SVGPostprocessor.Start();
-                }
-            }
-            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             if(SVGImporterLaunchEditor.active)

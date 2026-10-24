@@ -57,7 +57,9 @@ namespace SVGImporter
         }
 
 #if UNITY_EDITOR
-        public void StartProcess(SVGAsset asset)
+        /// <param name="addMesh">Registers the generated mesh with its owner. Defaults to adding it
+        /// to the asset's file through the AssetDatabase; a ScriptedImporter passes its context instead.</param>
+        public void StartProcess(SVGAsset asset, System.Action<Mesh> addMesh = null)
         {
             if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
                 return;
@@ -173,7 +175,14 @@ namespace SVGImporter
 
                 if(!asset.useLayers)
                 {
-                    sharedMesh.objectReferenceValue = AddObjectToAsset<Mesh>(mesh, asset, HideFlags.HideInHierarchy);
+                    if(addMesh != null)
+                    {
+                        mesh.hideFlags = HideFlags.HideInHierarchy;
+                        addMesh(mesh);
+                        sharedMesh.objectReferenceValue = mesh;
+                    } else {
+                        sharedMesh.objectReferenceValue = AddObjectToAsset<Mesh>(mesh, asset, HideFlags.HideInHierarchy);
+                    }
                 }
 
 //                Material sharedMaterial;
