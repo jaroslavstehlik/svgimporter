@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SVG Importer | Vector Graphics for Unity</title>
+  <meta name="description" content="SVG Importer is a free, open-source Unity plugin that turns SVG files into lightweight, GPU-friendly meshes. As simple to use as Unity sprites.">
+  <meta name="theme-color" content="#da1c5c">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SVG Importer | Vector Graphics for Unity">
+  <meta property="og:description" content="Import SVG files into Unity as sharp, lightweight meshes. Free and open source.">
+  <meta property="og:url" content="https://svgimporter.com/">
+  <meta property="og:image" content="https://svgimporter.com/assets/img/thumb-getting-started.png">
+
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header" id="top">
+  <div class="container header-inner">
+    <a class="brand" href="#top" aria-label="SVG Importer home">
+      <img src="assets/img/logo.png" alt="SVG Importer" width="178" height="48">
+    </a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="site-nav" id="site-nav">
+      <a href="#workflow">Workflow</a>
+      <a href="#features">Features</a>
+      <a href="#compatibility">Compatibility</a>
+      <a href="#videos">Videos</a>
+      <a href="assets/docs/svg-importer-documentation.pdf">Docs</a>
+      <a class="btn btn-small" href="https://github.com/jaroslavstehlik/svgimporter">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <p class="eyebrow">Free &amp; open-source Unity plugin</p>
+      <h1>Vector graphics for Unity</h1>
+      <p class="lead">SVG Importer turns your SVG files into sharp, lightweight, GPU&#8209;friendly meshes. The workflow is as simple as Unity sprites: drop a file in, drag it into your scene.</p>
+      <div class="hero-actions">
+        <a class="btn btn-light" href="https://github.com/jaroslavstehlik/svgimporter">Get it on GitHub</a>
+        <a class="btn btn-outline" href="#trailer">Watch the trailer</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section trailer" id="trailer">
+    <div class="container narrow">
+      <a class="video-frame" href="https://www.youtube.com/watch?v=hS3N9EMTuIc" data-youtube="hS3N9EMTuIc" aria-label="Play the SVG Importer trailer">
+        <img src="assets/img/thumb-trailer.jpg" alt="" width="1280" height="720">
+        <span class="play" aria-hidden="true"></span>
+      </a>
+      <p class="caption">Proven in production. SVG Importer has powered large commercial mobile games. See the showcase in the trailer.</p>
+    </div>
+  </section>
+
+  <section class="section alt" id="workflow">
+    <div class="container">
+      <h2 class="section-title">As simple as sprites</h2>
+      <p class="section-lead">If you know how to use a sprite in Unity, you already know how to use SVG Importer.</p>
+      <ol class="steps">
+        <li>
+          <span class="step-num">1</span>
+          <h3>Drop in an SVG</h3>
+          <p>Save artwork from your favourite vector editor and drop the <code>.svg</code> file into your Assets folder. It is imported automatically.</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <h3>Tune the import</h3>
+          <p>Pick opaque or transparent rendering, set the tessellation quality, a custom pivot, mesh compression, or generate a 2D collider. It's all in the Inspector.</p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <h3>Drag it into the scene</h3>
+          <p>Use it like any sprite: in the world with <em>SVG Renderer</em> or in Unity UI with <em>SVG Image</em>. Your existing scripts keep working.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-title">Why vector graphics</h2>
+      <div class="features">
+        <article class="feature">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <h3>Always sharp</h3>
+          <p>Vector graphics don't suffer from blurry edges or compression artefacts. You have full control over the tessellation quality to always get the best performance possible.</p>
+        </article>
+        <article class="feature">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <h3>Supports Unity UI</h3>
+          <p>Build your user interface completely resolution independent. No need to rewrite existing scripts or components.</p>
+        </article>
+        <article class="feature">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>
+          <h3>Easy to use</h3>
+          <p>Fits your existing workflow. Drag &amp; drop assets directly into your scene, just like sprites.</p>
+        </article>
+        <article class="feature">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
+          <h3>Mobile friendly</h3>
+          <p>Vector graphics are pre-baked at import time, in the editor only. Your game loads ready-made meshes at the quality you chose, with no extra overhead. The shaders are simple and well optimised.</p>
+        </article>
+        <article class="feature">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/></svg>
+          <h3>Smaller builds</h3>
+          <p>Textures store every pixel on disk and in memory. Vector images store only a series of points, which can make builds up to 10&times; smaller, depending on the project.</p>
+        </article>
+        <article class="feature">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+          <h3>Open source</h3>
+          <p>SVG Importer is free to use in all of your projects, commercial or not. The full source code is on GitHub.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="creativity">
+    <div class="container">
+      <h2 class="section-title">Unleash creativity</h2>
+      <div class="gallery">
+        <figure>
+          <img src="assets/gif/sharp.gif" alt="Vector artwork staying sharp while zooming in" width="315" height="305" loading="lazy">
+          <figcaption>Uber retina</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/gif/dragAndDrop.gif" alt="Dragging an SVG asset into a Unity scene" width="315" height="305" loading="lazy">
+          <figcaption>Drag &amp; drop</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/gif/ui.gif" alt="SVG graphics used in Unity UI" width="315" height="305" loading="lazy">
+          <figcaption>Unity UI</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/gif/coloring.gif" alt="Recoloring vector artwork at runtime" width="315" height="305" loading="lazy">
+          <figcaption>Recolor artwork</figcaption>
+        </figure>
+      </div>
+
+      <ul class="tags" aria-label="More features">
+        <li>Automatic colliders</li>
+        <li>Frame-by-frame animation</li>
+        <li>Opaque &amp; transparent rendering</li>
+        <li>Manual level of detail</li>
+        <li>Depth compression</li>
+        <li>Custom pivot point</li>
+        <li>Mesh compression</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="compatibility">
+    <div class="container">
+      <h2 class="section-title">Works with your tools</h2>
+      <p class="section-lead">Export SVG 1.1 from any of these editors:</p>
+      <ul class="editors">
+        <li>Adobe Illustrator</li>
+        <li>Adobe Flash / Animate</li>
+        <li>CorelDRAW</li>
+        <li>Affinity Designer</li>
+        <li>Inkscape</li>
+      </ul>
+
+      <div class="support">
+        <div class="support-col">
+          <h3>Supported</h3>
+          <ul class="check">
+            <li>Simple &amp; complex shapes</li>
+            <li>Strokes and fills with transparency</li>
+            <li>Linear, radial &amp; conical gradients</li>
+            <li>Holes</li>
+            <li>Clip paths (absolute)</li>
+            <li>Symbols</li>
+          </ul>
+        </div>
+        <div class="support-col">
+          <h3>Not supported</h3>
+          <ul class="cross">
+            <li>Masks <span>(hardware limitations)</span></li>
+            <li>Text <span>(convert text to curves in your editor)</span></li>
+            <li>Filter effects: blur, shadow, glow, bevel</li>
+            <li>SVG animation</li>
+            <li>Embedded images</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="crossplatform">
+    <div class="container">
+      <h2 class="section-title">Cross-platform</h2>
+      <p class="section-lead">One asset, every screen. Phones, tablets and desktops all get crisp graphics from the same small file.</p>
+      <img class="devices" src="assets/img/devices.png" alt="The same game running sharp on phones, tablets and a desktop monitor" width="1100" height="318" loading="lazy">
+    </div>
+  </section>
+
+  <section class="section" id="videos">
+    <div class="container">
+      <h2 class="section-title">More videos</h2>
+      <div class="videos">
+        <a class="video-card" href="https://www.youtube.com/watch?v=J-FEnUDqM20">
+          <img src="assets/img/thumb-getting-started.png" alt="" width="680" height="384" loading="lazy">
+          <h3>Getting started</h3>
+          <p>A walk through the import settings and editor workflow.</p>
+        </a>
+        <a class="video-card" href="https://www.youtube.com/watch?v=VZZwKJqW3WI">
+          <img src="assets/img/thumb-unite.png" alt="" width="680" height="384" loading="lazy">
+          <h3>Unite Europe 2015</h3>
+          <p>How SVG Importer gives mobile games sharp graphics in small files, without blurry compressed textures.</p>
+        </a>
+        <a class="video-card" href="https://www.youtube.com/watch?v=C57W9-SqQog">
+          <img src="assets/img/thumb-realtime.png" alt="" width="680" height="384" loading="lazy">
+          <h3>Realtime demo</h3>
+          <p>A trailer made in Unity with SVG Importer over one weekend. This is a screen capture of the result.</p>
+        </a>
+      </div>
+      <p class="more"><a href="https://www.youtube.com/@Svgimporter">All videos on YouTube &rarr;</a></p>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container narrow">
+      <h2>Bring vector graphics to your Unity project</h2>
+      <div class="hero-actions">
+        <a class="btn btn-light" href="https://github.com/jaroslavstehlik/svgimporter">View on GitHub</a>
+        <a class="btn btn-outline" href="https://github.com/jaroslavstehlik/svgimporter/archive/refs/heads/master.zip">Download ZIP</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <img src="assets/img/logo-white.png" alt="SVG Importer" width="148" height="40" loading="lazy">
+    <nav class="footer-links" aria-label="Footer">
+      <a href="https://github.com/jaroslavstehlik/svgimporter">GitHub</a>
+      <a href="https://www.youtube.com/@Svgimporter">YouTube</a>
+      <a href="assets/docs/svg-importer-documentation.pdf">Documentation (PDF)</a>
+      <a href="mailto:support@svgimporter.com">support@svgimporter.com</a>
+    </nav>
+    <p class="copy">&copy; Jaroslav Stehl&iacute;k, Prague. Released under a <a href="https://github.com/jaroslavstehlik/svgimporter/blob/master/LICENSE">BSD-style license</a>.</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var toggle = document.querySelector('.nav-toggle');
+    var header = document.querySelector('.site-header');
+    toggle.addEventListener('click', function () {
+      var open = header.classList.toggle('nav-open');
+      toggle.setAttribute('aria-expanded', open);
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    });
+    // Load the YouTube player only on click. Pages opened from disk (file://)
+    // send no referrer, which YouTube rejects with error 153, so there the
+    // link simply opens the video on youtube.com.
+    document.querySelectorAll('[data-youtube]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        if (location.protocol === 'file:') return;
+        e.preventDefault();
+        var iframe = document.createElement('iframe');
+        iframe.src = 'https://www.youtube-nocookie.com/embed/' + link.dataset.youtube + '?autoplay=1';
+        iframe.title = 'SVG Importer trailer';
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        iframe.allowFullscreen = true;
+        var frame = document.createElement('div');
+        frame.className = 'video-frame';
+        frame.appendChild(iframe);
+        link.replaceWith(frame);
+      });
+    });
+
+    document.querySelectorAll('.site-nav a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        header.classList.remove('nav-open');
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  })();
+</script>
+</body>
+</html>
