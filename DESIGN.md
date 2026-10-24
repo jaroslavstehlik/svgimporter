@@ -205,12 +205,11 @@ Vertex compression is not a cause: Unity 6's default mask (`VertexChannelCompres
 
 The gradient *shape* (where a pixel lies along the gradient) becomes maths instead of a lookup texture. How the colour is then found depends on the gradient type.
 
-1. **Linear gradients use vertex colours, with no texture and no atlas.** A linear gradient's colour is linear in position between two neighbouring stops, and vertex colours interpolate linearly across a triangle. So each triangle is exact, provided no stop line crosses it. At import, triangles are split along:
-   - every stop line (`t` equal to a stop offset);
-   - `t = 0` and `t = 1`, beyond which the default *pad* spread keeps the end colours;
-   - every period boundary for the *repeat* and *reflect* spreads.
-
-   Splitting a triangle along a line gives at most three triangles, and both sides share the new vertices, so edges stay watertight. Each vertex then gets the gradient's colour at its position. A two-stop gradient whose shape lies within `t ∈ [0, 1]` needs no splitting. Linear gradients then render with the solid-colour shaders and batch with solid shapes. They need no texture read and no gradient index, so they also don't need the per-asset mesh copy that remaps atlas indices. If *repeat* or *reflect* would create more than 64 periods across a shape, that shape uses the ramp path below instead.
+1. **Linear gradients use vertex colours where a shape's triangles allow it.** Gradients never add tessellation: triangles come only from the shape.
+   - Across a triangle, `t` is an affine function of position, so its range is `[min, max]` of the `t` values at the three vertices. **A triangle is exact if that range lies inside one band**: between two neighbouring stops, or in the flat *pad* area before the first or after the last stop. Vertex colours, set to the gradient's colour at each vertex, then reproduce it exactly.
+   - A triangle that crosses a stop may still be close enough. Inside the triangle, both the true colour and the interpolated colour are affine between stop lines, so the largest difference occurs where a stop line crosses a triangle edge (it is zero at the vertices). Evaluating both colours at those crossing points gives the exact maximum error. **A triangle passes if that error is at most a tolerance**, by default half an 8-bit step (0.5/255) per channel.
+   - **The decision is per shape.** If all of a shape's triangles pass, the shape uses vertex colours and the solid-colour shaders, needs no texture read and no gradient index, and batches with solid shapes. Otherwise the whole shape takes the ramp path below. Its `t` still costs nothing per pixel, because linear `t` interpolates exactly from the vertices; the only cost is one ramp read.
+   - In practice, two-stop gradients whose gradient line spans the shape (`t` from 0 to 1, the usual export from Illustrator and Figma) use vertex colours. Gradients with many stops, or spreads that repeat across the shape, usually use the ramp.
 2. **Radial and conical gradients compute `t` analytically.** Each vertex stores its position in the gradient's normalised space (TexCoord0, 32-bit float). Gradient space is an affine transform of the shape, so interpolating it across a triangle is exact. The fragment shader computes `t` in full precision (`float`):
    - radial: `t = length(g)`, using the SVG focal-point formula when the focal point differs from the centre;
    - conical: `t = atan2(g.y, g.x) / 2π + 0.5`, per pixel, so there is no seam.
@@ -227,16 +226,16 @@ The gradient *shape* (where a pixel lies along the gradient) becomes maths inste
 
 | | Today | New |
 |---|---|---|
-| Linear | 2 dependent texture reads | none (vertex colour) |
+| Linear | 2 dependent texture reads | none (vertex colour), or 1 texture read if the shape fails the test |
 | Radial | 2 dependent texture reads | `length()` + 1 texture read |
 | Conical | 2 dependent texture reads | `atan2()` + 1 texture read |
 
-The native core (phase 2) outputs the same data: split triangles with colours for linear gradients, and gradient-space positions plus a ramp index for radial and conical ones. This part of the design therefore doesn't change when the core is replaced.
+The native core (phase 2) outputs the same data: per-vertex `t` or gradient-space positions, and the importer makes the same per-shape decision. This part of the design therefore doesn't change when the core is replaced.
 
 **Compatibility:** the mesh data changes, so the importer version is bumped and every `.svg` file reimports automatically. SVG Assets stored as `.asset` files (1.x) keep the old encoding until they are reimported; the SVG Asset Inspector offers *Reimport*, and converting them to `.svg` files (section 7) updates them too. The old shaders and the gradient shape texture are removed.
 
 **Tests:**
-- Linear gradients with many stops, hard stops and every spread method: rendered colours match the expected value at sample points, and there are no cracks along split edges.
+- Linear gradients with two stops, many stops, hard stops and every spread method: rendered colours match the expected value at sample points, whichever path the shape takes. The per-shape decision is checked directly: two-stop gradients spanning the shape must use vertex colours.
 - Neighbouring radial gradients with contrasting colours, sampled at `t` = 0 and 1: no bleeding.
 - Smoothness: along a large gradient, adjacent pixels may differ by at most a small amount, so steps are caught.
 - Focal radial gradients and the conical seam.
@@ -343,7 +342,7 @@ Decided:
 - Targets: Windows x64, Linux x64, macOS universal (arm64 + x64), iOS arm64, Android arm64 (section 3).
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
-- Gradient shapes are computed in the shader, not looked up. Linear gradients use vertex colours with triangles split at stop lines; radial and conical gradients use ramps in a shared `Texture2DArray` (7.1).
+- Gradient shapes are computed, not looked up. Gradients never add tessellation. Linear gradients use vertex colours when every triangle of the shape passes an exact error test, otherwise a ramp; radial and conical gradients use ramps in a shared `Texture2DArray` (7.1).
 
 Open:
 1. Should text conversion use only system fonts in the Editor, or also fonts in the project? At runtime, only project fonts are reliable (6.5).
