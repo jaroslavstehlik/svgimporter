@@ -155,7 +155,9 @@ uint32_t svgi_version(void);
 
 **The C# side is generated, not written by hand.** [csbindgen](https://github.com/Cysharp/csbindgen) (MIT, by Cysharp, built for .NET and Unity) runs in the core's `build.rs` and generates `NativeMethods.g.cs`: the `[DllImport]` declarations and matching `[StructLayout(LayoutKind.Sequential)]` structs. The generated file is committed in the package's Editor assembly, and CI fails if it differs from a fresh build, so the two sides can't drift apart. A thin hand-written `SVGNativeCore` class wraps the generated calls in safe C# (pinning input, copying results, freeing native memory, turning error codes into exceptions).
 
-Alternatives considered: interoptopus (MIT), which generates richer bindings with more runtime machinery, and uniffi-bindgen-cs (MPL-2.0), which follows Mozilla's UniFFI model and is a heavier fit for a three-function API.
+Alternatives considered:
+- **interoptopus** (MIT) generates a richer, safer C# layer: services as disposable classes, slices, strings, and Rust `Result`s as exceptions. That would replace most of `SVGNativeCore`. However, its current C# backend (0.16) emits `[LibraryImport]` with `static partial` methods, which need .NET 7's interop source generator. Unity's Mono and IL2CPP don't have it, so the output doesn't compile in Unity. The Unity flavour from 0.10 onwards now lives in the project's `crates/_old` folder. Worth revisiting if a Unity/`DllImport` output returns, or if Unity moves to CoreCLR.
+- **uniffi-bindgen-cs** (MPL-2.0) follows Mozilla's UniFFI model, which is a heavier fit for a three-function API.
 
 All arrays live in one allocation owned by the native side. C# copies them into managed arrays in one pass and calls `svgi_free`. No callbacks, no state between calls, and no threading assumptions, so imports can run in parallel in Unity's import worker processes.
 
