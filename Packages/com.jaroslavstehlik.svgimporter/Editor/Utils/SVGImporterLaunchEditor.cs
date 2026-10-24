@@ -12,27 +12,8 @@ namespace SVGImporter
 {
     using Utils;
 
-	internal class DelayedCall
-    {
-        public System.Action callback;
-        public DelayedCall(System.Action callback = null)
-        {
-            this.callback = callback;
-        }
-
-        public IEnumerator Delay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            if(this.callback != null)
-                this.callback();
-        }
-
-    }
-
     [InitializeOnLoad]
     public class SVGImporterLaunchEditor {
-
-        static DelayedCall initCall;
 
         // Begining
 		static bool launched = false;
@@ -44,8 +25,6 @@ namespace SVGImporter
 			} else {
 				launched = true;
 			}
-
-            initCall = new DelayedCall(DelayedInit);
 
             if (EditorPrefs.HasKey(SVG_IMPORTER_WINDOW_PREF_KEY))
             {
@@ -59,7 +38,7 @@ namespace SVGImporter
             SVGPostprocessor.Init();
             UpdateDelegates();
 
-            EditorCoroutine.StartCoroutine(initCall.Delay(0.5f), initCall);
+            EditorApplication.delayCall += DelayedInit;
         }
 
         static void DelayedInit()
@@ -101,16 +80,17 @@ namespace SVGImporter
 
         static void RegisterDelegates()
         {
-            if(!SVGDeleagate.IsRegistered(EditorApplication.playmodeStateChanged, PlaymodeStateChanged))
-                EditorApplication.playmodeStateChanged += PlaymodeStateChanged;
-            if(!SVGDeleagate.IsRegistered<SceneView>(SceneView.onSceneGUIDelegate, OnSceneGUI))
-                SceneView.onSceneGUIDelegate += OnSceneGUI;
-            if(!SVGDeleagate.IsRegistered<GameObject>(PrefabUtility.prefabInstanceUpdated, OnPrefabInstanceUpdated))
-                PrefabUtility.prefabInstanceUpdated += OnPrefabInstanceUpdated;
-            if(!SVGDeleagate.IsRegistered<int, Rect>(EditorApplication.hierarchyWindowItemOnGUI, HierarchyWindowItemOnGUI))
-                EditorApplication.hierarchyWindowItemOnGUI += HierarchyWindowItemOnGUI;
-			if(!SVGDeleagate.IsRegistered(EditorApplication.update, Update))
-                EditorApplication.update += Update;
+            // Unsubscribe first so a delegate is never registered twice.
+            UnregisterDelegates();
+            EditorApplication.playModeStateChanged += PlaymodeStateChanged;
+            SceneView.duringSceneGui += OnSceneGUI;
+            PrefabUtility.prefabInstanceUpdated += OnPrefabInstanceUpdated;
+#if UNITY_6000_5_OR_NEWER
+            EditorApplication.hierarchyWindowItemByEntityIdOnGUI += HierarchyWindowItemOnGUI;
+#else
+            EditorApplication.hierarchyWindowItemOnGUI += HierarchyWindowItemOnGUI;
+#endif
+            EditorApplication.update += Update;
         }
 
         static void Update()
@@ -128,16 +108,15 @@ namespace SVGImporter
 
         static void UnregisterDelegates()
         {
-            if(SVGDeleagate.IsRegistered(EditorApplication.playmodeStateChanged, PlaymodeStateChanged))
-                EditorApplication.playmodeStateChanged -= PlaymodeStateChanged;
-            if(SVGDeleagate.IsRegistered<SceneView>(SceneView.onSceneGUIDelegate, OnSceneGUI))
-                SceneView.onSceneGUIDelegate -= OnSceneGUI;
-            if(SVGDeleagate.IsRegistered<GameObject>(PrefabUtility.prefabInstanceUpdated, OnPrefabInstanceUpdated))
-                PrefabUtility.prefabInstanceUpdated -= OnPrefabInstanceUpdated;
-            if(SVGDeleagate.IsRegistered<int, Rect>(EditorApplication.hierarchyWindowItemOnGUI, HierarchyWindowItemOnGUI))
-                EditorApplication.hierarchyWindowItemOnGUI -= HierarchyWindowItemOnGUI;
-			if(SVGDeleagate.IsRegistered(EditorApplication.update, Update))
-                EditorApplication.update -= Update;
+            EditorApplication.playModeStateChanged -= PlaymodeStateChanged;
+            SceneView.duringSceneGui -= OnSceneGUI;
+            PrefabUtility.prefabInstanceUpdated -= OnPrefabInstanceUpdated;
+#if UNITY_6000_5_OR_NEWER
+            EditorApplication.hierarchyWindowItemByEntityIdOnGUI -= HierarchyWindowItemOnGUI;
+#else
+            EditorApplication.hierarchyWindowItemOnGUI -= HierarchyWindowItemOnGUI;
+#endif
+            EditorApplication.update -= Update;
         }
 
         public static void Start() {
@@ -183,9 +162,9 @@ namespace SVGImporter
         }
         */
 
-        static void PlaymodeStateChanged()
+        static void PlaymodeStateChanged(PlayModeStateChange state)
         {
-			SVGAtlas svgAtlas = Object.FindObjectOfType<SVGAtlas>();
+			SVGAtlas svgAtlas = Object.FindAnyObjectByType<SVGAtlas>();
 			if(svgAtlas != null)
 			{
 				svgAtlas.ClearAll();
@@ -220,8 +199,8 @@ namespace SVGImporter
             Rect scenePosition = new Rect(0f, 0f, sceneView.position.width, sceneView.position.height);
             switch(evt.type)
             {
-                case EventType.dragUpdated:
-                case EventType.dragPerform:
+                case EventType.DragUpdated:
+                case EventType.DragPerform:
                     Vector2 mousePosition = evt.mousePosition;
                     if(scenePosition.Contains(mousePosition))
                     {
@@ -260,7 +239,19 @@ namespace SVGImporter
             }
         }
 
-        private static void HierarchyWindowItemOnGUI(int instancedID, Rect selectionRect)
+#if UNITY_6000_5_OR_NEWER
+        private static void HierarchyWindowItemOnGUI(EntityId entityId, Rect selectionRect)
+        {
+            HierarchyWindowItemOnGUI(EditorUtility.EntityIdToObject(entityId) as GameObject, selectionRect);
+        }
+#else
+        private static void HierarchyWindowItemOnGUI(int instanceId, Rect selectionRect)
+        {
+            HierarchyWindowItemOnGUI(EditorUtility.InstanceIDToObject(instanceId) as GameObject, selectionRect);
+        }
+#endif
+
+        private static void HierarchyWindowItemOnGUI(GameObject parent, Rect selectionRect)
         {
             Event current = Event.current;
             if (current.type != EventType.DragUpdated && current.type != EventType.DragPerform && current.type != EventType.DragExited)
@@ -278,7 +269,8 @@ namespace SVGImporter
             EventType type = current.type;
             if (type == EventType.DragPerform)
             {
-                GameObject parent = EditorUtility.InstanceIDToObject(instancedID) as GameObject;
+                if (parent == null)
+                    return;
                 GameObject objectToUndo = DropFramesToSceneToCreateGO(svgAssetsFromDraggedPathsOrObjects[0].name, svgAssetsFromDraggedPathsOrObjects, parent.transform.position);
                 Undo.RegisterCreatedObjectUndo(objectToUndo, "Create SVG Renderer");
                 objectToUndo.transform.SetParent(parent.transform);

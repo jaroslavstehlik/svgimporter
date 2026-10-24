@@ -81,3 +81,7 @@ Temporary Items
 /[Mm]emoryCaptures/
 /Assets/Samples/
 .DS_Store
+
+# IDE
+.vscode/
+*.slnx

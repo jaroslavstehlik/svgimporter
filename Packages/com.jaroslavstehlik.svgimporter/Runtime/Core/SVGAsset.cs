@@ -456,7 +456,7 @@ namespace SVGImporter
                 Mesh clonedMesh = SVGMeshUtils.Clone(sharedMeshReference);
                 if(clonedMesh != null)
                 {
-                    clonedMesh.name += " Instance "+clonedMesh.GetInstanceID();                    
+                    clonedMesh.name += " Instance";                    
                 }
                 return clonedMesh;
             }

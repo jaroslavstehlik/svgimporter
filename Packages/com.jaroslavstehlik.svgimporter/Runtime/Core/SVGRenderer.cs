@@ -965,7 +965,7 @@ namespace SVGImporter
                         _mesh.Clear();
                     }
 
-                    _mesh.name = _vectorGraphics.name + " Instance "+_mesh.GetInstanceID();
+                    _mesh.name = _vectorGraphics.name + " Instance";
                     meshFilter.sharedMesh = _mesh;
                 } else {
                     CleanMesh();
@@ -985,7 +985,7 @@ namespace SVGImporter
                         }
 
                         SVGMeshUtils.Fill(_vectorGraphics.sharedMesh, _mesh);
-                        _mesh.name += " Instance "+_mesh.GetInstanceID();
+                        _mesh.name += " Instance";
                         if(meshFilter.sharedMesh != _mesh) 
                             meshFilter.sharedMesh = _mesh;
                     }

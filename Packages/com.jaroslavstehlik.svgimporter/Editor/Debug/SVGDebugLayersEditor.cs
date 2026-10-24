@@ -64,7 +64,7 @@ namespace SVGImporter.Utils
 
 		void DebugPoints(SVGLayer svgLayer, SVGAsset svgAsset)
 		{
-			if(Event.current.type == EventType.repaint)
+			if(Event.current.type == EventType.Repaint)
 			{
 				SVGDebugLayers go = target as SVGDebugLayers;
 				Matrix4x4 handlesMatrix = Handles.matrix;
@@ -91,7 +91,7 @@ namespace SVGImporter.Utils
 		void DebugPoints(SVGShape svgShape, SVGAsset svgAsset)
 		{
 			if(svgShape.vertexCount == 0) return;
-			if(Event.current.type == EventType.repaint)
+			if(Event.current.type == EventType.Repaint)
 			{
 				SVGDebugLayers go = target as SVGDebugLayers;
 				Matrix4x4 handlesMatrix = Handles.matrix;

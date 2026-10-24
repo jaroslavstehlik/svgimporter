@@ -700,7 +700,7 @@ namespace SVGImporter
 
             if (_atlasData == null)
             {
-                Debug.LogWarning("atlasData is null! "+GetInstanceID());
+                Debug.LogWarning("atlasData is null!", this);
                 return;
             }
             CCGradient[] gradients = _atlasData.gradients;

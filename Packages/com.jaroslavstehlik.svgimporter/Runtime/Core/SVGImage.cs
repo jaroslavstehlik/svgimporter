@@ -296,7 +296,12 @@ namespace SVGImporter
         }
         
         public virtual float flexibleHeight { get { return -1; } }
-        
+
+        // Part of ILayoutElement since uGUI 2.x; -1 means unconstrained.
+        public virtual float maxWidth { get { return -1; } }
+
+        public virtual float maxHeight { get { return -1; } }
+
         public virtual int layoutPriority { get { return 0; } }
         
         public virtual bool IsRaycastLocationValid(Vector2 screenPoint, Camera eventCamera)

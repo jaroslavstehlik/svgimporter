@@ -162,5 +162,8 @@
 *.SPP filter=lfs diff=lfs merge=lfs -text
 *.max filter=lfs diff=lfs merge=lfs -text
 *.MAX filter=lfs diff=lfs merge=lfs -text
+# Store the UPM package as regular git objects, so installing it from a git URL
+# works without git-lfs. These rules must stay below the LFS rules above.
+Packages/com.jaroslavstehlik.svgimporter/** !filter !diff !merge !text
 ProjectSettings/** !text !filter !merge !diff
 Assets/** !text !filter !merge !diff
