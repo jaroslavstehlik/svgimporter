@@ -364,13 +364,13 @@ The existing samples are kept as the Showcase until the focused ones exist.
 | A. Antialiasing | New fringe and shaders (7.2), with lyon-generated fringes from the native core; *Hardware* (MSAA) option | Antialiasing tests pass in Built-in, URP and UI, on desktop and devices |
 | I. Unity integration | Sprite import target; UI Toolkit element (section 16, item 1) | SVGs work with SpriteRenderer and Sprite Atlas, and render in UI Toolkit |
 | L. 2D lighting | *SVG Lit (2D)* shaders (section 16, item 2) | 2D lights and normal maps affect SVG shapes in the URP 2D Renderer |
-| O. Group opacity | Overlap test and group flattening (section 16, item 3) | Group opacity matches a browser rendering, including overlapping children |
+| O. Group opacity | Overlap test at import; cached offscreen layer in `SVGImage`; depth path in `SVGRenderer` (section 16, item 3) | Group opacity in uGUI and world space matches a browser rendering, including overlapping children and fades |
 | R. Raster fallback | resvg rasterization of unsupported groups (section 16, item 4) | Files with filters, masks and images import with those parts rasterized and reported |
 | G. Gradients | New gradient rendering (7.1) | Gradient tests pass on desktop, with emulated mobile precision, and on Android and iOS devices |
 | 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in |
 | 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site |
 
-Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phases O and R need the native core (polygon booleans and resvg) and follow phase 3; phase I can start with solid fills and grow with them.
+Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phase O is C# and shader work and can ship in 2.x. Phase R needs resvg and follows phase 3; phase I can start with solid fills and grow with them.
 
 ## 14. Risks
 
@@ -411,22 +411,20 @@ Compared with other SVG solutions, the design above gives SVG Importer browser-g
 
 **2. 2D lighting.** With the URP 2D Renderer, SVG shapes are drawn unlit (section 7.2's `Universal2D` pass), so 2D lights, shadows and normal maps don't affect them. Add *SVG Lit (2D)* shaders whose `Universal2D` pass samples URP's 2D light textures, as URP's `Sprite-Lit-Default` does. Normal maps come from the generated normals. The pass uses URP include files, so it sits in a SubShader with a `PackageRequirements` block and projects without URP still compile. This is shader work and doesn't need the native core.
 
-**3. Group opacity.** `opacity` on a group applies to the group's combined result. Browsers and Skia render the group into an offscreen layer (`saveLayer`) and composite it with the opacity. Doing that at runtime costs a render target and an extra pass per group every frame, and breaks batching, so SVG Importer resolves group opacity at import wherever the result is provably identical. Applying it to each child, as today, makes overlapping children show through each other; group opacity is common in exports from Illustrator and Figma.
+**3. Group opacity.** `opacity` on a group applies to the group's combined result: browsers and Skia render the group into an offscreen layer (`saveLayer`) and composite that with the opacity. SVG Importer applies it to each child instead, so where children overlap, lower children show through upper ones. Group opacity in SVG files is common in exports from Illustrator and Figma, and the main place it matters is UI (uGUI).
 
-Why geometry can replace the offscreen layer: for opaque children, the layer holds exactly one child's colour at each pixel, the topmost one. If every child is cut by the children painted above it, no two pieces overlap, and drawing each piece with the group's opacity gives the same pixels as compositing the layer. Only coverage changes, not colours, so this holds for gradient fills too.
+Cutting overlapping children apart at import was considered and rejected: every cut adds the upper shape's outline to the shape below, which multiplies vertices in layered artwork, and the cut pieces show seams along every cut once they are antialiased.
 
-| Children of the group | Handling | Exact |
-|---|---|---|
-| Don't overlap (tested with `i_overlay`) | Opacity per child | Yes |
-| Overlap, all opaque (solid or gradient) | Cut each child by the children above it, then opacity per piece. Also removes hidden geometry, which reduces overdraw | Yes |
-| Overlap, semi-transparent solid colours | Split into regions (A only, B only, A∩B); each overlap region gets the colour blended at import | Yes |
-| Overlap, semi-transparent gradients | Blending two gradients isn't a gradient | No: raster fallback (item 4) |
-| Masks, filters or blend modes inside the group | — | No: raster fallback (item 4) |
-
-Limits:
-- **Internal edges.** In the offscreen layer, edges between children are internal, so the background never shows through them. After cutting, the pieces are separate shapes whose antialiasing fringes would let the background bleed through, like touching shapes (section 7.2). The cut edges are known exactly at import, so they get no fringe: pieces meet edge to edge, and only the group's outer edge is antialiased. With *Hardware* antialiasing (MSAA) everything stays exact.
-- **Modifiers.** Cut pieces and pre-blended overlap colours are fixed at import, so per-layer runtime changes (for example the recolour modifier) would be wrong inside a flattened group. Groups in assets that keep layers for modifiers are not flattened; the Inspector warns that their opacity is applied per child.
-- **To evaluate:** for overlapping opaque children, depth testing could do the same on the GPU without polygon operations: draw the group front to back with depth writes and the group's opacity, so each pixel takes only the topmost shape. The Opaque format already layers with depth. Antialiasing fringes conflict with it (a fringe would write depth while partly transparent), so it is not the default.
+The design:
+- **At import, record whether each group with opacity has overlapping children** (a cheap polygon-overlap test with Clipper, later `i_overlay`). If none overlap, opacity per child is exact and nothing else is needed. This is the common case for icons.
+- **uGUI (`SVGImage`): a cached offscreen layer.** If the asset contains a group whose opacity needs compositing, `SVGImage` renders its whole mesh once into a pooled `RenderTexture` the size of its rectangle on screen, through a command buffer executed immediately (this works the same in every render pipeline), and then draws a single quad with that texture.
+  - It is exact: it is the offscreen layer, with any nesting of groups, antialiasing, gradients and semi-transparency. It adds no vertices and no seams.
+  - The texture is re-rendered only when something visible changes: the element's size or the canvas scale (so it stays sharp), its colour, its asset, or a modifier. Otherwise it costs one textured quad per frame.
+  - Memory: one texture per visible element that needs it, at its on-screen size, for example 64 KB for a 128×128 icon or about 8 MB for a full-screen 1920×1080 illustration. The Inspector shows when an asset needs compositing and why.
+  - Rendering into the transparent texture uses premultiplied alpha, so edges composite correctly.
+  - The same path also makes runtime fades exact. While a `CanvasGroup` or the element's colour makes it translucent, `SVGImage` uses the cached texture even for assets without group opacity, and releases it when alpha returns to 1. `UIBehaviour.OnCanvasGroupChanged` tells it when that happens.
+- **World space (`SVGRenderer`): depth.** For an overlapping group, a depth-only pass first draws the group's fills, each child at its own depth with upper children closer; then the fills are drawn with depth test *Equal* and the group's opacity, so each pixel takes only its topmost child; finally the fringes are drawn with depth test *LessEqual*. It adds no vertices and leaves no seams. The only inexactness is in the one-pixel fringe on internal edges: c·α·(1−α)·(A − background), at most about 12 % of the colour difference at α = 0.5. Where no depth buffer is available, `SVGRenderer` can use the cached-layer path as well.
+- **Exact rasterization at import (item 4)** stays available per asset, for content that also uses filters or masks.
 
 **4. Raster fallback for what can't become geometry**: filters (drop shadows and blurs are common in exports), masks that aren't simple clips, blend modes, embedded images and patterns. resvg, from the same project as usvg, rasterizes just those groups at import into a mipmapped texture stored in the SVG Asset. The texture is placed in the mesh as a textured quad, in painter's order (`FILL_TYPE.TEXTURE` already exists). The resolution is an import setting, and these parts are no longer resolution-independent; the Inspector shows which elements were rasterized and why. Each asset with rasterized parts needs one extra material, so one more draw call.
 
