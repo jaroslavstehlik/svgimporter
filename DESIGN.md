@@ -13,6 +13,7 @@ Version 2.0 (the `modern` branch) already made the plugin a UPM package for Unit
 3. **Keep everything Unity-specific in C#.** The Inspector, the render formats (Opaque, Transparent, uGUI), depth handling, the gradient atlas, layers for modifiers, colliders and serialization stay as they are, so existing projects and APIs keep working.
 4. **Measure quality.** A conformance corpus with reference images gives a support percentage that we track over time, instead of discovering failures from user reports.
 5. **Ship samples as Unity samples and documentation as package documentation.**
+6. **Make every cost visible and optional.** By default an SVG costs one mesh, one shared material, one batched draw call and no render targets. Anything that creates a render target, adds a material or draw call, or adds a render pass is an explicit opt-in setting on the asset or the component, and the setting states its cost. Where the cheap default is an approximation, the Inspector says so. Each SVG Asset shows a cost summary: vertices, triangles, materials, draw calls, render targets and texture memory.
 
 ### Non-goals
 
@@ -364,13 +365,14 @@ The existing samples are kept as the Showcase until the focused ones exist.
 | A. Antialiasing | New fringe and shaders (7.2), with lyon-generated fringes from the native core; *Hardware* (MSAA) option | Antialiasing tests pass in Built-in, URP and UI, on desktop and devices |
 | I. Unity integration | Sprite import target; UI Toolkit element (section 16, item 1) | SVGs work with SpriteRenderer and Sprite Atlas, and render in UI Toolkit |
 | L. 2D lighting | *SVG Lit (2D)* shaders (section 16, item 2) | 2D lights and normal maps affect SVG shapes in the URP 2D Renderer |
-| O. Group opacity | Overlap test at import; cached offscreen layer in `SVGImage`; depth path in `SVGRenderer` (section 16, item 3) | Group opacity in uGUI and world space matches a browser rendering, including overlapping children and fades |
-| R. Raster fallback | resvg rasterization of unsupported groups (section 16, item 4) | Files with filters, masks and images import with those parts rasterized and reported |
+| O. Group opacity | Overlap test at import; opt-in cached offscreen layer in `SVGImage`; opt-in depth path in `SVGRenderer` (section 16, item 3) | Group opacity in uGUI and world space matches a browser rendering, including overlapping children and fades |
+| F. Feathering | Blur and drop shadows as feathered fringes (section 16, item 4) | Blurred shapes and drop shadows match a browser rendering within a tolerance, in the same draw call |
+| R. Raster fallback | Opt-in resvg rasterization of unsupported groups (section 16, item 5) | Files with filters, masks and images import with those parts rasterized and reported |
 | G. Gradients | New gradient rendering (7.1) | Gradient tests pass on desktop, with emulated mobile precision, and on Android and iOS devices |
 | 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in |
 | 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site |
 
-Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phase O is C# and shader work and can ship in 2.x. Phase R needs resvg and follows phase 3; phase I can start with solid fills and grow with them.
+Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phase O is C# and shader work and can ship in 2.x. Phase F needs the fringe from phase A. Phase R needs resvg and follows phase 3; phase I can start with solid fills and grow with them.
 
 ## 14. Risks
 
@@ -392,6 +394,7 @@ Decided:
 - Targets: Windows x64, Linux x64, macOS universal (arm64 + x64), iOS arm64, Android arm64 (section 3).
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
+- Every cost beyond one mesh, one shared material and one batched draw is opt-in and shown in the Inspector (goal 6).
 - Antialiasing uses a fringe centred on the edge with bevelled sharp corners, extruded in screen pixels in the vertex shader and with coverage computed per pixel; MSAA is offered as an alternative (7.2). Coverage uses the distance to the nearest edge, as Skia's GPU convex-path renderer does. Exact-area coverage (Skia's CPU "analytic AA") was rejected: it only improves sharp corners and sub-pixel details and needs compute or CPU work per frame.
 - Gradient shapes are computed, not looked up, and colours are evaluated exactly from stops kept in a shared data texture, as in Skia/Chromium. Gradients never add tessellation. Linear gradients use vertex colours when every triangle of the shape passes an exact error test (7.1).
 
@@ -401,7 +404,7 @@ Open:
 
 ## 16. Gaps and future work
 
-Compared with other SVG solutions, the design above gives SVG Importer browser-grade parsing (usvg), Skia-grade gradients and antialiasing, and the lowest runtime cost on mobile: baked meshes, one batched draw per SVG and an opaque mode that reduces overdraw. Unity's own Vector Graphics package supports only a subset of SVG 1.1 (no text, masks or filters) and is labelled experimental; Godot rasterizes SVG to textures with ThorVG. The gaps below decide whether real-world files and normal Unity 2D workflows work without surprises. Items 1–4 are part of the plan; items 5–10 are candidates after 3.0.
+Compared with other SVG solutions, the design above gives SVG Importer browser-grade parsing (usvg), Skia-grade gradients and antialiasing, and the lowest runtime cost on mobile: baked meshes, one batched draw per SVG and an opaque mode that reduces overdraw. Unity's own Vector Graphics package supports only a subset of SVG 1.1 (no text, masks or filters) and is labelled experimental; Godot rasterizes SVG to textures with ThorVG. The gaps below decide whether real-world files and normal Unity 2D workflows work without surprises. Items 1–5 are part of the plan; items 6–11 are candidates after 3.0.
 
 ### Important
 
@@ -417,32 +420,38 @@ Cutting overlapping children apart at import was considered and rejected: every 
 
 The design:
 - **At import, record whether each group with opacity has overlapping children** (a cheap polygon-overlap test with Clipper, later `i_overlay`). If none overlap, opacity per child is exact and nothing else is needed. This is the common case for icons.
-- **uGUI (`SVGImage`): a cached offscreen layer.** If the asset contains a group whose opacity needs compositing, `SVGImage` renders its whole mesh once into a pooled `RenderTexture` the size of its rectangle on screen, through a command buffer executed immediately (this works the same in every render pipeline), and then draws a single quad with that texture.
+- **The default stays free: opacity per child.** Following goal 6, accurate group opacity is an opt-in, because both methods below cost something. When an asset has a group whose children overlap, the Inspector says that its opacity is applied per shape and offers the accurate setting with its cost.
+- **uGUI (`SVGImage`), opt-in "Accurate Group Opacity": a cached offscreen layer.** It costs a render target and breaks batching with neighbouring UI elements for as long as it's active. When enabled and the asset contains a group whose opacity needs compositing, `SVGImage` renders its whole mesh once into a pooled `RenderTexture` the size of its rectangle on screen, through a command buffer executed immediately (this works the same in every render pipeline), and then draws a single quad with that texture.
   - It is exact: it is the offscreen layer, with any nesting of groups, antialiasing, gradients and semi-transparency. It adds no vertices and no seams.
   - The texture is re-rendered only when something visible changes: the element's size or the canvas scale (so it stays sharp), its colour, its asset, or a modifier. Otherwise it costs one textured quad per frame.
   - Memory: one texture per visible element that needs it, at its on-screen size, for example 64 KB for a 128×128 icon or about 8 MB for a full-screen 1920×1080 illustration. The Inspector shows when an asset needs compositing and why.
   - Rendering into the transparent texture uses premultiplied alpha, so edges composite correctly.
-  - The same path also makes runtime fades exact. While a `CanvasGroup` or the element's colour makes it translucent, `SVGImage` uses the cached texture even for assets without group opacity, and releases it when alpha returns to 1. `UIBehaviour.OnCanvasGroupChanged` tells it when that happens.
-- **World space (`SVGRenderer`): depth.** For an overlapping group, a depth-only pass first draws the group's fills, each child at its own depth with upper children closer; then the fills are drawn with depth test *Equal* and the group's opacity, so each pixel takes only its topmost child; finally the fringes are drawn with depth test *LessEqual*. It adds no vertices and leaves no seams. The only inexactness is in the one-pixel fringe on internal edges: c·α·(1−α)·(A − background), at most about 12 % of the colour difference at α = 0.5. Where no depth buffer is available, `SVGRenderer` can use the cached-layer path as well.
-- **Exact rasterization at import (item 4)** stays available per asset, for content that also uses filters or masks.
+  - A separate opt-in, "Accurate Fade", uses the same path to make runtime fades exact. While a `CanvasGroup` or the element's colour makes it translucent, `SVGImage` uses the cached texture even for assets without group opacity, and releases it when alpha returns to 1. `UIBehaviour.OnCanvasGroupChanged` tells it when that happens.
+- **World space (`SVGRenderer`), opt-in: depth.** It costs one extra depth-only draw per group. For an overlapping group, a depth-only pass first draws the group's fills, each child at its own depth with upper children closer; then the fills are drawn with depth test *Equal* and the group's opacity, so each pixel takes only its topmost child; finally the fringes are drawn with depth test *LessEqual*. It adds no vertices and leaves no seams. The only inexactness is in the one-pixel fringe on internal edges: c·α·(1−α)·(A − background), at most about 12 % of the colour difference at α = 0.5. Where no depth buffer is available, `SVGRenderer` can use the cached-layer path as well.
+- **Exact rasterization at import (item 5)** stays available per asset, for content that also uses filters or masks.
 
-**4. Raster fallback for what can't become geometry**: filters (drop shadows and blurs are common in exports), masks that aren't simple clips, blend modes, embedded images and patterns. resvg, from the same project as usvg, rasterizes just those groups at import into a mipmapped texture stored in the SVG Asset. The texture is placed in the mesh as a textured quad, in painter's order (`FILL_TYPE.TEXTURE` already exists). The resolution is an import setting, and these parts are no longer resolution-independent; the Inspector shows which elements were rasterized and why. Each asset with rasterized parts needs one extra material, so one more draw call.
+**4. Blur and drop shadows as feathered geometry.** Gaussian blurs on shapes and drop shadows (an offset, blurred copy of a shape) are the most common SVG filters in exports. Following Rive's "feathering", they become geometry instead of rasterized images: the antialiasing fringe (section 7.2) is widened to the blur's radius, and its coverage profile changes from a one-pixel box to the integral of a normal distribution (`erf`), centred on the path's edge. The result is resolution-independent and stays in the same mesh, material and draw call, so it's on by default.
+- Rive reports results visually identical to a Gaussian blur on a rasterized image, and describes a 2D correction for curves and corners, where curvature shifts the 50 % point. Rive doesn't publish that formula, so a first version uses the straight-edge profile and accepts slightly softer corners.
+- Only blurs and shadows of shapes qualify. Filter chains that combine images, or blur whole groups with overlapping content, use the raster fallback.
+- Source: https://rive.app/blog/how-rive-reinvented-feathering-for-the-vectorian-era
+
+**5. Raster fallback, opt-in, for what can't become geometry**: filters other than item 4, masks that aren't simple clips, blend modes, embedded images and patterns. resvg, from the same project as usvg, rasterizes just those groups at import into a mipmapped texture stored in the SVG Asset. The texture is placed in the mesh as a textured quad, in painter's order (`FILL_TYPE.TEXTURE` already exists). The resolution is an import setting, and these parts are no longer resolution-independent; the Inspector shows which elements were rasterized and why. Each asset with rasterized parts needs one extra material, so one more draw call, plus the texture memory. Following goal 6, it is off by default: unsupported elements are skipped, and the Inspector lists them and offers the fallback with its cost.
 
 ### Candidates after 3.0
 
-**5. Quality at high zoom.** Curves are flattened at import with a tolerance from the *Quality* setting, so extreme zoom shows facets. Options:
+**6. Quality at high zoom.** Curves are flattened at import with a tolerance from the *Quality* setting, so extreme zoom shows facets. Options:
 - **Levels of detail:** several tolerances per asset, with `SVGRenderer` choosing by screen size.
 - **Exact curves on the GPU** (Loop–Blinn): the triangles along curved edges carry curve coordinates, and the fragment shader computes coverage against the true curve. This is exact at any zoom, but it's significant work.
 
-**6. Stroke width at runtime.** Strokes from lyon carry the same normals as the antialiasing fringe, so their width can also be applied in the vertex shader. That enables SVG's `vector-effect: non-scaling-stroke` and animatable stroke widths.
+**7. Stroke width at runtime.** Strokes from lyon carry the same normals as the antialiasing fringe, so their width can also be applied in the vertex shader. That enables SVG's `vector-effect: non-scaling-stroke` and animatable stroke widths.
 
-**7. Text as text.** Text is converted to curves, so it can't be edited or localized. An import option could map simple `<text>` elements to TextMeshPro objects, keeping the rest as geometry.
+**8. Text as text.** Text is converted to curves, so it can't be edited or localized. An import option could map simple `<text>` elements to TextMeshPro objects, keeping the rest as geometry.
 
-**8. Colour.** CSS Color 4 interpolation spaces (for example oklab), the `color-interpolation` property, and wide-gamut colours.
+**9. Colour.** CSS Color 4 interpolation spaces (for example oklab), the `color-interpolation` property, and wide-gamut colours.
 
-**9. Interaction.** Hit-testing and events per SVG element: layers already keep element ids and bounds, but there is no API to ask which element is under a point.
+**10. Interaction.** Hit-testing and events per SVG element: layers already keep element ids and bounds, but there is no API to ask which element is under a point.
 
-**10. Performance work.** Confirm SRP Batcher compatibility with the Frame Debugger, cull layers of large documents by their bounds, and use smaller vertex formats where precision allows.
+**11. Performance work.** Confirm SRP Batcher compatibility with the Frame Debugger, cull layers of large documents by their bounds, and use smaller vertex formats where precision allows.
 
 ### Out of scope
 
