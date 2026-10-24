@@ -362,11 +362,15 @@ The existing samples are kept as the Showcase until the focused ones exist.
 | 3. Parity and beyond | Clip paths, dashes, text, masks-as-clips, diagnostics in the Inspector | Native support percentage ≥ legacy on every category; native becomes the default |
 | 4. Release 3.0 | Signing, CI release pipeline, legacy C# engine removed | Clean install from git on Windows, Linux and macOS Editors; runtime import works in iOS and Android builds |
 | A. Antialiasing | New fringe and shaders (7.2), with lyon-generated fringes from the native core; *Hardware* (MSAA) option | Antialiasing tests pass in Built-in, URP and UI, on desktop and devices |
+| I. Unity integration | Sprite import target; UI Toolkit element (16.1) | SVGs work with SpriteRenderer and Sprite Atlas, and render in UI Toolkit |
+| L. 2D lighting | *SVG Lit (2D)* shaders (16.2) | 2D lights and normal maps affect SVG shapes in the URP 2D Renderer |
+| O. Group opacity | Overlap test and group flattening (16.3) | Group opacity matches a browser rendering, including overlapping children |
+| R. Raster fallback | resvg rasterization of unsupported groups (16.4) | Files with filters, masks and images import with those parts rasterized and reported |
 | G. Gradients | New gradient rendering (7.1) | Gradient tests pass on desktop, with emulated mobile precision, and on Android and iOS devices |
 | 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in |
 | 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site |
 
-Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier.
+Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phases O and R need the native core (polygon booleans and resvg) and follow phase 3; phase I can start with solid fills and grow with them.
 
 ## 14. Risks
 
@@ -394,6 +398,45 @@ Decided:
 Open:
 1. Should text conversion use only system fonts in the Editor, or also fonts in the project? At runtime, only project fonts are reliable (6.5).
 2. Is a separate `svgimporter-cli` useful as a public tool, for example for CI pipelines that pre-check SVG files?
+
+## 16. Gaps and future work
+
+Compared with other SVG solutions, the design above gives SVG Importer browser-grade parsing (usvg), Skia-grade gradients and antialiasing, and the lowest runtime cost on mobile: baked meshes, one batched draw per SVG and an opaque mode that reduces overdraw. Unity's own Vector Graphics package supports only a subset of SVG 1.1 (no text, masks or filters) and is labelled experimental; Godot rasterizes SVG to textures with ThorVG. The gaps below decide whether real-world files and normal Unity 2D workflows work without surprises. Items 1–4 are part of the plan; items 5–10 are candidates after 3.0.
+
+### Important
+
+**1. Unity integration.** Today an SVG Asset renders only through SVG Importer's own `SVGRenderer` and `SVGImage`. It doesn't work with SpriteRenderer, Sprite Atlas, 2D Animation (bones), Sprite Shape, Tilemap or UI Toolkit, all of which Unity's Vector Graphics package targets.
+- **Sprites:** add an import target that produces a mesh Sprite with vertex colours, as Unity's *Vector Sprite* does. To investigate: which vertex attributes Sprites can carry (`SpriteDataAccessExtensions.SetVertexAttribute`), which decides whether gradients beyond the vertex-colour path work. If they can't, those shapes fall back to the raster fallback (item 4).
+- **UI Toolkit:** render SVG Assets in a custom `VisualElement` through `generateVisualContent` (`MeshGenerationContext`), which is public API. UI Toolkit doesn't take custom shaders, so solid fills and vertex-colour linear gradients work directly; other gradients need the raster fallback. To investigate: whether a UI Toolkit `VectorImage` can be produced through public API, so SVGs can be used as element backgrounds in UI Builder.
+
+**2. 2D lighting.** With the URP 2D Renderer, SVG shapes are drawn unlit (section 7.2's `Universal2D` pass), so 2D lights, shadows and normal maps don't affect them. Add *SVG Lit (2D)* shaders whose `Universal2D` pass samples URP's 2D light textures, as URP's `Sprite-Lit-Default` does. Normal maps come from the generated normals. The pass uses URP include files, so it sits in a SubShader with a `PackageRequirements` block and projects without URP still compile. This is shader work and doesn't need the native core.
+
+**3. Group opacity.** `opacity` on a group applies to the group's combined result. Applying it to each child, as today, makes overlapping children show through each other. Group opacity is common in exports from Illustrator and Figma. Approach, at import:
+- If the group's children don't overlap, per-child opacity is exact. Overlap is tested with polygon intersection (`i_overlay`).
+- If they overlap and the children are opaque, **flatten the group**: subtract each child's area from the children painted before it, so that no two children overlap, then apply the opacity per child. This is exact, and as a bonus removes hidden geometry, which reduces overdraw on mobile.
+- Groups with overlapping semi-transparent children use the raster fallback (item 4).
+
+**4. Raster fallback for what can't become geometry**: filters (drop shadows and blurs are common in exports), masks that aren't simple clips, blend modes, embedded images and patterns. resvg, from the same project as usvg, rasterizes just those groups at import into a mipmapped texture stored in the SVG Asset. The texture is placed in the mesh as a textured quad, in painter's order (`FILL_TYPE.TEXTURE` already exists). The resolution is an import setting, and these parts are no longer resolution-independent; the Inspector shows which elements were rasterized and why. Each asset with rasterized parts needs one extra material, so one more draw call.
+
+### Candidates after 3.0
+
+**5. Quality at high zoom.** Curves are flattened at import with a tolerance from the *Quality* setting, so extreme zoom shows facets. Options:
+- **Levels of detail:** several tolerances per asset, with `SVGRenderer` choosing by screen size.
+- **Exact curves on the GPU** (Loop–Blinn): the triangles along curved edges carry curve coordinates, and the fragment shader computes coverage against the true curve. This is exact at any zoom, but it's significant work.
+
+**6. Stroke width at runtime.** Strokes from lyon carry the same normals as the antialiasing fringe, so their width can also be applied in the vertex shader. That enables SVG's `vector-effect: non-scaling-stroke` and animatable stroke widths.
+
+**7. Text as text.** Text is converted to curves, so it can't be edited or localized. An import option could map simple `<text>` elements to TextMeshPro objects, keeping the rest as geometry.
+
+**8. Colour.** CSS Color 4 interpolation spaces (for example oklab), the `color-interpolation` property, and wide-gamut colours.
+
+**9. Interaction.** Hit-testing and events per SVG element: layers already keep element ids and bounds, but there is no API to ask which element is under a point.
+
+**10. Performance work.** Confirm SRP Batcher compatibility with the Frame Debugger, cull layers of large documents by their bounds, and use smaller vertex formats where precision allows.
+
+### Out of scope
+
+SVG animation (SMIL and CSS), and the vector animation formats used in practice today, Lottie and Rive. SVG Importer animates through its own components (frame animator, modifiers) and Unity's animation system.
 
 ## References
 
