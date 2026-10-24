@@ -38,12 +38,6 @@ namespace SVGImporter
             SVGPostprocessor.Init();
             UpdateDelegates();
 
-            EditorApplication.delayCall += DelayedInit;
-        }
-
-        static void DelayedInit()
-        {
-            SVGImporterEditor.Init();
         }
 
         static bool repaint;

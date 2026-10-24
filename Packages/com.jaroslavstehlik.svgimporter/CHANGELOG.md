@@ -12,6 +12,8 @@
 - Fixed SVG Image not rendering when added through Add Component on Unity 6.
 - The Diffuse shaders now render in URP (lit by the main light) and the URP 2D Renderer (unlit).
 - Removed the "Standard SVG" materials, which referenced a shader that was never included.
+- Importer settings now live in the project (Window > SVG Importer > Settings creates `Assets/SVG Importer/Resources/svgImporterSettings.asset`), because packages installed from git are read-only. Without that asset the defaults are used.
+- The plugin no longer creates an `Assets/Gizmos` folder in your project.
 
 ## Legacy releases
 

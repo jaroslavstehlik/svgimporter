@@ -8,37 +8,23 @@ namespace SVGImporter
 {
     public class SVGImporterSettings : ScriptableObject 
     {
+        public const string resourceName = "svgImporterSettings";
+
         protected static SVGImporterSettings _instance;
+        /// <summary>
+        /// The project's settings asset (any Resources/svgImporterSettings.asset),
+        /// or the default settings when the project has none.
+        /// </summary>
         public static SVGImporterSettings Get
         {
             get {
                 if(_instance == null)
                 {
-                    _instance = Resources.Load<SVGImporterSettings>("svgImporterSettings");
+                    _instance = Resources.Load<SVGImporterSettings>(resourceName);
                     if(_instance == null)
                     {
-                        Debug.LogError("Cannot Load SVG Importer Settings! Please Move SVG Importer Settings in to Resource folder.");
                         _instance = ScriptableObject.CreateInstance<SVGImporterSettings>();
-                        _instance.defaultSVGFormat = SVGAssetFormat.Transparent;
-                        _instance.defaultUseGradients = SVGUseGradients.Never;
-                        _instance.defaultAntialiasing = true;
-                        _instance.defaultAntialiasingWidth = 2f;
-                        _instance.defaultMeshCompression = SVGMeshCompression.High;
-                        _instance.defaultVerticesPerMeter = 1000;
-                        _instance.defaultScale = 0.001f;
-                        _instance.defaultDepthOffset = 0.01f;
-                        _instance.defaultCompressDepth = true;
-                        _instance.defaultCustomPivotPoint = false;
-                        _instance.defaultPivotPoint = new Vector2(0.5f, 0.5f);
-                        _instance.defaultGenerateCollider = false;
-                        _instance.defaultKeepSVGFile = false;
-                        _instance.defaultUseLayers = false;
-                        _instance.defaultIgnoreSVGCanvas = true;
-                        _instance.defaultOptimizeMesh = true;
-                        _instance.defaultGenerateNormals = false;
-                        _instance.defaultGenerateTangents = false;
-                        _instance.defaultSVGIcon = null;
-                        _instance.ignoreImportExceptions = true;
+                        _instance.hideFlags = HideFlags.DontSave;
                     }
                 }
 
@@ -60,8 +46,8 @@ namespace SVGImporter
         }
 
         public SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;
-        public SVGUseGradients defaultUseGradients = SVGUseGradients.Always;
-        public bool defaultAntialiasing = false;
+        public SVGUseGradients defaultUseGradients = SVGUseGradients.Auto;
+        public bool defaultAntialiasing = true;
         public float defaultAntialiasingWidth = 2f;
         public SVGMeshCompression defaultMeshCompression = SVGMeshCompression.Off;
         public int defaultVerticesPerMeter = 1000;
@@ -71,7 +57,7 @@ namespace SVGImporter
         public bool defaultCustomPivotPoint = false;
         public Vector2 defaultPivotPoint = new Vector2(0.5f, 0.5f);
         public bool defaultGenerateCollider = false;
-        public bool defaultKeepSVGFile = true;
+        public bool defaultKeepSVGFile = false;
         public bool defaultUseLayers = false;
         public bool defaultIgnoreSVGCanvas = true;
         public bool defaultOptimizeMesh = true;

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2015 Jaroslav Stehlik
+// Copyright (C) 2015 Jaroslav Stehlik
 // Released under the license found in the LICENSE file.
 
 using UnityEngine;
@@ -10,68 +10,46 @@ namespace SVGImporter
 {
     public class SVGImporterEditor
     {
-        protected const string assetName = "svgImporterSettings.asset";
-        protected const string slash = "/";
-        protected const string path = "Assets";
-        protected const string gizmosPath = path+slash+"Gizmos";
-        protected const string gizmosAssetIconPath = "SVGAsset icon.png";
+        // Packages installed from git are read-only, so the settings live in the project.
+        // Keeping them in a Resources folder makes them available in builds too.
+        protected const string settingsPath = "Assets/SVG Importer/Resources/" + SVGImporterSettings.resourceName + ".asset";
 
         [MenuItem("Window/SVG Importer/Settings")]
         static public void ShowSettings () {
-            Selection.activeObject = settings;
+            Selection.activeObject = GetOrCreateSettingsAsset();
         }
 
-        protected static SVGImporterSettings _settings;
+        /// <summary>
+        /// The project's settings asset, or the default settings when the project has none.
+        /// </summary>
         public static SVGImporterSettings settings
         {
             get {
-                CreateSettings();
-                return _settings;
+                SVGImporterSettings asset = FindSettingsAsset();
+                return asset != null ? asset : SVGImporterSettings.Get;
             }
         }
 
-        protected static void CreateSettings()
+        protected static SVGImporterSettings FindSettingsAsset()
         {
-            if(_settings == null)
-            {
-                string[] guids = AssetDatabase.FindAssets("t:SVGImporterSettings");
-                if(guids == null || guids.Length == 0)
-                {
-                    ScriptableObject asset = ScriptableObject.CreateInstance<SVGImporterSettings>();                        
-                    AssetDatabase.CreateAsset(asset, path + slash + assetName);
-                    AssetDatabase.SaveAssets();
-
-					_settings = (SVGImporterSettings)AssetDatabase.LoadAssetAtPath(path + assetName, typeof(SVGImporterSettings));
-                    if(_settings != null)
-                    {
-                        EditorUtility.SetDirty(_settings);
-                    }
-                } else {
-					_settings = (SVGImporterSettings)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guids[0]), typeof(SVGImporterSettings));
-                }
-            }
-        }
-        
-        public static void Init()
-        {
-            CreateSettings();
-            InitIcons();
+            string[] guids = AssetDatabase.FindAssets("t:SVGImporterSettings", new[] { "Assets" });
+            if(guids == null || guids.Length == 0)
+                return null;
+            return AssetDatabase.LoadAssetAtPath<SVGImporterSettings>(AssetDatabase.GUIDToAssetPath(guids[0]));
         }
 
-        protected static void InitIcons()
+        protected static SVGImporterSettings GetOrCreateSettingsAsset()
         {
-			if(!System.IO.Directory.Exists(gizmosPath))
-            {
-                AssetDatabase.CreateFolder(path, "Gizmos");
-            }
-            if(settings.defaultSVGIcon != null)
-            {
-				if(AssetDatabase.LoadAssetAtPath(gizmosAssetIconPath, typeof(Texture2D)) == null)
-                {
-                    File.WriteAllBytes(Application.dataPath + "/Gizmos/"+gizmosAssetIconPath, settings.defaultSVGIcon.EncodeToPNG());
-                    AssetDatabase.Refresh();
-                }
-            }
+            SVGImporterSettings asset = FindSettingsAsset();
+            if(asset != null)
+                return asset;
+
+            Directory.CreateDirectory(Path.GetDirectoryName(settingsPath));
+            AssetDatabase.Refresh();
+            asset = ScriptableObject.CreateInstance<SVGImporterSettings>();
+            AssetDatabase.CreateAsset(asset, settingsPath);
+            AssetDatabase.SaveAssets();
+            return asset;
         }
     }
 }
