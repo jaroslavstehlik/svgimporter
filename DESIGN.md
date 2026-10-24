@@ -203,32 +203,36 @@ Vertex compression is not a cause: Unity 6's default mask (`VertexChannelCompres
 
 **New design:**
 
-The gradient *shape* (where a pixel lies along the gradient) becomes maths instead of a lookup texture. How the colour is then found depends on the gradient type.
+The gradient *shape* (where a pixel lies along the gradient) becomes maths instead of a lookup texture, and colours are evaluated exactly from the gradient's stops. This follows how Chromium renders gradients through Skia: `t` is computed per pixel, the colour is evaluated analytically from the stops, and geometry never depends on gradients. Skia's only blurred path, a rasterised ramp texture, is the one we avoid.
 
 1. **Linear gradients use vertex colours where a shape's triangles allow it.** Gradients never add tessellation: triangles come only from the shape.
    - Across a triangle, `t` is an affine function of position, so its range is `[min, max]` of the `t` values at the three vertices. **A triangle is exact if that range lies inside one band**: between two neighbouring stops, or in the flat *pad* area before the first or after the last stop. Vertex colours, set to the gradient's colour at each vertex, then reproduce it exactly.
    - A triangle that crosses a stop may still be close enough. Inside the triangle, both the true colour and the interpolated colour are affine between stop lines, so the largest difference occurs where a stop line crosses a triangle edge (it is zero at the vertices). Evaluating both colours at those crossing points gives the exact maximum error. **A triangle passes if that error is at most a tolerance**, by default half an 8-bit step (0.5/255) per channel.
-   - **The decision is per shape.** If all of a shape's triangles pass, the shape uses vertex colours and the solid-colour shaders, needs no texture read and no gradient index, and batches with solid shapes. Otherwise the whole shape takes the ramp path below. Its `t` still costs nothing per pixel, because linear `t` interpolates exactly from the vertices; the only cost is one ramp read.
-   - In practice, two-stop gradients whose gradient line spans the shape (`t` from 0 to 1, the usual export from Illustrator and Figma) use vertex colours. Gradients with many stops, or spreads that repeat across the shape, usually use the ramp.
+   - **The decision is per shape.** If all of a shape's triangles pass, the shape uses vertex colours and the solid-colour shaders, needs no texture read and no gradient index, and batches with solid shapes. Otherwise the whole shape takes the stop-data path below. Its `t` still costs nothing per pixel, because linear `t` interpolates exactly from the vertices; the only cost is evaluating the stops.
+   - In practice, two-stop gradients whose gradient line spans the shape (`t` from 0 to 1, the usual export from Illustrator and Figma) use vertex colours. Gradients with many stops, or spreads that repeat across the shape, usually use stop data.
 2. **Radial and conical gradients compute `t` analytically.** Each vertex stores its position in the gradient's normalised space (TexCoord0, 32-bit float). Gradient space is an affine transform of the shape, so interpolating it across a triangle is exact. The fragment shader computes `t` in full precision (`float`):
    - radial: `t = length(g)`, using the SVG focal-point formula when the focal point differs from the centre;
    - conical: `t = atan2(g.y, g.x) / 2π + 0.5`, per pixel, so there is no seam.
 
    The spread method (pad, reflect, repeat) is applied to `t` in the shader.
-3. **Their colours come from ramps in a `Texture2DArray`, one slice per gradient.** Each ramp is a 1×N row (1,024 texels by default, so hard stops stay sharp on large gradients). GPUs never filter between slices, so colours can't bleed between gradients. Clamp addressing keeps sampling inside each ramp. Ramps are sampled with an explicit level 0, so mipmap selection can't interfere.
-   - OpenGL ES 3.0 guarantees only 256 slices. When a device reports fewer slices than needed (`SystemInfo.maxTextureArraySlices`), further arrays are added, and each shape stores which array it uses.
-   - Identical gradients are shared by content hash. Each gradient is reference-counted by the SVG Assets that use it, so slices can be reused, and only changed slices are uploaded. The array grows on demand (recreated with `Graphics.CopyTexture`), and all gradient materials are updated.
-4. **The ramp index is an exact integer per vertex.** TexCoord1 holds the slice index, the gradient type and the spread as small integers. These are exact even when Unity compresses the channel to 16 bits (Unity 6's default vertex compression mask, 4054, includes TexCoord1).
-5. **Colours match browsers.** SVG interpolates colours in sRGB. Ramps are generated on the CPU in sRGB and stored as sRGB textures. Vertex colours are converted from sRGB to linear in the *fragment* shader, after interpolation, so linear gradients also interpolate in sRGB in Linear colour space projects. This costs a few arithmetic instructions per pixel and replaces the per-vertex conversion added in 2.0.
-6. **Optional dithering.** A material keyword adds ±½ of one 8-bit step of noise per pixel. It removes the banding that 8-bit output shows on long, subtle gradients.
+3. **Otherwise the colour is evaluated from the gradient's stops, stored in a shared data texture.** This is the approach of Skia's newer Graphite backend (`colorize_grad_tex` in `src/sksl/sksl_graphite_frag.sksl`).
+   - **Layout:** one row per gradient in a single `RGBAHalf` texture. Each stop takes two texels: its colour (sRGB) and its offset. A row holds up to 64 stops (128 texels); gradients with more stops are resampled to 64 with an import warning. Offsets are normalised at import so that the first stop is at 0 and the last at 1; `t` outside that range is handled by the spread method.
+   - **Reading:** with `Texture2D.Load` (`texelFetch`): integer coordinates, no filtering, no mipmaps, no sampler state. Colours can't bleed between gradients, and texture resolution doesn't limit sharpness: hard stops stay perfectly sharp at any size.
+   - **Evaluation:** find the interval containing `t`, then blend its two colours. Two-stop gradients read just their two colours. With more stops, a binary search reads log₂(N) offsets, then the interval's two colours and two offsets. All reads come from a tiny texture that stays in cache.
+   - **Precision:** offsets are 16-bit floats, so an offset is accurate to about 0.0005. That's under half a pixel on a gradient 1,000 pixels long. `t` and the blend are computed in full precision (`float`), which OpenGL ES 3.0 and newer guarantee in fragment shaders.
+   - **Memory:** 64 rows to start (64 KB at 8 bytes per texel), doubling as needed up to 4,096 gradients (4 MB). Growing recreates the texture with `Graphics.CopyTexture` and updates all gradient materials. Identical gradients share a row by content hash. Each gradient is reference-counted by the SVG Assets that use it, so rows can be reused, and only changed rows are uploaded.
+   - **Why not per-material uniforms** (Skia's `colorize_grad_4`/`_8` tiers): Skia sets uniforms per draw. Here, one material per gradient would split an SVG mesh into a draw call per gradient, and interleaving them with solid shapes in painter's order would multiply the draw calls. The shared data texture keeps one material and one draw per mesh.
+4. **The gradient row is an exact integer per vertex.** TexCoord1 holds the row index (x) and the gradient type, spread and stop count packed into one integer (y). Both stay below 2,048, so they are exact even when Unity compresses the channel to 16 bits (Unity 6's default vertex compression mask, 4054, includes TexCoord1).
+5. **Colours match browsers.** SVG interpolates colours in sRGB. Stop colours are stored as sRGB values and blended in sRGB, in the shader for stop data and by the GPU's interpolation for vertex colours. The result is then converted to linear in the *fragment* shader when the project uses Linear colour space. This costs a few arithmetic instructions per pixel and replaces the per-vertex conversion added in 2.0.
+6. **Optional dithering**, as Chrome does for gradients. A material keyword adds ±½ of one 8-bit step of noise per pixel, from interleaved gradient noise computed from the screen position: pure arithmetic, with no lookup texture. It removes the banding that 8-bit output shows on long, subtle gradients.
 
-**Cost per pixel compared with today:**
+**Cost per pixel compared with today** (stop-data reads are point reads from a tiny, cached texture):
 
 | | Today | New |
 |---|---|---|
-| Linear | 2 dependent texture reads | none (vertex colour), or 1 texture read if the shape fails the test |
-| Radial | 2 dependent texture reads | `length()` + 1 texture read |
-| Conical | 2 dependent texture reads | `atan2()` + 1 texture read |
+| Linear | 2 dependent texture reads | none (vertex colour); if the shape fails the test, stop data as below |
+| Radial | 2 dependent texture reads | `length()` + 2 point reads for 2 stops, about log₂(N) + 4 for N stops |
+| Conical | 2 dependent texture reads | `atan2()` + the same reads as radial |
 
 The native core (phase 2) outputs the same data: per-vertex `t` or gradient-space positions, and the importer makes the same per-shape decision. This part of the design therefore doesn't change when the core is replaced.
 
@@ -236,10 +240,11 @@ The native core (phase 2) outputs the same data: per-vertex `t` or gradient-spac
 
 **Tests:**
 - Linear gradients with two stops, many stops, hard stops and every spread method: rendered colours match the expected value at sample points, whichever path the shape takes. The per-shape decision is checked directly: two-stop gradients spanning the shape must use vertex colours.
-- Neighbouring radial gradients with contrasting colours, sampled at `t` = 0 and 1: no bleeding.
+- Neighbouring gradients with contrasting colours, in adjacent texture rows, sampled at `t` = 0 and 1: no bleeding.
+- Hard stops on very large gradients stay sharp (a one-pixel transition).
 - Smoothness: along a large gradient, adjacent pixels may differ by at most a small amount, so steps are caught.
 - Focal radial gradients and the conical seam.
-- Array growth past 256 and 1,024 gradients, and the fallback to more arrays when a device's slice limit is low.
+- Data texture growth past 64 and 1,024 gradients; gradients with more than 64 stops.
 - Colours in Gamma and Linear projects match a browser rendering of the same SVG.
 - Mobile precision: the same render tests with TexCoord channels forced to 16-bit floats, to emulate devices. Then on Android (Mali and Adreno GPUs) and iOS with the phase 1 test app.
 
@@ -342,7 +347,7 @@ Decided:
 - Targets: Windows x64, Linux x64, macOS universal (arm64 + x64), iOS arm64, Android arm64 (section 3).
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
-- Gradient shapes are computed, not looked up. Gradients never add tessellation. Linear gradients use vertex colours when every triangle of the shape passes an exact error test, otherwise a ramp; radial and conical gradients use ramps in a shared `Texture2DArray` (7.1).
+- Gradient shapes are computed, not looked up, and colours are evaluated exactly from stops kept in a shared data texture, as in Skia/Chromium. Gradients never add tessellation. Linear gradients use vertex colours when every triangle of the shape passes an exact error test (7.1).
 
 Open:
 1. Should text conversion use only system fonts in the Editor, or also fonts in the project? At runtime, only project fonts are reliable (6.5).
@@ -356,6 +361,7 @@ Open:
 - csbindgen: https://github.com/Cysharp/csbindgen (MIT)
 - interoptopus: https://github.com/ralfbiedert/interoptopus (MIT)
 - uniffi-bindgen-cs: https://github.com/NordSecurity/uniffi-bindgen-cs (MPL-2.0)
+- Skia gradients: `src/gpu/ganesh/gradients/GrGradientShader.cpp` and `src/sksl/sksl_graphite_frag.sksl` in https://github.com/google/skia
 - i_overlay: https://github.com/iShape-Rust/iOverlay (Apache-2.0)
 - Clipper2: https://github.com/AngusJohnson/Clipper2 (BSL-1.0)
 - ThorVG: https://github.com/thorvg/thorvg (MIT)
