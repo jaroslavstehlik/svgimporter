@@ -348,6 +348,7 @@ The existing samples are kept as the Showcase until the focused ones exist.
   - Runtime API
   - Upgrading from 1.x
   - Supported SVG features (generated from the conformance table)
+  - Colour spaces: why soft edges and semi-transparent shapes look slightly different from a browser in Linear projects
   - Troubleshooting
 - **API reference:** generated from XML doc comments with DocFX.
 - **Publishing:** the Markdown and API reference are built into a static site under `svgimporter.com/docs`, by the same GitHub Pages setup that hosts the website. `package.json`'s `documentationUrl` points there, so the Package Manager's *Documentation* link opens it.
@@ -395,6 +396,7 @@ Decided:
 - Runtime import uses the native core on those targets; the legacy C# parser is removed (section 8).
 - C# bindings are generated with csbindgen (6.3).
 - Every cost beyond one mesh, one shared material and one batched draw is opt-in and shown in the Inspector (goal 6).
+- In Linear colour space projects, soft edges (antialiasing, blur) and semi-transparent shapes blend in linear light, as everything else in Unity does. They are not adjusted to match browsers, which blend in sRGB; the documentation explains the difference (section 16, item 4).
 - Antialiasing uses a fringe centred on the edge with bevelled sharp corners, extruded in screen pixels in the vertex shader and with coverage computed per pixel; MSAA is offered as an alternative (7.2). Coverage uses the distance to the nearest edge, as Skia's GPU convex-path renderer does. Exact-area coverage (Skia's CPU "analytic AA") was rejected: it only improves sharp corners and sub-pixel details and needs compute or CPU work per frame.
 - Gradient shapes are computed, not looked up, and colours are evaluated exactly from stops kept in a shared data texture, as in Skia/Chromium. Gradients never add tessellation. Linear gradients use vertex colours when every triangle of the shape passes an exact error test (7.1).
 
@@ -435,7 +437,7 @@ The design:
 - Only blurs and shadows of shapes qualify. Filter chains that combine images, or blur whole groups with overlapping content, use the raster fallback.
 - Source: https://rive.app/blog/how-rive-reinvented-feathering-for-the-vectorian-era
 - **Prototype** (`Assets/Prototypes/FeatheredShapes`): rectangles and rounded rectangles, compared with Chrome's `feGaussianBlur` rendering of the same SVG at the same pixel size. Rectangles are exact (a product of two `erf` integrals). Rounded rectangles integrate `erf` across 8 horizontal slices, each weighted by its exact Gaussian mass, within 4σ. In Gamma colour space the difference from Chrome is at most 4/255 (mean 0.4/255) for σ = 12, including a 20-pixel-wide rectangle, which the straight-edge profile can't handle. A drop shadow under a crisp card differs by up to 27/255 only along the card's crisp edge, where Chrome's antialiasing differs from a σ = 0.4 px Gaussian. The same function with σ ≈ 0.4 px draws antialiased shapes, so blur and antialiasing are one continuous effect.
-- **Linear colour space differs from browsers for every soft edge.** Browsers blend in sRGB. A Unity project in Linear colour space blends in linear light, so the same coverage produces lighter dark-on-light edges: the prototype in Linear differs from Chrome by up to 76/255 in blurred regions. This affects blur, antialiasing and semi-transparent shapes alike. To decide: document it, or offer an option that remaps coverage to approximate sRGB blending in Linear projects (exact emulation would need the destination colour, which the GPU only provides through framebuffer fetch).
+- **Linear colour space differs from browsers for every soft edge.** Browsers blend in sRGB. A Unity project in Linear colour space blends in linear light, so the same coverage produces lighter dark-on-light edges: the prototype in Linear differs from Chrome by up to 76/255 in blurred regions. This affects blur, antialiasing and semi-transparent shapes alike. **Decision:** keep Unity's standard linear blending and document the difference; SVG Importer doesn't try to emulate browser (sRGB) blending.
 
 **5. Raster fallback, opt-in, for what can't become geometry**: filters other than item 4, masks that aren't simple clips, blend modes, embedded images and patterns. resvg, from the same project as usvg, rasterizes just those groups at import into a mipmapped texture stored in the SVG Asset. The texture is placed in the mesh as a textured quad, in painter's order (`FILL_TYPE.TEXTURE` already exists). The resolution is an import setting, and these parts are no longer resolution-independent; the Inspector shows which elements were rasterized and why. Each asset with rasterized parts needs one extra material, so one more draw call, plus the texture memory. Following goal 6, it is off by default: unsupported elements are skipped, and the Inspector lists them and offers the fallback with its cost.
 
