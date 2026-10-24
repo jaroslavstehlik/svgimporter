@@ -1,4 +1,4 @@
-﻿
+
 
 #include "SVGImporterCG.cginc"
 
@@ -25,7 +25,7 @@ vertex_output vertexColor(vertex_input v)
 {
     vertex_output o;
     o.vertex = UnityObjectToClipPos(v.vertex);    
-    o.color = v.color;
+    o.color = SVGVertexColor(v.color);
     return o;
 }
 
@@ -33,7 +33,7 @@ vertex_output vertexColorAntialiased(vertex_input_normal v)
 {
 	vertex_output o;	
 	o.vertex = UnityObjectToClipPos(Antialiasing(v.vertex, v.normal));
-	o.color = v.color;
+	o.color = SVGVertexColor(v.color);
 	return o;
 }
 

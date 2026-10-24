@@ -14,6 +14,8 @@ namespace SVGImporter
     using Utils;
 
     [ExecuteInEditMode]
+    // uGUI 2.x no longer requires a CanvasRenderer on Graphic itself, only on its subclasses.
+    [RequireComponent(typeof(CanvasRenderer))]
     [AddComponentMenu("UI/SVG Image", 21)]
     public class SVGImage : MaskableGraphic, ILayoutElement, ICanvasRaycastFilter, ISVGRenderer, ISVGReference
     {

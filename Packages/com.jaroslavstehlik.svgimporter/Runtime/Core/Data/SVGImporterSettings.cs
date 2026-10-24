@@ -51,7 +51,7 @@ namespace SVGImporter
             Shader.SetGlobalFloat("SVG_ANTIALIASING_WIDTH", Get.defaultAntialiasingWidth);
         }
 
-        protected static string _version = "1.1.3";
+        protected static string _version = "2.0.0";
         public static string version
         {
             get {

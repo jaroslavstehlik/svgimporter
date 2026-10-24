@@ -14,7 +14,7 @@ namespace SVGImporter
     [AddComponentMenu("Rendering/SVG Modifiers/Blur Modifier", 22)]
     public class SVGBlurModifier : SVGModifier 
     {
-    new public Camera camera;
+    public Camera camera;
         public bool useCameraVelocity;
 
         public float radius = 20f;

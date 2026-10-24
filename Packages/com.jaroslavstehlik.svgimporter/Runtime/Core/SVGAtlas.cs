@@ -380,9 +380,13 @@ namespace SVGImporter
                 DontDestroyOnLoad(gameObject);
             _atlasHasChanged = false;
             _beingDestroyed = false;
-            AddFakeCamera();
 
+            // The atlas must be up to date before anything renders. The Built-in pipeline
+            // raises Camera.onPreRender, scriptable pipelines (URP) raise
+            // beginContextRendering instead, and UI-only scenes may have neither.
             Camera.onPreRender += OnAtlasPreRender;
+            UnityEngine.Rendering.RenderPipelineManager.beginContextRendering += OnBeginContextRendering;
+            Canvas.willRenderCanvases += OnWillRenderCanvases;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.update += EditorUpdate;
 #endif
@@ -395,7 +399,17 @@ namespace SVGImporter
         }
 #endif
         public void OnPreRender()
-        {            
+        {
+            OnAtlasPreRender();
+        }
+
+        void OnBeginContextRendering(UnityEngine.Rendering.ScriptableRenderContext context, List<Camera> cameras)
+        {
+            OnAtlasPreRender();
+        }
+
+        void OnWillRenderCanvases()
+        {
             OnAtlasPreRender();
         }
 
@@ -403,22 +417,13 @@ namespace SVGImporter
         {
             _beingDestroyed = true;
             Camera.onPreRender -= OnAtlasPreRender;
+            UnityEngine.Rendering.RenderPipelineManager.beginContextRendering -= OnBeginContextRendering;
+            Canvas.willRenderCanvases -= OnWillRenderCanvases;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.update -= EditorUpdate;
 #endif
         }
 
-        protected void AddFakeCamera()
-        {
-                Camera camera = gameObject.AddComponent<Camera>();
-                camera.hideFlags = HideFlags.DontSave;
-                camera.clearFlags = CameraClearFlags.Nothing;
-                camera.orthographic = true;
-                camera.depth = float.MinValue;
-                camera.cullingMask = 0;
-                camera.useOcclusionCulling = false;
-        }
-        
         public void OnAtlasPreRender(Camera camera = null)
         {
             SVGImporterSettings.UpdateAntialiasing();
@@ -747,7 +752,8 @@ namespace SVGImporter
         const float PI2 = Mathf.PI * 2f;
         public static Texture2D GenerateGradientShapeTexture (int textureSize)
         {
-            Texture2D texture = new Texture2D (textureSize, textureSize, TextureFormat.ARGB32, false);
+            // Holds gradient positions, not colors, so it must not be sRGB-decoded in Linear color space.
+            Texture2D texture = new Texture2D (textureSize, textureSize, TextureFormat.ARGB32, false, true);
             texture.hideFlags = HideFlags.DontSave;
             texture.name = "Gradient Shape Texture";
             texture.anisoLevel = 0;

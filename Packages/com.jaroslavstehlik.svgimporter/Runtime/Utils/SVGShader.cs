@@ -59,8 +59,8 @@ namespace SVGImporter.Rendering
         protected static Shader _UIAntialiased;
         public static Shader UIAntialiased {
             get {
-                if(_UIAntialiased == null) _UI = Shader.Find("SVG Importer/UI/UIAntialiased");
-                return _UI;
+                if(_UIAntialiased == null) _UIAntialiased = Shader.Find("SVG Importer/UI/UIAntialiased");
+                return _UIAntialiased;
             }
         }       
     }

@@ -120,10 +120,11 @@ namespace SVGImporter
             importTotalAssets = importSVGAssets.Count;
             reImportTotalAssets = reimportSVGAssets.Count;
 
-			if(importTotalAssets + reImportTotalAssets > 0)
-			{				
-				AssetDatabase.StartAssetEditing();
-			} else {
+			// No AssetDatabase.StartAssetEditing() here: since Unity 6 an asset created
+			// inside it has no AssetImporter until StopAssetEditing(), and the import
+			// stores the SVG source in the importer's userData.
+			if(importTotalAssets + reImportTotalAssets == 0)
+			{
 				EditorUtility.ClearProgressBar();
 				importSVGAssets.Clear();
 				importSVGAssets = null;
@@ -177,7 +178,6 @@ namespace SVGImporter
             reimportSVGAssets = null;
 
 			AssetDatabase.SaveAssets();
-			AssetDatabase.StopAssetEditing();
 			AssetDatabase.Refresh();
 			Canvas.ForceUpdateCanvases();
 			SceneView.RepaintAll();
@@ -239,7 +239,7 @@ namespace SVGImporter
             _editor_scale.SetValue(asset, SVGImporterEditor.settings.defaultScale);
 
             FieldInfo _editor_depthOffset = typeof(SVGAsset).GetField("_depthOffset", BindingFlags.NonPublic | BindingFlags.Instance);
-            _editor_depthOffset.SetValue(asset, SVGImporterEditor.settings.defaultScale);
+            _editor_depthOffset.SetValue(asset, SVGImporterEditor.settings.defaultDepthOffset);
 
             FieldInfo _editor_compressDepth = typeof(SVGAsset).GetField("_compressDepth", BindingFlags.NonPublic | BindingFlags.Instance);
             _editor_compressDepth.SetValue(asset, SVGImporterEditor.settings.defaultCompressDepth);

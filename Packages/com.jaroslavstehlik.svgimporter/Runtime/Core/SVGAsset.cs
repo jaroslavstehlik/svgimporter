@@ -1540,14 +1540,16 @@ namespace SVGImporter
             var svgAssetPath = UnityEditor.AssetDatabase.GetAssetPath(this);
             var svgAssetImporter = UnityEditor.AssetImporter.GetAtPath(svgAssetPath);
 
-            if(!string.IsNullOrEmpty(svgFile))
+            string svgSource = svgFile;
+            if(svgAssetImporter != null && !string.IsNullOrEmpty(svgSource))
             {
-                svgAssetImporter.userData = svgFile;
+                svgAssetImporter.userData = svgSource;
             }
 
-            if(keepSVGFile)
+            if(keepSVGFile || svgAssetImporter == null)
             {
-                _documentAsset.svgFile = svgAssetImporter.userData;
+                // Without an importer there is nowhere else to keep the source.
+                _documentAsset.svgFile = svgSource;
             } else {
                 _documentAsset.svgFile = null;
             }
@@ -1599,7 +1601,8 @@ namespace SVGImporter
 
                 int vertexCount = _sharedMesh.vertexCount;
                 UnityEditor.MeshUtility.SetMeshCompression(_sharedMesh, GetModelImporterMeshCompression(_meshCompression));
-                if(_optimizeMesh) ;
+                // "Optimize Mesh" is currently a no-op: reordering triangles would break the
+                // painter's order that overlapping transparent shapes rely on.
                 if(_generateNormals)
                 {
                     if(!_antialiasing)

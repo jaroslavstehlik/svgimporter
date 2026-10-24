@@ -45,7 +45,7 @@ namespace SVGImporter
                 {
                     var svgAssetPath = UnityEditor.AssetDatabase.GetAssetPath(this);
                     var svgAssetImporter = UnityEditor.AssetImporter.GetAtPath(svgAssetPath);
-                    return svgAssetImporter.userData;
+                    return svgAssetImporter != null ? svgAssetImporter.userData : null;
                 }
 #endif
                 return _svgFile;

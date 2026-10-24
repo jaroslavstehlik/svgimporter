@@ -1,5 +1,16 @@
 
 
+// SVG colors are authored in sRGB and stored as vertex colors. In a Linear color space
+// project they must be converted, or they render washed out. (UI shaders do not need
+// this: the Canvas converts its vertex colors itself.)
+half4 SVGVertexColor(half4 color)
+{
+#ifndef UNITY_COLORSPACE_GAMMA
+    color.rgb = GammaToLinearSpace(color.rgb);
+#endif
+    return color;
+}
+
 float SVG_ANTIALIASING_WIDTH;
 
 float4 Antialiasing(float4 vertex, float3 normal)

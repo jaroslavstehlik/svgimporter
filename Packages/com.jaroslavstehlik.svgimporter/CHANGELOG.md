@@ -5,6 +5,13 @@
 - Requires Unity 6.0 or newer. Unity 2017 users can use the `legacy/v1` branch (tag `v1.1.6`).
 - Removed analytics tracking and the bug report window.
 - Example projects are now samples, importable from the Package Manager.
+- Added Universal Render Pipeline (URP) support, including the URP 2D Renderer. The Built-in Render Pipeline is still supported.
+- Fixed colors rendering washed out in Linear color space projects (the Unity 6 default).
+- Fixed gradients not updating at runtime in URP.
+- Fixed importing SVG files failing with a NullReferenceException on Unity 6.
+- Fixed SVG Image not rendering when added through Add Component on Unity 6.
+- The Diffuse shaders now render in URP (lit by the main light) and the URP 2D Renderer (unlit).
+- Removed the "Standard SVG" materials, which referenced a shader that was never included.
 
 ## Legacy releases
 

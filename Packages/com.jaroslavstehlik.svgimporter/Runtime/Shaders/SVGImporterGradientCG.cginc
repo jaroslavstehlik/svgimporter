@@ -4,7 +4,9 @@
 
 sampler2D _GradientColor;
 sampler2D _GradientShape;
+CBUFFER_START(UnityPerMaterial)
 float4 _Params;
+CBUFFER_END
 
 struct vertex_input
 {
@@ -36,7 +38,7 @@ vertex_output vertexGradients(vertex_input v)
     vertex_output o;
     o.vertex = UnityObjectToClipPos(v.vertex);			    
     o.uv0.xy = v.texcoord0;
-    o.color = v.color;
+    o.color = SVGVertexColor(v.color);
 	
 	// half pixel
 	float2 texelOffset = float2(0.5 / _Params.x, 0.5 / _Params.y);
@@ -57,7 +59,7 @@ vertex_output vertexGradientsAntialiased(vertex_input_normal v)
     vertex_output o;
 	o.vertex = UnityObjectToClipPos(Antialiasing(v.vertex, v.normal));
     o.uv0.xy = v.texcoord0;
-    o.color = v.color;
+    o.color = SVGVertexColor(v.color);
 	
 	// half pixel
 	float2 texelOffset = float2(0.5 / _Params.x, 0.5 / _Params.y);
