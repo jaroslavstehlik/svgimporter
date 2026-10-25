@@ -409,6 +409,7 @@ namespace SVGImporter
         public void OnAtlasPreRender(Camera camera = null)
         {
             SVGImporterSettings.UpdateAntialiasing();
+            UpgradeAtlasTextures();
 
             if (_atlasHasChanged)
             {
@@ -417,6 +418,25 @@ namespace SVGImporter
 #if UNITY_EDITOR
                 UpdateMaterialList();
 #endif
+            }
+        }
+
+        /// <summary>
+        /// The Editor's atlas object survives script reloads, so after a package update its textures
+        /// can still hold sampled colours (SVG Importer 2.0 and earlier) instead of stop data. They
+        /// are converted in place, so materials keep referencing them, and the stops written again.
+        /// </summary>
+        void UpgradeAtlasTextures()
+        {
+            if (atlasTextures == null) return;
+            for (int i = 0; i < atlasTextures.Count; i++)
+            {
+                Texture2D texture = atlasTextures[i];
+                if (texture == null || texture.graphicsFormat == UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat)
+                    continue;
+                texture.Reinitialize(texture.width, texture.height, UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat, false);
+                texture.filterMode = FilterMode.Point;
+                _atlasHasChanged = true;
             }
         }
 
@@ -685,7 +705,7 @@ namespace SVGImporter
 		{
 			// Stop data, not an image: half floats for the offsets, no sRGB decoding (the shaders
 			// interpolate in sRGB) and no filtering.
-			Texture2D texture = new Texture2D (width, height, TextureFormat.RGBAHalf, false, true);
+			Texture2D texture = new Texture2D (width, height, UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat, UnityEngine.Experimental.Rendering.TextureCreationFlags.None);
 			texture.filterMode = FilterMode.Point;
 			texture.wrapMode = TextureWrapMode.Clamp;
 //			texture.alphaIsTransparency = true;
