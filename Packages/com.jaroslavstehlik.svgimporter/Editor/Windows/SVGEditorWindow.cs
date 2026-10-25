@@ -23,7 +23,6 @@ namespace SVGImporter
 		//
 		public static SVGEditorWindow s_Instance;
 		protected static SVGAsset svgAsset;
-		protected static Mesh _tempMesh;
 
         Camera _editorCamera;
         SVGRenderer _editorRenderer;
@@ -866,62 +865,19 @@ namespace SVGImporter
                 );
         }
 
-		protected static Mesh GetMesh(SVGAsset targetObject)
-		{
-			try {
-				if(targetObject.useLayers)
-				{
-					if(_tempMesh == null) _tempMesh = new Mesh();
-					Shader[] outputShaders;
-					SVGMesh.CombineMeshes(targetObject.layers, _tempMesh, out outputShaders, targetObject.useGradients, targetObject.format, targetObject.compressDepth, targetObject.antialiasing, targetObject.depthOffset);
-					return _tempMesh;
-				} else {
-					return targetObject._editor_sharedMesh;
-				}
-            } catch {
-                return null;
-            }            
-        }
-
         public static void DoRenderPreview(SVGAsset targetObject, PreviewRenderUtility previewUtility)
 		{
 			if(targetObject == null)
 				return;
 
-			bool hasGradients = targetObject.hasGradients;
-
-			Mesh tempMesh = GetMesh(targetObject);
-			if(tempMesh == null)
-				return;
-			Material[] sharedMaterials = targetObject.sharedMaterials;
-			Material[] outputMaterials = sharedMaterials;
-			if(tempMesh == null || sharedMaterials == null || sharedMaterials.Length == 0)
+			// The mesh scene renderers draw: its gradients are registered in the shared atlas, which
+			// binds itself for every camera, the preview's included.
+			Mesh mesh = targetObject.sharedMesh;
+			Material[] materials = targetObject.sharedMaterials;
+			if(mesh == null || materials == null || materials.Length == 0)
 				return;
 
-			// The preview draws the asset's own mesh, whose gradient indices refer to its gradient
-			// list, so it binds an atlas of just those gradients for this one render.
-			Texture2D gradientAtlas = null;
-			Texture previousAtlas = Shader.GetGlobalTexture(SVGAtlas.globalAtlasKey);
-			Vector4 previousParams = Shader.GetGlobalVector(SVGAtlas.globalAtlasParamsKey);
-			if(hasGradients)
-			{
-				gradientAtlas = SVGAtlas.GenerateGradientAtlasTexture(targetObject.sharedGradients, SVGAtlas.defaultGradientWidth, SVGAtlas.defaultGradientHeight);
-				Shader.SetGlobalTexture(SVGAtlas.globalAtlasKey, gradientAtlas);
-				Shader.SetGlobalVector(SVGAtlas.globalAtlasParamsKey, new Vector4(gradientAtlas.width, gradientAtlas.height, SVGAtlas.defaultGradientWidth, SVGAtlas.defaultGradientHeight));
-			}
-
-			RenderMeshPreviewSkipCameraAndLighting(tempMesh, previewUtility, outputMaterials);
-
-			if(hasGradients)
-			{
-				Shader.SetGlobalTexture(SVGAtlas.globalAtlasKey, previousAtlas);
-				Shader.SetGlobalVector(SVGAtlas.globalAtlasParamsKey, previousParams);
-			}
-
-			if(gradientAtlas != null)
-			{
-				DestroyImmediate(gradientAtlas);
-			}
+			RenderMeshPreviewSkipCameraAndLighting(mesh, previewUtility, materials);
 		}
 
 		internal static void RenderMeshPreviewSkipCameraAndLighting(Mesh mesh, PreviewRenderUtility previewUtility, Material[] materials)

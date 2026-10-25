@@ -86,6 +86,20 @@ public static class RendererTests
             bool finite = vertices.Length > 0 && vertices.All(v => !float.IsNaN(v.x) && !float.IsNaN(v.y) && !float.IsInfinity(v.x) && !float.IsInfinity(v.y));
             Check("a sliced renderer of a Use Layers asset has finite vertices", finite, vertices.Length + " vertices");
             UnityEngine.Object.DestroyImmediate(go);
+
+            // Thumbnails of gradient assets show their gradient (the shared atlas, which binds itself
+            // for every camera, used to replace the preview's own atlas: they came out white).
+            const string path = "Assets/RendererTests.svg";
+            File.WriteAllText(path, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
+                + "<linearGradient id=\"g\"><stop offset=\"0\" stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient>"
+                + "<rect width=\"100\" height=\"100\" fill=\"url(#g)\"/></svg>");
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            var editor = UnityEditor.Editor.CreateEditor(AssetDatabase.LoadAssetAtPath<SVGAsset>(path));
+            Texture2D thumbnail = editor.RenderStaticPreview(path, null, 128, 128);
+            Color centre = thumbnail != null ? thumbnail.GetPixel(64, 64) : Color.clear;
+            Check("gradient thumbnails show the gradient", centre.r > 0.2f && centre.b > 0.2f && centre.g < 0.2f, "centre " + centre);
+            UnityEngine.Object.DestroyImmediate(editor);
+            AssetDatabase.DeleteAsset(path);
         }
         catch (Exception exception)
         {
