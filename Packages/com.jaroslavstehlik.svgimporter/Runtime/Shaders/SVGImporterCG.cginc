@@ -29,3 +29,33 @@ float4 Antialiasing(float4 vertex, float3 normal)
 	}
 	return output;
 }
+
+// The position along the gradient for each gradient type (x linear, y radial, z conical, w solid),
+// computed rather than read from a lookup texture, so it is exact at any zoom (DESIGN.md, 7.1).
+// uv is the point in the gradient's unit square: linear gradients run along x from 0 to 1, radial
+// and conical gradients are centred at (0.5, 0.5) and radial ones end at a radius of 0.5. Outside
+// that range the position is clamped, which pads with the end colours.
+float4 SVGGradientShape(float2 uv)
+{
+	float2 d = uv - 0.5;
+	return saturate(float4(uv.x, length(d) * 2.0, frac(atan2(d.y, d.x) * 0.15915494 + 1.0), 1.0));
+}
+
+// Adds up to half an 8-bit step of noise to a colour before it is written to an 8-bit target, as
+// browsers do for gradients, so long and subtle gradients don't show bands (DESIGN.md, 7.1). The
+// noise is interleaved gradient noise from the pixel position: arithmetic only, no texture. A colour
+// that is exactly an 8-bit value still rounds to itself. alpha is the colour's blending weight: the
+// noise is divided by it, so it is still half a step once blended.
+float3 SVGDither(float3 color, float alpha, float2 pixel)
+{
+	float noise = (frac(52.9829189 * frac(dot(pixel, float2(0.06711056, 0.00583715)))) - 0.5) / (255.0 * max(alpha, 1.0 / 255.0));
+#ifdef UNITY_COLORSPACE_GAMMA
+	return color + noise;
+#else
+	// The target stores sRGB, so the noise is added in sRGB: half a step in dark tones too.
+	float3 c = max(color, 0.0);
+	float3 srgb = lerp(1.055 * pow(c, 1.0 / 2.4) - 0.055, c * 12.92, step(c, 0.0031308));
+	srgb += noise;
+	return lerp(pow((max(srgb, 0.0) + 0.055) / 1.055, 2.4), srgb / 12.92, step(srgb, 0.04045));
+#endif
+}

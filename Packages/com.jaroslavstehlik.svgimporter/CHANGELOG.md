@@ -30,6 +30,7 @@
 - The Native import engine applies clip paths as geometry, including `objectBoundingBox` units, nested clip paths and clipped elements inside clip paths, and applies masks that are plain opaque shapes. Strokes now bevel at the right angle for their `stroke-miterlimit`.
 - The Inspector lists more unsupported features found during import: filters, patterns, blend modes, group opacity and skipped text.
 - Gradients are now smooth when zoomed in: shaders compute the position along a gradient instead of reading it from a 512×512 lookup texture, which made radial gradients blocky and left a seam in conical gradients. The gradient shape texture is gone, and `SVGAtlas.gradientShapeTexture` is obsolete.
+- Gradients are dithered, as in browsers: up to half an 8-bit step of noise per pixel, so subtle gradients don't show bands. Flat colours are unchanged.
 - Fixed meshes placed one canvas height too low when **Ignore SVG Canvas** is off. Reimport affected assets; their pivot now matches the canvas.
 
 ## Legacy releases
