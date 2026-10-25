@@ -30,10 +30,22 @@ Drop an `.svg` file into your project. It is imported as an SVG Asset, just like
 
 Version 1 converted every SVG file into an `.asset` file and deleted the original. Those SVG Assets still work. To convert them back to `.svg` files, use **Window > SVG Importer > Convert SVG Assets to SVG Files...**: each asset keeps its import settings and its references in scenes and prefabs. Commit or back up your project first; the project must use text serialization (Project Settings > Editor > Asset Serialization: Force Text).
 
+## Platforms
+
+SVG files are imported by a native library included in the package.
+
+| | Import in the Editor | Import at runtime (`SVGAsset.Load`) | Rendering imported SVG Assets |
+|---|---|---|---|
+| Windows x86_64, macOS, Linux x86_64 | Yes | Yes | Yes |
+| iOS (arm64), Android (arm64-v8a, armeabi-v7a) | | Yes | Yes |
+| WebGL and other platforms | | **No** | Yes |
+
+SVG Assets imported in the Editor render on every platform. Runtime import needs the native library, so on WebGL (and other platforms without one) `SVGAsset.Load` returns null and logs why: import the files in the Editor instead.
+
 ## Known limitations
 
-- Masks, text (convert it to curves), filter effects, SVG animation and embedded images are not supported.
-- `clipPathUnits="objectBoundingBox"` is not supported; clip paths are always in user space.
+- Filter effects, patterns, blend modes, group opacity, SVG animation and embedded images are not supported; masks are supported only when they are plain opaque shapes. The Inspector lists the unsupported features a file uses.
+- Text is converted to shapes with the fonts installed on the machine that imports it, so it can look different on another machine. Convert text to curves for exact results.
 
 ## Documentation
 

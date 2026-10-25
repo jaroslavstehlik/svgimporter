@@ -118,6 +118,8 @@ namespace SVGImporter.Native
         public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false)
         {
             if (svg == null) throw new ArgumentNullException("svg");
+            if (!isSupported)
+                throw new InvalidOperationException("SVG Importer can't import at runtime on " + Application.platform + ", which has no native library; import the files in the Editor.");
             if (abiVersion != expectedAbiVersion)
                 throw new InvalidOperationException("svgimporter_core ABI version " + abiVersion + " doesn't match the expected " + expectedAbiVersion + ". Reinstall the package.");
 
