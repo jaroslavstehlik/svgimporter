@@ -76,12 +76,15 @@ namespace SVGImporter
             // Unsubscribe first so a delegate is never registered twice.
             UnregisterDelegates();
             EditorApplication.playModeStateChanged += PlaymodeStateChanged;
-            SceneView.duringSceneGui += OnSceneGUI;
             PrefabUtility.prefabInstanceUpdated += OnPrefabInstanceUpdated;
-#if UNITY_6000_5_OR_NEWER
-            EditorApplication.hierarchyWindowItemByEntityIdOnGUI += HierarchyWindowItemOnGUI;
+            // Dropping SVG Assets into the Scene view and the Hierarchy goes through Unity's drop
+            // handlers; Unity rejects drags that no handler accepts.
+#if UNITY_6000_6_OR_NEWER
+            DragAndDrop.AddDropHandlerV2(OnSceneDrop);
+            DragAndDrop.AddDropHandlerV2(OnHierarchyDrop);
 #else
-            EditorApplication.hierarchyWindowItemOnGUI += HierarchyWindowItemOnGUI;
+            DragAndDrop.AddDropHandler(OnSceneDrop);
+            DragAndDrop.AddDropHandler(OnHierarchyDrop);
 #endif
             EditorApplication.update += Update;
         }
@@ -102,12 +105,13 @@ namespace SVGImporter
         static void UnregisterDelegates()
         {
             EditorApplication.playModeStateChanged -= PlaymodeStateChanged;
-            SceneView.duringSceneGui -= OnSceneGUI;
             PrefabUtility.prefabInstanceUpdated -= OnPrefabInstanceUpdated;
-#if UNITY_6000_5_OR_NEWER
-            EditorApplication.hierarchyWindowItemByEntityIdOnGUI -= HierarchyWindowItemOnGUI;
+#if UNITY_6000_6_OR_NEWER
+            DragAndDrop.RemoveDropHandlerV2(OnSceneDrop);
+            DragAndDrop.RemoveDropHandlerV2(OnHierarchyDrop);
 #else
-            EditorApplication.hierarchyWindowItemOnGUI -= HierarchyWindowItemOnGUI;
+            DragAndDrop.RemoveDropHandler(OnSceneDrop);
+            DragAndDrop.RemoveDropHandler(OnHierarchyDrop);
 #endif
             EditorApplication.update -= Update;
         }
@@ -178,100 +182,55 @@ namespace SVGImporter
             */
             //visible = visible;
         }
-        /*
-        static void OnSceneGUI(SceneView sceneView)
+        /// <summary>Creates an SVG Renderer where SVG Assets are dropped in the Scene view.</summary>
+        static DragAndDropVisualMode OnSceneDrop(Object dropUpon, Vector3 worldPosition, Vector2 viewportPosition, Transform parentForDraggedObjects, bool perform)
         {
-            if(DragAndDrop.objectReferences == null || DragAndDrop.objectReferences.Length == 0)
-                return;
-
-            SVGAsset asset = DragAndDrop.objectReferences[0] as SVGAsset;
-            if(asset == null)
-                return;
-
-            Event evt = Event.current;
-            Rect scenePosition = new Rect(0f, 0f, sceneView.position.width, sceneView.position.height);
-            switch(evt.type)
+            SVGAsset[] assets = GetSVGAssetsFromDraggedObjects();
+            if (assets.Length == 0)
+                return DragAndDropVisualMode.None;
+            if (perform)
             {
-                case EventType.DragUpdated:
-                case EventType.DragPerform:
-                    Vector2 mousePosition = evt.mousePosition;
-                    if(scenePosition.Contains(mousePosition))
-                    {
-                        DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-                        if (evt.type == EventType.DragPerform) {
-                            DragAndDrop.AcceptDrag ();
-
-                        }
-                    }
-                break;
+                GameObject go = DropFramesToSceneToCreateGO(assets[0].name, assets, worldPosition);
+                if (parentForDraggedObjects != null)
+                    Undo.SetTransformParent(go.transform, parentForDraggedObjects, "Create SVG Renderer");
             }
-        }
-        */
-
-        public static void OnSceneGUI(SceneView sceneView)
-        {
-            Event current = Event.current;
-            if (current.type != EventType.DragUpdated && current.type != EventType.DragPerform && current.type != EventType.DragExited)
-            {
-                return;
-            }
-            SVGAsset[] svgAssetsFromDraggedPathsOrObjects = GetSVGAssetsFromDraggedObjects();
-            if (svgAssetsFromDraggedPathsOrObjects.Length == 0)
-            {
-                return;
-            }
-            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-            EventType type = current.type;
-            if (type == EventType.DragPerform)
-            {
-                Vector3 point = HandleUtility.GUIPointToWorldRay(current.mousePosition).GetPoint(10f);
-                point.z = 0f;
-                GameObject objectToUndo = DropFramesToSceneToCreateGO(svgAssetsFromDraggedPathsOrObjects[0].name, svgAssetsFromDraggedPathsOrObjects, point);
-                Undo.RegisterCreatedObjectUndo(objectToUndo, "Create SVG Renderer");
-                current.Use();
-            }
+            return DragAndDropVisualMode.Copy;
         }
 
-#if UNITY_6000_5_OR_NEWER
-        private static void HierarchyWindowItemOnGUI(EntityId entityId, Rect selectionRect)
+#if UNITY_6000_6_OR_NEWER
+        static DragAndDropVisualMode OnHierarchyDrop(EntityId dropTargetId, HierarchyDropFlags dropMode, Transform parentForDraggedObjects, bool perform)
         {
-            HierarchyWindowItemOnGUI(EditorUtility.EntityIdToObject(entityId) as GameObject, selectionRect);
+            return OnHierarchyDrop(EditorUtility.EntityIdToObject(dropTargetId) as GameObject, dropMode, parentForDraggedObjects, perform);
         }
 #else
-        private static void HierarchyWindowItemOnGUI(int instanceId, Rect selectionRect)
+        static DragAndDropVisualMode OnHierarchyDrop(int dropTargetInstanceID, HierarchyDropFlags dropMode, Transform parentForDraggedObjects, bool perform)
         {
-            HierarchyWindowItemOnGUI(EditorUtility.InstanceIDToObject(instanceId) as GameObject, selectionRect);
+            return OnHierarchyDrop(EditorUtility.InstanceIDToObject(dropTargetInstanceID) as GameObject, dropMode, parentForDraggedObjects, perform);
         }
 #endif
 
-        private static void HierarchyWindowItemOnGUI(GameObject parent, Rect selectionRect)
+        /// <summary>
+        /// Creates an SVG Renderer where SVG Assets are dropped in the Hierarchy: as a child of the
+        /// object dropped upon, otherwise under the parent Unity suggests, or at the scene root.
+        /// </summary>
+        static DragAndDropVisualMode OnHierarchyDrop(GameObject target, HierarchyDropFlags dropMode, Transform parentForDraggedObjects, bool perform)
         {
-            Event current = Event.current;
-            if (current.type != EventType.DragUpdated && current.type != EventType.DragPerform && current.type != EventType.DragExited)
+            SVGAsset[] assets = GetSVGAssetsFromDraggedObjects();
+            if (assets.Length == 0)
+                return DragAndDropVisualMode.None;
+            if (perform)
             {
-                return;
+                Transform parent = (dropMode & HierarchyDropFlags.DropUpon) != 0 && target != null ? target.transform : parentForDraggedObjects;
+                GameObject go = DropFramesToSceneToCreateGO(assets[0].name, assets, parent != null ? parent.position : GetDefaultInstantiatePosition());
+                if (parent != null)
+                {
+                    Undo.SetTransformParent(go.transform, parent, "Create SVG Renderer");
+                    go.transform.localPosition = Vector3.zero;
+                    go.transform.localRotation = Quaternion.identity;
+                    go.transform.localScale = Vector3.one;
+                }
             }
-            if(!selectionRect.Contains(Event.current.mousePosition))
-                return;
-            SVGAsset[] svgAssetsFromDraggedPathsOrObjects = GetSVGAssetsFromDraggedObjects();
-            if (svgAssetsFromDraggedPathsOrObjects.Length == 0)
-            {
-                return;
-            }
-            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-            EventType type = current.type;
-            if (type == EventType.DragPerform)
-            {
-                if (parent == null)
-                    return;
-                GameObject objectToUndo = DropFramesToSceneToCreateGO(svgAssetsFromDraggedPathsOrObjects[0].name, svgAssetsFromDraggedPathsOrObjects, parent.transform.position);
-                Undo.RegisterCreatedObjectUndo(objectToUndo, "Create SVG Renderer");
-                objectToUndo.transform.SetParent(parent.transform);
-                objectToUndo.transform.localPosition = Vector3.zero;
-                objectToUndo.transform.localRotation = Quaternion.identity;
-                objectToUndo.transform.localScale = Vector3.one;
-                current.Use();
-            }
+            return DragAndDropVisualMode.Copy;
         }
 
         public static GameObject DropFramesToSceneToCreateGO(string name, SVGAsset[] frames, Vector3 position)
@@ -285,6 +244,7 @@ namespace SVGImporter
                     SVGFrameAnimator svgFrameAnimator = gameObject.AddComponent<SVGFrameAnimator>();
                     svgFrameAnimator.frames = frames.Clone() as SVGAsset[];
                 }
+                Undo.RegisterCreatedObjectUndo(gameObject, "Create SVG Renderer");
                 return gameObject;
             }
             return null;
@@ -307,30 +267,6 @@ namespace SVGImporter
             }
             return result;
         }
-        /*
-        public static bool HandleSingleDragIntoHierarchy(IHierarchyProperty property, SVGAsset svgAsset, bool perform)
-        {
-            GameObject gameObject = null;
-            if (property != null && property.pptrValue != null)
-            {
-                UnityEngine.Object pptrValue = property.pptrValue;
-                gameObject = (pptrValue as GameObject);
-            }
-            if (perform)
-            {
-                Vector3 defaultInstantiatePosition = GetDefaultInstantiatePosition();
-                GameObject gameObject2 = DropSVGAssetToSceneToCreateGO(svgAsset, defaultInstantiatePosition);
-                if (gameObject != null)
-                {
-                    gameObject2.transform.parent = gameObject.transform;
-                    gameObject2.transform.localPosition = Vector3.zero;
-                }
-                Selection.activeGameObject = gameObject2;
-            }
-            return true;
-        }
-        */
-
         public static SVGAsset[] GetSVGAssetsFromDraggedObjects()
         {
             List<SVGAsset> list = new List<SVGAsset>();
@@ -338,7 +274,7 @@ namespace SVGImporter
             for (int i = 0; i < objectReferences.Length; i++)
             {
                 UnityEngine.Object @object = objectReferences[i];
-                if (@object.GetType() == typeof(SVGAsset))
+                if (@object != null && @object.GetType() == typeof(SVGAsset))
                 {
                     list.Add(@object as SVGAsset);
                 }
@@ -349,7 +285,6 @@ namespace SVGImporter
         public static GameObject DropSVGAssetToSceneToCreateGO(SVGAsset asset, Vector3 position)
         {
             GameObject go = new GameObject(asset.name);
-            Undo.RegisterCreatedObjectUndo(go, "Create SVG Renderer");
             //Vector3 destination = Camera.current.ScreenToWorldPoint(new Vector3(mousePosition.x, scenePosition.height - mousePosition.y, 0f));
             //destination.z = 0f;
             go.transform.position = position;

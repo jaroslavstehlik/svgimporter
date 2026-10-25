@@ -33,16 +33,6 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unity.analytics": {
-      "version": "3.8.2",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0",
-        "com.unity.services.analytics": "1.0.4"
-      },
-      "url": "https://packages.unity.com"
-    },
     "com.unity.burst": {
       "version": "2.0.0",
       "depth": 2,
@@ -112,31 +102,11 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.nuget.newtonsoft-json": {
-      "version": "3.2.2",
-      "depth": 2,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
     "com.unity.profiling.core": {
       "version": "1.0.3",
       "depth": 2,
       "source": "registry",
       "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.purchasing": {
-      "version": "4.15.0",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0",
-        "com.unity.services.core": "1.12.5",
-        "com.unity.modules.androidjni": "1.0.0",
-        "com.unity.modules.jsonserialize": "1.0.0",
-        "com.unity.modules.unitywebrequest": "1.0.0"
-      },
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {
@@ -173,28 +143,6 @@
       "depth": 2,
       "source": "registry",
       "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.services.analytics": {
-      "version": "6.3.0",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0",
-        "com.unity.services.core": "1.16.0",
-        "com.unity.modules.jsonserialize": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.services.core": {
-      "version": "1.18.0",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.modules.androidjni": "1.0.0",
-        "com.unity.nuget.newtonsoft-json": "3.2.2",
-        "com.unity.modules.unitywebrequest": "1.0.0"
-      },
       "url": "https://packages.unity.com"
     },
     "com.unity.shadergraph": {
@@ -248,15 +196,6 @@
         "com.unity.modules.physics2d": "1.0.0",
         "com.unity.modules.physics": "1.0.0"
       }
-    },
-    "com.unity.xr.legacyinputhelpers": {
-      "version": "3.0.1",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.modules.xr": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
