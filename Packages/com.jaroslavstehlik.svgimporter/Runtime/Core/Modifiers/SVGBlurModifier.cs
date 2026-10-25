@@ -62,6 +62,21 @@ namespace SVGImporter
             lastPosition = transform.position;
         }
 
+        // Widens an antialiasing fringe outward: its outer, transparent edge moves out by the blur,
+        // while its inner edge stays on the shape's outline, so the shape keeps its solid core. A
+        // unit of extrusion moves a vertex half a pixel (two in 1.x), so the added spread is
+        // doubled to keep the radius's meaning.
+        static void Spread(SVGShape fringe, SVGMatrix matrix)
+        {
+            if(fringe.angles == null || fringe.colors == null || fringe.colors.Length != fringe.angles.Length) return;
+            for(int k = 0; k < fringe.angles.Length; k++)
+            {
+                if(fringe.colors[k].a != 0) continue;
+                Vector2 extrusion = fringe.angles[k];
+                fringe.angles[k] = matrix.Transform(extrusion) * 2f - extrusion;
+            }
+        }
+
         protected override void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force) 
         {
             if (!active) return;
@@ -137,14 +152,7 @@ namespace SVGImporter
                     for(int j = 0; j < shapesLength; j++)
                     {
                         if(layers[i].shapes[j].type != SVGShapeType.ANTIALIASING) continue;
-                        if(layers[i].shapes[j].angles == null) continue;
-                        int vertexCount = layers[i].shapes[j].vertexCount;
-                        for(int k = 0; k < vertexCount; k++)
-                        {
-                            Vector2 dir = layers[i].shapes[j].angles[k];                           
-                            dir = matrix.Transform(dir);
-                            layers[i].shapes[j].angles[k] = dir;
-                        }
+                        Spread(layers[i].shapes[j], matrix);
                     }
                 }
             } else
@@ -160,16 +168,8 @@ namespace SVGImporter
                         int shapesLength = layers[layerIndex].shapes.Length;
                         for (int j = 0; j < shapesLength; j++)
                         {
-                            int vertexCount = layers[layerIndex].shapes[j].vertexCount;
                             if (layers[layerIndex].shapes[j].type != SVGShapeType.ANTIALIASING) continue;
-                            if (layers[layerIndex].shapes[j].angles == null) continue;
-
-                            for (int k = 0; k < vertexCount; k++)
-                            {
-                                Vector2 dir = layers[layerIndex].shapes[j].angles[k];
-                                dir = matrix.Transform(dir);
-                                layers[layerIndex].shapes[j].angles[k] = dir;
-                            }
+                            Spread(layers[layerIndex].shapes[j], matrix);
                         }
                     }
                 }
