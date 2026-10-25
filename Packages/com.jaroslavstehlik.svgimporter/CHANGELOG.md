@@ -31,6 +31,9 @@
 - The Inspector lists more unsupported features found during import: filters, patterns, blend modes, group opacity and skipped text.
 - Gradients are now smooth when zoomed in: shaders compute the position along a gradient instead of reading it from a 512×512 lookup texture, which made radial gradients blocky and left a seam in conical gradients. The gradient shape texture is gone, and `SVGAtlas.gradientShapeTexture` is obsolete.
 - Gradient colours are exact: the gradient atlas stores each gradient's stops (up to 64) instead of 128 sampled colours, and shaders interpolate between them in sRGB, as browsers do. Hard stops are sharp at any size, colours of neighbouring gradients can't bleed in, and gradients look the same in Gamma and Linear projects. Requires shader model 3.5 (OpenGL ES 3.0, Metal, Vulkan or Direct3D 11).
+- Fixed gradients showing the wrong colours or disappearing in the Editor after entering or leaving play mode, script reloads, reimports or long editing sessions: the gradient atlas is rebuilt consistently after each of them, and grows instead of running out of space (512 gradients before).
+- Fixed SVG Renderers with **Use Layers** (used by modifiers) drawing another asset's gradient colours.
+- Scenes update when an SVG file changes on disk; before, only after **Apply** in the Inspector.
 - Gradients are dithered, as in browsers: up to half an 8-bit step of noise per pixel, so subtle gradients don't show bands. Flat colours are unchanged.
 - Fixed meshes placed one canvas height too low when **Ignore SVG Canvas** is off. Reimport affected assets; their pivot now matches the canvas.
 

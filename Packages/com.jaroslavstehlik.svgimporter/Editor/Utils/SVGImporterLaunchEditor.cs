@@ -75,7 +75,6 @@ namespace SVGImporter
         {
             // Unsubscribe first so a delegate is never registered twice.
             UnregisterDelegates();
-            EditorApplication.playModeStateChanged += PlaymodeStateChanged;
             PrefabUtility.prefabInstanceUpdated += OnPrefabInstanceUpdated;
             // Dropping SVG Assets into the Scene view and the Hierarchy goes through Unity's drop
             // handlers; Unity rejects drags that no handler accepts.
@@ -104,7 +103,6 @@ namespace SVGImporter
 
         static void UnregisterDelegates()
         {
-            EditorApplication.playModeStateChanged -= PlaymodeStateChanged;
             PrefabUtility.prefabInstanceUpdated -= OnPrefabInstanceUpdated;
 #if UNITY_6000_6_OR_NEWER
             DragAndDrop.RemoveDropHandlerV2(OnSceneDrop);
@@ -159,29 +157,6 @@ namespace SVGImporter
         }
         */
 
-        static void PlaymodeStateChanged(PlayModeStateChange state)
-        {
-			SVGAtlas svgAtlas = Object.FindAnyObjectByType<SVGAtlas>();
-			if(svgAtlas != null)
-			{
-				svgAtlas.ClearAll();
-			}
-            /*
-            SVGImage[] svgImages = Resources.FindObjectsOfTypeAll<SVGImage>();
-            if(svgImages != null && svgImages.Length > 0)
-            {
-                for(int i = 0; i < svgImages.Length; i++)
-                {
-                    if(svgImages[i] == null)
-                        continue;
-                    if(svgImages[i].vectorGraphics == null)
-                        continue;
-                    svgImages[i].vectorGraphics._editor_ClearCache();
-                }
-            }
-            */
-            //visible = visible;
-        }
         /// <summary>Creates an SVG Renderer where SVG Assets are dropped in the Scene view.</summary>
         static DragAndDropVisualMode OnSceneDrop(Object dropUpon, Vector3 worldPosition, Vector2 viewportPosition, Transform parentForDraggedObjects, bool perform)
         {

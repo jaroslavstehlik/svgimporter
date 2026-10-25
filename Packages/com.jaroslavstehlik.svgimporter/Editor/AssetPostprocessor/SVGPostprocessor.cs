@@ -30,6 +30,17 @@ namespace SVGImporter
 
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
+            // Renderers in open scenes keep drawing the meshes of the previous import until they
+            // rebuild.
+            var reimported = new HashSet<SVGAsset>();
+            foreach(string path in importedAssets)
+            {
+                if(!path.EndsWith(".svg", StringComparison.OrdinalIgnoreCase)) continue;
+                SVGAsset asset = AssetDatabase.LoadAssetAtPath<SVGAsset>(path);
+                if(asset != null) reimported.Add(asset);
+            }
+            SVGAtlas.RefreshRenderers(reimported);
+
             if(s_NewSVGFiles.Count == 0)
                 return;
 

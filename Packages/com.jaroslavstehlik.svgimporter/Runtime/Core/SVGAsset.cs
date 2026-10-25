@@ -429,127 +429,105 @@ namespace SVGImporter
             }
         }
 
+        /// <summary>
+        /// Kept for compatibility: gradients are registered with the atlas when a mesh using them
+        /// is built (see runtimeMesh), and stay registered while the atlas exists.
+        /// </summary>
         public void AddReference(ISVGReference reference)
         {
-            if(hasGradients)
-            {
-                MonoBehaviour mb = reference as MonoBehaviour;                
-                if(SVGAtlas.beingDestroyed) return;
-                for(int i = 0; i < _sharedGradients.Length; i++)
-                {
-                    if(_sharedGradients[i] == null) continue;
-                    CCGradient gradient = SVGAtlas.Instance.GetGradient(_sharedGradients[i]);
-                    if(gradient != null)
-                    {
-                        gradient.AddReference(reference);
-                    } else {
-                        gradient = SVGAtlas.Instance.AddGradient(_sharedGradients[i].Clone());
-                        gradient.AddReference(reference);
-                    }
-                }
-            }
         }
 
+        /// <summary>Kept for compatibility; see AddReference.</summary>
         public void RemoveReference(ISVGReference reference)
         {
-            if(hasGradients)
-            {
-                MonoBehaviour mb = reference as MonoBehaviour;                
-                int totalReferences = 0;
-                if(SVGAtlas.beingDestroyed) return;
-                for(int i = 0; i < _sharedGradients.Length; i++)
-                {
-                    if(_sharedGradients[i] == null) continue;
-                    CCGradient gradient = SVGAtlas.Instance.GetGradient(_sharedGradients[i]);
-                    if(gradient != null)
-                    {
-                        gradient.RemoveReference(reference);
-                        if(gradient.referenceCount == 0)
-                        {
-                            SVGAtlas.Instance.RemoveGradient(gradient);
-                        }
-                        totalReferences += gradient.CountReferences(reference);
-                    }
-                }
+        }
 
-                if(totalReferences == 0)
-                {
-                    if(_runtimeMesh != null)
-                    {
-                        _runtimeMesh.Clear();
-                        _runtimeMesh = null;
-                    }
+        // The atlas slot of each of the asset's gradients, by the gradient's index in the asset.
+        [System.NonSerialized] Dictionary<int, int> _atlasSlots;
+        [System.NonSerialized] int _atlasSlotsGeneration;
+        [System.NonSerialized] long _atlasSlotsImport;
 
-                    if(_runtimeMaterials != null)
+        /// <summary>
+        /// Registers the asset's gradients with the current atlas and returns their slots, by
+        /// gradient index in the asset (the index stored in the imported mesh and layers).
+        /// </summary>
+        internal Dictionary<int, int> atlasSlots
+        {
+            get {
+                SVGAtlas atlas = SVGAtlas.Instance;
+                // Unity can reimport an asset into the same object, so caches also check the
+                // import time.
+                if (_atlasSlots != null && _atlasSlotsGeneration == SVGAtlas.generation && _atlasSlotsImport == _lastTimeModified)
+                    return _atlasSlots;
+                // Adding a gradient can replace a full atlas; then start over with the new one.
+                do {
+                    _atlasSlotsGeneration = SVGAtlas.generation;
+                    _atlasSlotsImport = _lastTimeModified;
+                    _atlasSlots = new Dictionary<int, int>();
+                    if (_sharedGradients == null) break;
+                    foreach (CCGradient local in _sharedGradients)
                     {
-                        _runtimeMaterials = null;
+                        if (local == null) continue;
+                        CCGradient registered = SVGAtlas.Instance.AddGradient(local.Clone());
+                        if (registered != null) _atlasSlots[local.index] = registered.index;
                     }
-                }
+                } while (_atlasSlotsGeneration != SVGAtlas.generation);
+                return _atlasSlots;
             }
         }
 
         protected Mesh _runtimeMesh;
+        [System.NonSerialized] int _runtimeMeshGeneration;
+        [System.NonSerialized] Mesh _runtimeMeshSource;
+        [System.NonSerialized] long _runtimeMeshImport;
+
+        /// <summary>
+        /// The mesh to draw: the imported mesh, with its gradient indices replaced by atlas slots
+        /// if it has gradients. Rebuilt when the atlas or the imported mesh changes.
+        /// </summary>
         protected Mesh runtimeMesh
         {
             get {
-                if(!hasGradients)
-                {
+                if(!hasGradients || _sharedMesh == null)
                     return _sharedMesh;
-                } else {
-                    if(_runtimeMesh == null && _sharedMesh != null)
+
+                Dictionary<int, int> slots = atlasSlots;
+                if (_runtimeMesh != null && _runtimeMeshGeneration == SVGAtlas.generation && _runtimeMeshSource == _sharedMesh && _runtimeMeshImport == _lastTimeModified)
+                    return _runtimeMesh;
+
+                _runtimeMesh = SVGMeshUtils.Clone(_sharedMesh);
+                _runtimeMesh.hideFlags = HideFlags.DontSave;
+                SVGAtlas.Own(_runtimeMesh);
+                _runtimeMeshGeneration = SVGAtlas.generation;
+                _runtimeMeshSource = _sharedMesh;
+                _runtimeMeshImport = _lastTimeModified;
+                Vector2[] uv2 = _runtimeMesh.uv2;
+                if(uv2 != null && uv2.Length > 0)
+                {
+                    int slot;
+                    for(int i = 0; i < uv2.Length; i++)
                     {
-//                        Debug.Log("Mesh has changed: "+name);
-                        Dictionary<int, int> gradientCache = new Dictionary<int, int>();
-                        CCGradient[] gradients = new CCGradient[_sharedGradients.Length];
-                        for(int i = 0; i < _sharedGradients.Length; i++)
-                        {
-                            if(_sharedGradients[i] == null)
-                                continue;
-
-                            CCGradient gradient = SVGAtlas.Instance.GetGradient(_sharedGradients[i]);
-                            if(gradient != null)
-                            {
-                                gradients[i] = gradient;
-                            } else {
-                                gradients[i] = SVGAtlas.Instance.AddGradient(_sharedGradients[i].Clone());
-                            }
-
-                            gradientCache.Add(_sharedGradients[i].index, gradients[i].index);
-                        }
-
-                        _runtimeMesh = SVGMeshUtils.Clone(_sharedMesh);
-                        _runtimeMesh.hideFlags = HideFlags.DontSave;
-                        if(_runtimeMesh.uv2 != null && _runtimeMesh.uv2.Length > 0)
-                        {
-                            Vector2[] uv2 = _runtimeMesh.uv2;
-                            int key;
-                            for(int i = 0; i < uv2.Length; i++)
-                            {
-                                key = Mathf.FloorToInt(Mathf.Abs(uv2[i].x));
-                                try {
-                                    uv2[i].x = gradientCache[key];
-                                } catch {}
-                                /*
-                                catch ( System.Exception exception)
-                                {
-                                    Debug.Log("i: "+i+", "+exception.Message+"\nKey: "+key);
-                                }
-                                */
-                            }
-                            _runtimeMesh.uv2 = uv2;
-                        }
-                    }    
+                        if (slots.TryGetValue(Mathf.FloorToInt(Mathf.Abs(uv2[i].x)), out slot))
+                            uv2[i].x = slot;
+                    }
+                    _runtimeMesh.uv2 = uv2;
                 }
                 return _runtimeMesh;
             }
         }
 
         protected Mesh _runtimeLegacyUIMesh;
+        [System.NonSerialized] Mesh _runtimeLegacyUIMeshSource;
         protected Mesh runtimeLegacyUIMesh
         {
             get {
-                if(_runtimeLegacyUIMesh == null)
-                    _runtimeLegacyUIMesh = CreateLegacyUIMesh(sharedMesh);
+                Mesh source = sharedMesh;
+                if(_runtimeLegacyUIMesh == null || _runtimeLegacyUIMeshSource != source)
+                {
+                    _runtimeLegacyUIMesh = CreateLegacyUIMesh(source);
+                    _runtimeLegacyUIMeshSource = source;
+                    if (_runtimeLegacyUIMesh != null && hasGradients) SVGAtlas.Own(_runtimeLegacyUIMesh);
+                }
                 return _runtimeLegacyUIMesh;
             }
         }
@@ -1033,6 +1011,22 @@ namespace SVGImporter
                 for(int i = 0; i < _layersLength; i++)
                 {
                     output[i] = _layers[i].Clone();
+                }
+                // Meshes built from the layers draw with the atlas, so their gradients refer to
+                // atlas slots, as in runtimeMesh.
+                if (hasGradients)
+                {
+                    Dictionary<int, int> slots = atlasSlots;
+                    int slot;
+                    foreach (SVGLayer layer in output)
+                    {
+                        if (layer.shapes == null) continue;
+                        foreach (SVGShape shape in layer.shapes)
+                        {
+                            if (shape.fill != null && shape.fill.gradientColors != null && slots.TryGetValue(shape.fill.gradientColors.index, out slot))
+                                shape.fill.gradientColors.index = slot;
+                        }
+                    }
                 }
                 return output;
             }

@@ -17,7 +17,7 @@ namespace SVGImporter
     
     [ExecuteInEditMode]
     [AddComponentMenu("Rendering/SVG Renderer", 20)]
-    public class SVGRenderer : UIBehaviour, ISVGShape, ISVGRenderer, ISVGReference
+    public class SVGRenderer : UIBehaviour, ISVGShape, ISVGRenderer, ISVGReference, ISVGAtlasClient
     {
         public enum Type
         {
@@ -319,7 +319,21 @@ namespace SVGImporter
         protected override void OnEnable()
         {
             base.OnEnable();
+            SVGAtlas.Register(this);
+            // After a script reload the atlas and the meshes built from it are new: rebuild.
+            if (!meshRenderer.isPartOfStaticBatch)
+            {
+                CleanLayers();
+                PrepareForRendering(true);
+            }
             EnableMeshRenderer(true);
+        }
+
+        void ISVGAtlasClient.OnAtlasReset()
+        {
+            if (meshRenderer.isPartOfStaticBatch) return;
+            CleanLayers();
+            PrepareForRendering(true);
         }
         
 #if UNITY_EDITOR
@@ -339,6 +353,7 @@ namespace SVGImporter
 
         protected override void OnDisable()
         {
+            SVGAtlas.Unregister(this);
             EnableMeshRenderer(false);
             base.OnDisable();
         }

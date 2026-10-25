@@ -17,7 +17,7 @@ namespace SVGImporter
     // uGUI 2.x no longer requires a CanvasRenderer on Graphic itself, only on its subclasses.
     [RequireComponent(typeof(CanvasRenderer))]
     [AddComponentMenu("UI/SVG Image", 21)]
-    public class SVGImage : MaskableGraphic, ILayoutElement, ICanvasRaycastFilter, ISVGRenderer, ISVGReference
+    public class SVGImage : MaskableGraphic, ILayoutElement, ICanvasRaycastFilter, ISVGRenderer, ISVGReference, ISVGAtlasClient
     {
         public enum Type
         {
@@ -134,6 +134,26 @@ namespace SVGImporter
                 _vectorGraphics.RemoveReference(this);
             }
             base.OnDestroy();
+        }
+
+        protected override void OnEnable()
+        {
+            SVGAtlas.Register(this);
+            // After a script reload the atlas material is new.
+            Clear();
+            base.OnEnable();
+        }
+
+        protected override void OnDisable()
+        {
+            SVGAtlas.Unregister(this);
+            base.OnDisable();
+        }
+
+        void ISVGAtlasClient.OnAtlasReset()
+        {
+            Clear();
+            SetAllDirty();
         }
 
 

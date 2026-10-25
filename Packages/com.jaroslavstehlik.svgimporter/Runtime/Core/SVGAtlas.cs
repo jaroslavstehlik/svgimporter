@@ -86,18 +86,22 @@ namespace SVGImporter
                 gradient = gradientCache [gradientHash];
                 gradientExist = true;
             } else {
-                int gradientsLength = gradients.Length;
-                for(int i = 0; i < gradientsLength; i++)
-                {
-                    if(gradients[i] != null) continue;
-                    gradient.index = i;
-                    gradients[i] = gradient;
-                    gradientCache.Add (gradientHash, gradient);
-                    break;
-                }
+                int slot = System.Array.IndexOf(gradients, null);
+                if (slot < 0)
+                    return null; // Full: SVGAtlas grows the atlas and tries again.
+                gradient.index = slot;
+                gradients[slot] = gradient;
+                gradientCache.Add (gradientHash, gradient);
                 gradientExist = false;
             }
             return  gradient;
+        }
+
+        /// <summary>Adds empty slots at the end; existing gradients keep theirs.</summary>
+        public void Grow(int length)
+        {
+            if (gradients == null || length <= gradients.Length) return;
+            System.Array.Resize(ref gradients, length);
         }
 
         public bool RemoveGradient(CCGradient gradient)
@@ -171,8 +175,55 @@ namespace SVGImporter
         }
     }
 
+    /// <summary>Renderers that draw meshes or materials from the atlas; see SVGAtlas.</summary>
+    internal interface ISVGAtlasClient
+    {
+        /// <summary>The atlas was replaced: rebuild meshes and materials taken from it.</summary>
+        void OnAtlasReset();
+    }
+
+    /// <summary>
+    /// All gradients of the loaded SVG Assets share one texture, so that SVG meshes share materials
+    /// and batch. Each gradient has a slot in the texture, and the meshes drawn with the atlas store
+    /// slot numbers (see SVGAsset.runtimeMesh).
+    ///
+    /// The atlas is a cache that can be thrown away and rebuilt at any time: its slot registry isn't
+    /// serialized. Anything built from it records the atlas generation it was built for:
+    /// - Script reloads destroy the atlas and everything built from it; after the reload renderers
+    ///   rebuild in OnEnable and the atlas is created again on demand.
+    /// - When the atlas is replaced within a session (it can't grow further, or ResetAtlas), the
+    ///   generation changes and every registered renderer (ISVGAtlasClient) rebuilds immediately.
+    /// - The atlas grows instead of running out of slots. Gradients are never removed while it
+    ///   exists, so a slot never changes meaning.
+    /// </summary>
     [ExecuteInEditMode]
     public class SVGAtlas : MonoBehaviour {
+
+        /// <summary>
+        /// Changes whenever a new atlas is created, so slot numbers and materials from an earlier
+        /// atlas can be recognised.
+        /// </summary>
+        public static int generation { get; private set; }
+
+        static readonly HashSet<ISVGAtlasClient> clients = new HashSet<ISVGAtlasClient>();
+        // Meshes holding slot numbers of the current atlas; destroyed with it.
+        static readonly List<UnityEngine.Object> ownedObjects = new List<UnityEngine.Object>();
+
+        internal static void Register(ISVGAtlasClient client) { clients.Add(client); }
+        internal static void Unregister(ISVGAtlasClient client) { clients.Remove(client); }
+        internal static void Own(UnityEngine.Object obj) { ownedObjects.Add(obj); }
+
+        /// <summary>Rebuilds the renderers that draw any of these assets, for example after a reimport.</summary>
+        public static void RefreshRenderers(ICollection<SVGAsset> assets)
+        {
+            if (assets == null || assets.Count == 0) return;
+            foreach (ISVGAtlasClient client in clients.ToArray())
+            {
+                ISVGRenderer renderer = client as ISVGRenderer;
+                if (renderer != null && renderer.vectorGraphics != null && assets.Contains(renderer.vectorGraphics))
+                    client.OnAtlasReset();
+            }
+        }
 
         protected bool _atlasHasChanged;
         public bool atlasHasChanged
@@ -348,7 +399,9 @@ namespace SVGImporter
         public const int defaultGradientWidth = 128;
         public const int defaultGradientHeight = 4;
         public const int defaultAtlasTextureWidth = 512;
-        public const int defaultAtlasTextureHeight = 512;
+        public const int defaultAtlasTextureHeight = 64;
+        // The atlas doubles in height when it runs out of slots, up to this height.
+        const int maxAtlasTextureHeight = 4096;
         const int atlasIndex = 0;
 
     	public int gradientWidth = 128;
@@ -409,7 +462,6 @@ namespace SVGImporter
         public void OnAtlasPreRender(Camera camera = null)
         {
             SVGImporterSettings.UpdateAntialiasing();
-            UpgradeAtlasTextures();
 
             if (_atlasHasChanged)
             {
@@ -421,40 +473,21 @@ namespace SVGImporter
             }
         }
 
-        /// <summary>
-        /// The Editor's atlas object survives script reloads, so after a package update its textures
-        /// can still hold sampled colours (SVG Importer 2.0 and earlier) instead of stop data. They
-        /// are converted in place, so materials keep referencing them, and the stops written again.
-        /// </summary>
-        void UpgradeAtlasTextures()
-        {
-            if (atlasTextures == null) return;
-            for (int i = 0; i < atlasTextures.Count; i++)
-            {
-                Texture2D texture = atlasTextures[i];
-                if (texture == null || texture.graphicsFormat == UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat)
-                    continue;
-                texture.Reinitialize(texture.width, texture.height, UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat, false);
-                texture.filterMode = FilterMode.Point;
-                _atlasHasChanged = true;
-            }
-        }
-
         protected static SVGAtlas _Instance;
         public static SVGAtlas Instance
         {
             get {
                 if(_Instance == null)
                 {
-                    SVGAtlas[] instances = Resources.FindObjectsOfTypeAll<SVGAtlas>();
-                    if(instances != null && instances.Length > 0)
+                    // An atlas object that exists while _Instance is null was created before a
+                    // script reload (or by an older version of SVG Importer): its slot registry is
+                    // gone, so its slots can't be trusted. Renderers rebuild after a reload anyway.
+                    foreach (SVGAtlas stale in Resources.FindObjectsOfTypeAll<SVGAtlas>())
                     {
-                        _Instance = instances[0];
-//                        Debug.Log("SVGAtlas, found instances: "+instances.Length);
+                        if (stale != null && (stale.gameObject.hideFlags & HideFlags.DontSave) != 0)
+                            stale.DestroyAtlas();
                     }
-                }
-                if(_Instance == null)
-                {
+
                     GameObject go = new GameObject("SVGAtlas", typeof(SVGAtlas));
                     go.hideFlags = HideFlags.HideAndDontSave;
                     _Instance = go.GetComponent<SVGAtlas>();
@@ -502,65 +535,64 @@ namespace SVGImporter
 
         }
 
+        /// <summary>
+        /// Replaces the atlas with an empty one. Every registered renderer rebuilds and registers
+        /// the gradients it uses again.
+        /// </summary>
+        public static void ResetAtlas()
+        {
+            if (_Instance != null) _Instance.DestroyAtlas();
+            foreach (ISVGAtlasClient client in clients.ToArray())
+                client.OnAtlasReset();
+        }
+
+        [System.Obsolete("Use SVGAtlas.ResetAtlas().")]
         public void ClearAll()
         {
-            Debug.Log("Cleared SVG Atlas: "+Time.frameCount+", playmode: "+Application.isPlaying);
-            if(_ui != null)
-            {
-                DestroyObjectInternal(_ui);
-                _ui = null;
-            }            
-            if(_uiAntialiased != null)
-            {
-                DestroyObjectInternal(_uiAntialiased);
-                _uiAntialiased = null;
-            }
-            if(_opaqueSolid != null)
-            {
-                DestroyObjectInternal(_opaqueSolid);
-                _opaqueSolid = null;
-            }
-            if(_transparentSolid != null)
-            {
-                DestroyObjectInternal(_transparentSolid);
-                _transparentSolid = null;
-            }
-            if(_transparentSolidAntialiased != null)
-            {
-                DestroyObjectInternal(_transparentSolidAntialiased);
-                _transparentSolidAntialiased = null;
-            }
-            if(_opaqueGradient != null)
-            {
-                DestroyObjectInternal(_opaqueGradient);
-                _opaqueGradient = null;
-            }
-            if(_transparentGradient != null)
-            {
-                DestroyObjectInternal(_transparentGradient);
-                _transparentGradient = null;
-            }
-            if(_transparentGradientAntialiased != null)
-            {
-                DestroyObjectInternal(_transparentGradientAntialiased);
-                _transparentGradientAntialiased = null;
-            }
+            ResetAtlas();
+        }
 
-            ClearAllData();
+        /// <summary>Destroys the atlas, its textures and materials, and the meshes built from it.</summary>
+        void DestroyAtlas()
+        {
+            if (_Instance == this) _Instance = null;
+            Material[] own = { _ui, _uiAntialiased, _opaqueSolid, _transparentSolid, _transparentSolidAntialiased, _opaqueGradient, _transparentGradient, _transparentGradientAntialiased };
+            foreach (Material material in own)
+                if (material != null) DestroyObjectInternal(material);
             ClearMaterials();
             ClearAtlasTextures();
+            if (_atlasData != null) _atlasData.Clear();
+            if (_Instance == null)
+            {
+                foreach (UnityEngine.Object obj in ownedObjects)
+                    if (obj != null) DestroyObjectInternal(obj);
+                ownedObjects.Clear();
+            }
+            DestroyObjectInternal(gameObject);
         }
+
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        static void DestroyBeforeScriptReload()
+        {
+            // The slot registry doesn't survive a script reload, so neither may anything that uses
+            // slot numbers. Renderers rebuild in OnEnable after the reload.
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += () =>
+            {
+                if (_Instance != null) _Instance.DestroyAtlas();
+            };
+        }
+#endif
 
     	protected void Init ()
     	{
 //            Debug.Log("Inited SVG Atlas: "+Time.frameCount+", playmode: "+Application.isPlaying+" InstanceID: "+GetInstanceID());
     		if (materials == null) materials = new List<Material> ();
-//            Debug.Log(_atlasData);
+            generation++;
             if(_atlasData == null)
             {
-//                Debug.Log("Creating Atlas Data! InstanceID: "+GetInstanceID());
                 _atlasData = new SVGAtlasData();
-                _atlasData.Init(atlasTextureWidth * atlasTextureHeight);
+                _atlasData.Init(slotCount);
                 AddGradient(SVGAtlasData.GetDefaultGradient());
             }
     	}
@@ -655,6 +687,11 @@ namespace SVGImporter
             return Mathf.Lerp(from.alpha, to.alpha, to.time > from.time ? (time - from.time) / (to.time - from.time) : 0f);
         }
 
+        int slotCount
+        {
+            get { return (atlasTextureWidth / gradientWidth) * (atlasTextureHeight / gradientHeight); }
+        }
+
     	public int imagePerRow {
     		get {
     			return atlasTextureWidth / gradientWidth;
@@ -721,10 +758,22 @@ namespace SVGImporter
             if(_atlasData == null)
             {
                 _atlasData = new SVGAtlasData();
-                _atlasData.Init(atlasTextureWidth * atlasTextureHeight);
+                _atlasData.Init(slotCount);
             }
             bool gradientExist;
-            gradient = _atlasData.AddGradient(gradient, out gradientExist);
+            CCGradient added = _atlasData.AddGradient(gradient, out gradientExist);
+            if (added == null)
+            {
+                if (atlasTextureHeight * 2 > Mathf.Min(maxAtlasTextureHeight, SystemInfo.maxTextureSize))
+                {
+                    // Can't grow: start over with only the gradients renderers use now.
+                    ResetAtlas();
+                    return Instance.AddGradient(gradient);
+                }
+                Grow();
+                added = _atlasData.AddGradient(gradient, out gradientExist);
+            }
+            gradient = added;
             if(gradientExist) return gradient;
 
             int x = 0, y = 0;
@@ -737,6 +786,28 @@ namespace SVGImporter
             return  gradient;
         }
         
+        /// <summary>
+        /// Doubles the atlas height. Slots are numbered row by row, so existing slots keep their
+        /// position; the texture is resized and every gradient written again.
+        /// </summary>
+        void Grow()
+        {
+            atlasTextureHeight *= 2;
+            _atlasData.Grow(slotCount);
+            if (atlasTextures != null)
+            {
+                foreach (Texture2D texture in atlasTextures)
+                {
+                    if (texture == null) continue;
+                    texture.Reinitialize(atlasTextureWidth, atlasTextureHeight, UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat, false);
+                }
+            }
+            Material[] own = { _ui, _uiAntialiased, _opaqueGradient, _transparentGradient, _transparentGradientAntialiased };
+            foreach (Material material in own.Concat(materials ?? new List<Material>()))
+                UpdateMaterialProperties(material);
+            _atlasHasChanged = true;
+        }
+
         public bool RemoveGradient(CCGradient gradient)
         {
             if (gradient == null || !gradient.initialised)
