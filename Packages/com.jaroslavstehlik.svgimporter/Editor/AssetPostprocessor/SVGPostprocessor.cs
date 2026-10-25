@@ -47,7 +47,7 @@ namespace SVGImporter
             var newFiles = new List<string>(s_NewSVGFiles);
             s_NewSVGFiles.Clear();
 
-            if(!SVGImporterEditor.settings.importNewSVGFiles)
+            if(!SVGImporterProjectSettings.instance.importNewSVGFiles)
                 return;
 
             foreach(string path in newFiles)
@@ -76,7 +76,7 @@ namespace SVGImporter
                 return false;
             }
 
-            importer.ApplyDefaults(SVGImporterEditor.settings);
+            importer.ApplyDefaults(SVGImporterProjectSettings.instance.defaults);
             // SaveAndReimport only writes the settings of an importer marked as changed.
             EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();

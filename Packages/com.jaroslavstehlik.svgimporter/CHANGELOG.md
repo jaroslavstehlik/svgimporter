@@ -17,7 +17,7 @@
 - Fixed SVG Image not rendering when added through Add Component on Unity 6.
 - The Diffuse shaders now render in URP (lit by the main light) and the URP 2D Renderer (unlit).
 - Removed the "Standard SVG" materials, which referenced a shader that was never included.
-- Importer settings now live in the project (Window > SVG Importer > Settings creates `Assets/SVG Importer/Resources/svgImporterSettings.asset`), because packages installed from git are read-only. Without that asset the defaults are used.
+- Settings are in **Edit > Project Settings > SVG Importer** (also Window > SVG Importer > Settings), stored in `ProjectSettings/SVGImporterSettings.asset` with the project's other settings, instead of an asset in `Assets`. Projects that have the settings asset of an earlier 2.0 build get its values once; the asset can then be deleted. Builds include the one runtime setting, the antialiasing width, automatically.
 - The plugin no longer creates an `Assets/Gizmos` folder in your project.
 - Only SVG files inside the `Assets` folder are converted. Previously the importer also tried to convert, and delete, SVG files that other packages ship.
 - Samples are re-saved in the Unity 6 format, without the removed GUILayer component.
@@ -25,7 +25,7 @@
 - Fixed `gradientUnits="userSpaceOnUse"` never being recognised (the attribute name was misspelled).
 - Fixed the radius of radial gradients with a percentage radius on shapes away from the canvas origin.
 - Reimport existing SVG assets to apply these gradient fixes.
-- New: **Import Engine** project setting (Window > SVG Importer > Settings). **Native** imports with a new native core (usvg and lyon) that is about 15 times faster and supports more of SVG, such as gradient strokes. It is available in the macOS Editor for now; other platforms use **Legacy**, the default. Changing the setting reimports all SVG files. Documents that use `conicalGradient` are still imported by the legacy parser.
+- New: **Import Engine** project setting. **Native** imports with a new native core (usvg and lyon) that is about 15 times faster and supports more of SVG, such as gradient strokes. It is available in the macOS Editor for now; other platforms use **Legacy**, the default. Changing the setting reimports all SVG files. Documents that use `conicalGradient` are still imported by the legacy parser.
 - Fixed shape and mesh bounds that could miss their right or bottom edge.
 - The Native import engine applies clip paths as geometry, including `objectBoundingBox` units, nested clip paths and clipped elements inside clip paths, and applies masks that are plain opaque shapes. Strokes now bevel at the right angle for their `stroke-miterlimit`.
 - The Inspector lists more unsupported features found during import: filters, patterns, blend modes, group opacity and skipped text.
@@ -33,6 +33,8 @@
 - Gradient colours are exact: the gradient atlas stores each gradient's stops (up to 64) instead of 128 sampled colours, and shaders interpolate between them in sRGB, as browsers do. Hard stops are sharp at any size, colours of neighbouring gradients can't bleed in, and gradients look the same in Gamma and Linear projects. Requires shader model 3.5 (OpenGL ES 3.0, Metal, Vulkan or Direct3D 11).
 - Fixed gradients showing the wrong colours or disappearing in the Editor after entering or leaving play mode, script reloads, reimports or long editing sessions: the gradient atlas is rebuilt consistently after each of them, and grows instead of running out of space (512 gradients before).
 - Gradients are identified by exactly what they draw. The old text hash rounded stop offsets and alphas to 1/999, so slightly different gradients could share one atlas slot. `CCGradient.GetStops()` returns a gradient's merged stops; `CCGradient.Evaluate` now matches the shaders, including hard stops. `CCGradient.hash`, `SVGFill.gradientHash` and the gradient reference counting are obsolete; `SVGAtlasData.gradientCache` is replaced by `registeredGradients`.
+- Removed the per-machine "Support Service" switch; drag and drop and gradient updates are always on. Its Start button used to turn it off.
+- Fixed dropping an SVG Asset on empty space in the Hierarchy throwing an exception.
 - Fixed SVG Renderers with **Use Layers** (used by modifiers) drawing another asset's gradient colours.
 - Scenes update when an SVG file changes on disk; before, only after **Apply** in the Inspector.
 - Gradients are dithered, as in browsers: up to half an 8-bit step of noise per pixel, so subtle gradients don't show bands. Flat colours are unchanged.

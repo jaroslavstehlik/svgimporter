@@ -15,30 +15,42 @@ namespace SVGImporter
         Native,
     }
 
+    /// <summary>
+    /// Import options for SVGAsset.Load, and the settings players use at runtime.
+    ///
+    /// The project's settings are edited in Edit > Project Settings > SVG Importer and stored in
+    /// ProjectSettings (SVGImporterProjectSettings, Editor only). Get returns the runtime part of
+    /// them: in the Editor it is kept up to date from the project settings, and builds include it
+    /// as a preloaded asset (SVGImporterBuildSettings).
+    /// </summary>
     public class SVGImporterSettings : ScriptableObject 
     {
+        [System.Obsolete("Settings are no longer loaded from Resources; see Edit > Project Settings > SVG Importer.")]
         public const string resourceName = "svgImporterSettings";
 
+        // True for the copy of the project settings a build preloads.
+        [SerializeField, HideInInspector] internal bool _isPlayerSettings;
+
         protected static SVGImporterSettings _instance;
-        /// <summary>
-        /// The project's settings asset (any Resources/svgImporterSettings.asset),
-        /// or the default settings when the project has none.
-        /// </summary>
+
+        /// <summary>The project's runtime settings.</summary>
         public static SVGImporterSettings Get
         {
             get {
                 if(_instance == null)
                 {
-                    _instance = Resources.Load<SVGImporterSettings>(resourceName);
-                    if(_instance == null)
-                    {
-                        _instance = ScriptableObject.CreateInstance<SVGImporterSettings>();
-                        _instance.hideFlags = HideFlags.DontSave;
-                    }
+                    _instance = ScriptableObject.CreateInstance<SVGImporterSettings>();
+                    _instance.hideFlags = HideFlags.DontSave;
                 }
 
                 return _instance;
             }
+        }
+
+        void OnEnable()
+        {
+            // Preloaded assets are loaded when the player starts.
+            if(_isPlayerSettings) _instance = this;
         }
 
         public static void UpdateAntialiasing()
@@ -54,11 +66,12 @@ namespace SVGImporter
             }
         }
 
-        [Tooltip("Import SVG files added to the project with SVG Importer. Turn this off when the project uses Unity's own SVG import, for example for UI Toolkit. Individual files can still be switched in the Inspector.")]
-        public bool importNewSVGFiles = true;
+        [System.Obsolete("Use SVGImporterProjectSettings.instance.importNewSVGFiles (Editor).")]
+        [HideInInspector] public bool importNewSVGFiles = true;
 
         [Tooltip("Native: parse and tessellate with the native core (usvg and lyon), which is faster and supports more of SVG. Currently available on macOS. Legacy: the C# implementation of SVG Importer 2.x.")]
-        public SVGImportEngine importEngine = SVGImportEngine.Legacy;
+        [System.Obsolete("Use SVGImporterProjectSettings.instance.importEngine (Editor).")]
+        [HideInInspector] public SVGImportEngine importEngine = SVGImportEngine.Legacy;
 
         public SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;
         public SVGUseGradients defaultUseGradients = SVGUseGradients.Auto;
@@ -78,7 +91,8 @@ namespace SVGImporter
         public bool defaultOptimizeMesh = true;
         public bool defaultGenerateNormals = false;
         public bool defaultGenerateTangents = false;
-        public Texture2D defaultSVGIcon;
+        [System.Obsolete("Not used: the asset icon is SVG Importer's own.")]
+        [HideInInspector] public Texture2D defaultSVGIcon;
 
         public bool ignoreImportExceptions = true;
     }

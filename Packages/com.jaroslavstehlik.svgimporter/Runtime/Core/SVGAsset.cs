@@ -1524,7 +1524,8 @@ namespace SVGImporter
         /// addObject registers each generated sub-object (identifier, object) with the import context.
         /// The import settings must already be set on this asset.
         /// </summary>
-        internal void _editor_Import(string svgText, System.Action<string, Object> addObject)
+        /// <param name="engine">The engine to import with; the importer decides it from the project settings.</param>
+        internal void _editor_Import(string svgText, System.Action<string, Object> addObject, SVGImportEngine engine)
         {
             _documentAsset = ScriptableObject.CreateInstance<SVGDocumentAsset>();
             _documentAsset.name = this.name + " Document";
@@ -1532,7 +1533,7 @@ namespace SVGImporter
             addObject("document", _documentAsset);
 
             _svgFile = svgText;
-            _editor_LoadSVG(mesh => addObject("mesh", mesh));
+            _editor_LoadSVG(mesh => addObject("mesh", mesh), engine);
             _documentAsset.svgFile = _keepSVGFile ? svgText : null;
             _editor_ReportErrors();
             _svgFile = null;
@@ -1660,7 +1661,8 @@ namespace SVGImporter
             _layers = layers;
         }
 
-        internal void _editor_LoadSVG(System.Action<Mesh> addMesh = null)
+        // SVG Assets stored as .asset files (1.x) are reimported with the legacy engine.
+        internal void _editor_LoadSVG(System.Action<Mesh> addMesh = null, SVGImportEngine engine = SVGImportEngine.Legacy)
         {        
             SVGAssetImport assetImport;
             if (svgFile != null)
@@ -1674,7 +1676,7 @@ namespace SVGImporter
                 SVGAssetImport.ignoreSVGCanvas = _ignoreSVGCanvas;
                 SVGAssetImport.useGradients = _useGradients;
                 SVGAssetImport.antialiasing = _antialiasing;
-                SVGAssetImport.engine = SVGImporterSettings.Get.importEngine;
+                SVGAssetImport.engine = engine;
                 assetImport = new SVGAssetImport(svgFile, _vpm);
                 assetImport.StartProcess(this, addMesh);
             }

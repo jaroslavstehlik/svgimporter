@@ -457,6 +457,9 @@ namespace SVGImporter
         }
 
         protected static SVGAtlas _Instance;
+
+        /// <summary>Whether an atlas exists, without creating one.</summary>
+        internal static bool exists { get { return _Instance != null; } }
         public static SVGAtlas Instance
         {
             get {

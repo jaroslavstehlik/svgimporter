@@ -54,7 +54,8 @@ namespace SVGImporter
             asset.name = Path.GetFileNameWithoutExtension(ctx.assetPath);
             ApplySettings(this, asset);
 
-            asset._editor_Import(File.ReadAllText(ctx.assetPath), (identifier, obj) => ctx.AddObjectToAsset(identifier, obj));
+            asset._editor_Import(File.ReadAllText(ctx.assetPath), (identifier, obj) => ctx.AddObjectToAsset(identifier, obj),
+                SVGImporterProjectSettings.instance.effectiveImportEngine);
 
             SVGError[] errors = asset._editor_errors;
             if(errors != null)
@@ -104,25 +105,25 @@ namespace SVGImporter
         }
 
         /// <summary>Applies the project's default import settings to a newly assigned importer.</summary>
-        internal void ApplyDefaults(SVGImporterSettings settings)
+        internal void ApplyDefaults(SVGImportDefaults defaults)
         {
-            _format = settings.defaultSVGFormat;
-            _useGradients = settings.defaultUseGradients;
-            _antialiasing = settings.defaultAntialiasing;
-            _meshCompression = settings.defaultMeshCompression;
-            _optimizeMesh = settings.defaultOptimizeMesh;
-            _scale = settings.defaultScale;
-            _vpm = settings.defaultVerticesPerMeter;
-            _depthOffset = settings.defaultDepthOffset;
-            _compressDepth = settings.defaultCompressDepth;
-            _customPivotPoint = settings.defaultCustomPivotPoint;
-            _pivotPoint = settings.defaultPivotPoint;
-            _generateCollider = settings.defaultGenerateCollider;
-            _generateNormals = settings.defaultGenerateNormals;
-            _generateTangents = settings.defaultGenerateTangents;
-            _keepSVGFile = settings.defaultKeepSVGFile;
-            _useLayers = settings.defaultUseLayers;
-            _ignoreSVGCanvas = settings.defaultIgnoreSVGCanvas;
+            _format = defaults.format;
+            _useGradients = defaults.useGradients;
+            _antialiasing = defaults.antialiasing;
+            _meshCompression = defaults.meshCompression;
+            _optimizeMesh = defaults.optimizeMesh;
+            _scale = defaults.scale;
+            _vpm = defaults.verticesPerMeter;
+            _depthOffset = defaults.depthOffset;
+            _compressDepth = defaults.compressDepth;
+            _customPivotPoint = defaults.customPivotPoint;
+            _pivotPoint = defaults.pivotPoint;
+            _generateCollider = defaults.generateCollider;
+            _generateNormals = defaults.generateNormals;
+            _generateTangents = defaults.generateTangents;
+            _keepSVGFile = defaults.keepSVGFile;
+            _useLayers = defaults.useLayers;
+            _ignoreSVGCanvas = defaults.ignoreSVGCanvas;
         }
     }
 }

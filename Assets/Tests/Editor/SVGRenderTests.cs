@@ -104,8 +104,9 @@ public static class SVGRenderTests
         // Optional: -svgTestColorSpace Linear|Gamma
         // Optional: -svgTestEngine Native|Legacy
         string engine = Arg("-svgTestEngine");
+        SVGImportEngine originalEngine = SVGImporterProjectSettings.instance.importEngine;
         if (engine != null)
-            SVGImporterSettings.Get.importEngine = (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engine);
+            SVGImporterProjectSettings.instance.importEngine = (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engine);
         string colorSpace = Arg("-svgTestColorSpace");
         if (colorSpace != null)
             PlayerSettings.colorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), colorSpace);
@@ -129,7 +130,8 @@ public static class SVGRenderTests
             SetPipeline(null);
         }
 
-        string engineName = SVGImporterSettings.Get.importEngine.ToString();
+        string engineName = SVGImporterProjectSettings.instance.effectiveImportEngine.ToString();
+        SVGImporterProjectSettings.instance.importEngine = originalEngine;
         results.Insert(0, "Engine: " + engineName + ", color space: " + PlayerSettings.colorSpace + ", result: " + (passed ? "PASS" : "FAIL"));
         File.WriteAllLines(Path.Combine(output, "results-" + engineName + "-" + PlayerSettings.colorSpace + ".txt"), results);
         foreach (string line in results) Debug.Log("[SVGRenderTests] " + line);
@@ -168,7 +170,7 @@ public static class SVGRenderTests
         }
 
         // With "Import New SVG Files" off, new files keep Unity's importer.
-        SVGImporterSettings projectSettings = SVGImporterEditor.settings;
+        SVGImporterProjectSettings projectSettings = SVGImporterProjectSettings.instance;
         projectSettings.importNewSVGFiles = false;
         try
         {

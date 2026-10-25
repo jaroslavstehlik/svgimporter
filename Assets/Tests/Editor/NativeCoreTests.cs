@@ -106,7 +106,7 @@ public static class NativeCoreTests
     static void LegacyImport(MethodInfo import, string svg, Action<string, UnityEngine.Object> add, List<UnityEngine.Object> created)
     {
         var asset = ScriptableObject.CreateInstance<SVGAsset>();
-        import.Invoke(asset, new object[] { svg, add });
+        import.Invoke(asset, new object[] { svg, add, SVGImportEngine.Legacy });
         foreach (var obj in created) UnityEngine.Object.DestroyImmediate(obj);
         created.Clear();
         UnityEngine.Object.DestroyImmediate(asset);
@@ -140,8 +140,6 @@ public static class NativeCoreTests
         var import = typeof(SVGAsset).GetMethod("_editor_Import", flags);
         var created = new List<UnityEngine.Object>();
         Action<string, UnityEngine.Object> add = (id, obj) => created.Add(obj);
-        SVGImportEngine original = SVGImporterSettings.Get.importEngine;
-        try
         {
             foreach (string path in Directory.GetFiles("Assets/Samples", "*.svg", SearchOption.AllDirectories).OrderBy(f => f))
             {
@@ -165,10 +163,6 @@ public static class NativeCoreTests
                 }
             }
         }
-        finally
-        {
-            SVGImporterSettings.Get.importEngine = original;
-        }
         lines.Insert(0, files + " files, " + mismatches + " with different layers; vertices: legacy " + legacyVertices + ", native " + nativeVertices);
         File.WriteAllLines(Path.Combine(output, "parity.txt"), lines);
         foreach (string line in lines.Take(40)) Debug.Log("[NativeCoreTests] " + line);
@@ -179,10 +173,9 @@ public static class NativeCoreTests
 
     static List<string> Layers(MethodInfo import, string svg, SVGImportEngine engine, Action<string, UnityEngine.Object> add, List<UnityEngine.Object> created, out List<Rect> bounds)
     {
-        SVGImporterSettings.Get.importEngine = engine;
         var asset = ScriptableObject.CreateInstance<SVGAsset>();
         typeof(SVGAsset).GetField("_useLayers", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asset, true);
-        import.Invoke(asset, new object[] { svg, add });
+        import.Invoke(asset, new object[] { svg, add, engine });
         var names = asset.layers == null ? new List<string>() : asset.layers.Select(l => l.name ?? "").ToList();
         lastVertices[engine] = asset.layers == null ? 0 : asset.layers.Sum(l => l.shapes.Sum(sh => (long)sh.vertexCount));
         bounds = asset.layers == null ? new List<Rect>() : asset.layers.Select(LayerBounds).ToList();

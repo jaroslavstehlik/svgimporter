@@ -15,61 +15,12 @@ namespace SVGImporter
     [InitializeOnLoad]
     public class SVGImporterLaunchEditor {
 
-        // Begining
-		static bool launched = false;
         static SVGImporterLaunchEditor() {
-
-			if(launched)
-			{
-				return;
-			} else {
-				launched = true;
-			}
-
-            if (EditorPrefs.HasKey(SVG_IMPORTER_WINDOW_PREF_KEY))
-            {
-                _active = EditorPrefs.GetBool(SVG_IMPORTER_WINDOW_PREF_KEY);
-            } else
-            {
-                _active = true;
-            }
-
-            //HideGizmos();
-            UpdateDelegates();
-
+            RegisterDelegates();
         }
 
-        static bool repaint;
-        const string SVG_IMPORTER_WINDOW_PREF_KEY = "SVG_IMPORTER_WINDOW_PREF_KEY";
-        static bool _active = false;
-        public static bool active
-        {
-            get {
-                if (EditorPrefs.HasKey(SVG_IMPORTER_WINDOW_PREF_KEY))
-                {
-                    _active = EditorPrefs.GetBool(SVG_IMPORTER_WINDOW_PREF_KEY);
-                } else
-                {
-                    _active = true;
-                }
-
-                return _active;
-            }
-            set {
-                EditorPrefs.SetBool(SVG_IMPORTER_WINDOW_PREF_KEY, value);
-                _active = value;
-            }
-        }
-
-        static void UpdateDelegates()
-        {
-            if(_active)
-            {
-                RegisterDelegates();
-            } else {
-                UnregisterDelegates();
-            }
-        }
+        [System.Obsolete("SVG Importer's editor support is always on.")]
+        public static bool active { get { return true; } set { } }
 
         static void RegisterDelegates()
         {
@@ -90,15 +41,12 @@ namespace SVGImporter
 
         static void Update()
         {
-
-			if(!Application.isPlaying)
-			{
-				if(SVGAtlas.Instance.atlasHasChanged)
-				{
-					SVGAtlas.Instance.OnAtlasPreRender();
-					SceneView.RepaintAll();
-				}
-			}
+            // Only once something uses the atlas: projects without SVG content don't get one.
+            if(!Application.isPlaying && SVGAtlas.exists && SVGAtlas.Instance.atlasHasChanged)
+            {
+                SVGAtlas.Instance.OnAtlasPreRender();
+                SceneView.RepaintAll();
+            }
         }
 
         static void UnregisterDelegates()
@@ -114,48 +62,11 @@ namespace SVGImporter
             EditorApplication.update -= Update;
         }
 
-        public static void Start() {
-            active = true;
-            UpdateDelegates();
-        }
+        [System.Obsolete("SVG Importer's editor support is always on.")]
+        public static void Start() { }
 
-        public static void Stop() {
-            active = false;
-            UpdateDelegates();
-        }
-
-        /*
-        public static void HideGizmos()
-        {
-            var Annotation = System.Type.GetType("UnityEditor.Annotation, UnityEditor");
-            var ClassId = Annotation.GetField("classID");
-            var ScriptClass = Annotation.GetField("scriptClass");
-            
-            System.Type AnnotationUtility = System.Type.GetType("UnityEditor.AnnotationUtility, UnityEditor");
-            var GetAnnotations = AnnotationUtility.GetMethod("GetAnnotations", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
-            //var SetGizmoEnabled = AnnotationUtility.GetMethod("SetGizmoEnabled", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
-            var SetIconEnabled = AnnotationUtility.GetMethod("SetIconEnabled", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
-            
-            System.Array annotations = (System.Array)GetAnnotations.Invoke(null, null);
-            foreach (var a in annotations)
-            {
-                int classId = (int)ClassId.GetValue(a);
-                string scriptClass = (string)ScriptClass.GetValue(a);
-                if(string.IsNullOrEmpty(scriptClass)) continue;
-
-                if(scriptClass == typeof(SVGAsset).Name || 
-                   scriptClass == typeof(SVGAtlas).Name || 
-                   scriptClass == typeof(SVGImage).Name || 
-                   scriptClass == typeof(SVGRenderer).Name || 
-                   scriptClass == typeof(SVGCollider2D).Name
-                   )
-                {                    
-                    if(SetIconEnabled != null)
-                        SetIconEnabled.Invoke(null, new object[] { classId, scriptClass, 0 });
-                }
-            }
-        }
-        */
+        [System.Obsolete("SVG Importer's editor support is always on.")]
+        public static void Stop() { }
 
         /// <summary>Creates an SVG Renderer where SVG Assets are dropped in the Scene view.</summary>
         static DragAndDropVisualMode OnSceneDrop(Object dropUpon, Vector3 worldPosition, Vector2 viewportPosition, Transform parentForDraggedObjects, bool perform)
@@ -237,7 +148,7 @@ namespace SVGImporter
                 }
                 else
                 {
-                    result = (Vector3)typeof(SceneView).GetField("cameraTargetPosition", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(SceneView.lastActiveSceneView);
+                    result = SceneView.lastActiveSceneView.pivot;
                 }
             }
             return result;

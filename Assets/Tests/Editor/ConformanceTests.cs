@@ -30,16 +30,17 @@ using Debug = UnityEngine.Debug;
 
 public static class ConformanceTests
 {
+    static SVGImportEngine engine;
+
     public static void Run()
     {
         string corpus = Arg("-corpus") ?? throw new ArgumentException("-corpus <folder> is required");
         string output = Arg("-out") ?? "Temp/ConformanceTests";
         string filter = Arg("-filter");
         bool saveRenders = Environment.GetCommandLineArgs().Contains("-saveRenders");
-        string engine = Arg("-svgTestEngine");
-        if (engine != null)
-            SVGImporterSettings.Get.importEngine = (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engine);
-        string engineName = SVGImporterSettings.Get.importEngine.ToString();
+        string engineArg = Arg("-svgTestEngine");
+        engine = engineArg != null ? (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engineArg) : SVGImporterProjectSettings.instance.effectiveImportEngine;
+        string engineName = engine.ToString();
         Directory.CreateDirectory(output);
         string renders = Path.Combine(output, "renders-" + engineName);
         if (saveRenders) Directory.CreateDirectory(renders);
@@ -148,7 +149,7 @@ public static class ConformanceTests
         // Quality 10,000 vertices per meter: curves within 0.1 user units, so the test measures
         // features rather than the default tessellation density.
         typeof(SVGAsset).GetField("_vpm", flags).SetValue(asset, 10000f);
-        import.Invoke(asset, new object[] { Encoding.UTF8.GetString(data), add });
+        import.Invoke(asset, new object[] { Encoding.UTF8.GetString(data), add, engine });
         if (asset.sharedMesh == null) return "no mesh";
 
         int width = reference.width, height = reference.height;

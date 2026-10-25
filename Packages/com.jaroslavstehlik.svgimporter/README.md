@@ -22,7 +22,7 @@ Example scenes can be imported from the **Samples** tab of the package in the Pa
 
 Drop an `.svg` file into your project. It is imported as an SVG Asset, just like a texture is imported as a Sprite: select the file to change its import settings in the Inspector, then drag it into the scene or assign it to an **SVG Image** in your UI.
 
-- Default import settings for new files: **Window > SVG Importer > Settings**.
+- Settings, including the import engine and the defaults for new files: **Edit > Project Settings > SVG Importer**.
 - Unity 6 has its own SVG importer, used by UI Toolkit. SVG Importer takes over SVG files *added* to the project. To keep using Unity's importer for a file, pick it in the importer dropdown at the top of the file's Inspector. To keep Unity's importer for all new files, turn off **Import New SVG Files** in the settings.
 - SVG files that were already in the project: select them and use **Assets > SVG Importer > Import with SVG Importer**.
 

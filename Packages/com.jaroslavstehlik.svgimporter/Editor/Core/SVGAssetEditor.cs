@@ -692,7 +692,7 @@ namespace SVGImporter
             }
             if(width <= 20 || height <= 20)
             {
-                return SVGImporterEditor.settings.defaultSVGIcon;
+                return AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.jaroslavstehlik.svgimporter/Editor/Gizmos/SVGAsset icon.png");
             } else {
                 this.Init();
                 this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));

@@ -71,11 +71,11 @@ public static class SampleMaintenance
         };
 
         string engine = Environment.GetCommandLineArgs().SkipWhile(a => a != "-svgTestEngine").Skip(1).FirstOrDefault();
+        SVGImportEngine originalEngine = SVGImporterProjectSettings.instance.importEngine;
         if (engine != null)
         {
-            SVGImporterSettings.Get.importEngine = (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engine);
-            // As SVGImportEngineDependency.Register: the changed dependency reimports every .svg file.
-            AssetDatabase.RegisterCustomDependency("SVGImporter/ImportEngine", Hash128.Compute(engine));
+            // Saving the setting updates the import dependency; the refresh reimports every .svg file.
+            SVGImporterProjectSettings.instance.importEngine = (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engine);
             AssetDatabase.Refresh();
         }
 
@@ -103,5 +103,6 @@ public static class SampleMaintenance
             File.WriteAllBytes(Path.Combine(output, Path.GetFileNameWithoutExtension(scenePath) + ".png"), pixels.EncodeToPNG());
         }
         Debug.Log("[SampleMaintenance] errors while rendering: " + errors);
+        if (engine != null) SVGImporterProjectSettings.instance.importEngine = originalEngine;
     }
 }
