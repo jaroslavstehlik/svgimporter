@@ -376,7 +376,7 @@ namespace SVGImporter
     {
         [FormerlySerializedAs("lastTimeModified")]
         [SerializeField]
-        protected long _lastTimeModified;
+        protected long _lastTimeModified; // The import hash (SVGImportResult.importHash); the old name is kept for serialization.
 
         [FormerlySerializedAs("documentAsset")]
         [SerializeField]
@@ -518,14 +518,16 @@ namespace SVGImporter
 
         protected Mesh _runtimeLegacyUIMesh;
         [System.NonSerialized] Mesh _runtimeLegacyUIMeshSource;
+        [System.NonSerialized] long _runtimeLegacyUIMeshImport;
         protected Mesh runtimeLegacyUIMesh
         {
             get {
                 Mesh source = sharedMesh;
-                if(_runtimeLegacyUIMesh == null || _runtimeLegacyUIMeshSource != source)
+                if(_runtimeLegacyUIMesh == null || _runtimeLegacyUIMeshSource != source || _runtimeLegacyUIMeshImport != _lastTimeModified)
                 {
                     _runtimeLegacyUIMesh = CreateLegacyUIMesh(source);
                     _runtimeLegacyUIMeshSource = source;
+                    _runtimeLegacyUIMeshImport = _lastTimeModified;
                     if (_runtimeLegacyUIMesh != null && hasGradients) SVGAtlas.Own(_runtimeLegacyUIMesh);
                 }
                 return _runtimeLegacyUIMesh;
@@ -1201,239 +1203,111 @@ namespace SVGImporter
             return outputMesh;
         }
 
-        /// <summary>Load SVG at runtime. (Slow Method).
-        /// <para>svgText represents the SVG string content</para>
-        /// <para>settings holds all the SVG settings</para>
+        /// <summary>
+        /// Imports SVG text at runtime (also in the Editor), with the defaults of settings, or of
+        /// SVGImportOptions.Default without them. The engine is the project's (Project Settings >
+        /// SVG Importer). Returns null if the document couldn't be imported.
         /// </summary>
         public static SVGAsset Load(string svgText, SVGImporterSettings settings = null)
         {
-#if UNITY_EDITOR
-            if(!Application.isPlaying)
-            {
-                Debug.LogWarning("SVG Asset Load works only in playmode!");
-                return null;
-            }
-#endif
+            SVGImportOptions options = settings != null ? SVGImportOptions.FromSettings(settings) : SVGImportOptions.Default;
+            options.engine = SVGImporterSettings.Get.importEngine;
+            return Load(svgText, options);
+        }
+
+        /// <summary>Imports SVG text with these options. Returns null if the document couldn't be imported.</summary>
+        public static SVGAsset Load(string svgText, SVGImportOptions options)
+        {
             if(string.IsNullOrEmpty(svgText)) return null;
-
-            if(settings == null)
+            SVGImportResult result = SVGImport.Import(svgText, options);
+            foreach(string message in result.messages)
             {
-                SVGAssetImport.format = SVGAssetFormat.Transparent;
-                SVGAssetImport.pivotPoint = new Vector2(0.5f, 0.5f);
-                SVGAssetImport.meshScale = 0.01f;
-                SVGAssetImport.border = new Vector4(0f, 0f, 0f, 0f);
-                SVGAssetImport.sliceMesh = false;
-                SVGAssetImport.minDepthOffset = 0.01f;
-                SVGAssetImport.compressDepth = true;
-                SVGAssetImport.ignoreSVGCanvas = true;
-                SVGAssetImport.useGradients = SVGUseGradients.Always;            
-            } else {
-                SVGAssetImport.format = settings.defaultSVGFormat;
-                SVGAssetImport.pivotPoint = settings.defaultPivotPoint;
-                SVGAssetImport.meshScale = settings.defaultScale;
-                SVGAssetImport.border = new Vector4(0f, 0f, 0f, 0f);
-                SVGAssetImport.sliceMesh = false;
-                SVGAssetImport.minDepthOffset = settings.defaultDepthOffset;
-                SVGAssetImport.compressDepth = settings.defaultCompressDepth;
-                SVGAssetImport.ignoreSVGCanvas = settings.defaultIgnoreSVGCanvas;
-                SVGAssetImport.useGradients = settings.defaultUseGradients;
-                SVGAssetImport.antialiasing = settings.defaultAntialiasing;
+                if(result.succeeded) Debug.LogWarning("SVG Importer: " + message);
+                else Debug.LogError("SVG Importer: " + message);
             }
-
-            SVGGraphics graphics = new SVGGraphics(1000f, SVGAssetImport.antialiasing);
-            SVGDocument svgDocument = null;
-
-            SVGAssetImport.Clear();
-            SVGAssetImport.atlasData = new SVGAtlasData();
-            SVGAssetImport.atlasData.Init(SVGAtlas.defaultAtlasTextureWidth * SVGAtlas.defaultAtlasTextureHeight);
-            SVGAssetImport.atlasData.AddGradient(SVGAtlasData.GetDefaultGradient());
-            SVGParser.Init();
-            SVGGraphics.Init();
-            
-            SVGElement rootSVGElement = null;
-            List<SVGError> errors = new List<SVGError>();
-
-            svgDocument = new SVGDocument(svgText, graphics);
-            rootSVGElement = svgDocument.rootElement;
-
-            if(rootSVGElement == null)
-            {
-                Debug.LogError("SVG Document is corrupted!");
-                return null;
-            }
+            if(!result.succeeded) return null;
 
             SVGAsset asset = ScriptableObject.CreateInstance<SVGAsset>();
-
-            asset._antialiasing = SVGAssetImport.antialiasing;
-            asset._border = SVGAssetImport.border;
-            asset._compressDepth = SVGAssetImport.compressDepth;
-            asset._depthOffset = SVGAssetImport.minDepthOffset;
-            asset._ignoreSVGCanvas = SVGAssetImport.ignoreSVGCanvas;
-            asset._meshCompression = SVGMeshCompression.Off;
-            asset._scale = SVGAssetImport.meshScale;
-            asset._format = SVGAssetImport.format;
-            asset._useGradients = SVGAssetImport.useGradients;
-            asset._pivotPoint = SVGAssetImport.pivotPoint;
-            asset._vpm = SVGAssetImport.vpm;
-            asset._sharedGradients = null;
-
-            if(settings != null)
-            {
-                asset._generateCollider = settings.defaultGenerateCollider;
-                asset._generateNormals = settings.defaultGenerateNormals;
-                asset._generateTangents = settings.defaultGenerateTangents;
-                asset._sliceMesh = false;
-                asset._optimizeMesh = settings.defaultOptimizeMesh;
-                asset._keepSVGFile = settings.defaultKeepSVGFile;
-            } else {
-                asset._generateCollider = false;
-                asset._generateNormals = false;
-                asset._generateTangents = false;
-                asset._sliceMesh = false;
-                asset._optimizeMesh = true;
-                asset._keepSVGFile = false;
-            }
-
-            try {
-                rootSVGElement.Render();
-
-                Rect viewport = rootSVGElement.paintable.viewport;
-                viewport.x *= SVGAssetImport.meshScale;
-                viewport.y *= SVGAssetImport.meshScale;
-                viewport.size *= SVGAssetImport.meshScale;
-
-                Vector2 offset;
-                SVGGraphics.CorrectSVGLayers(SVGGraphics.layers, viewport, asset, out offset);
-
-                // Handle gradients
-                bool hasGradients = (asset.useGradients == SVGUseGradients.Always);
-
-                // Create actual Mesh
-                Shader[] outputShaders;
-                Mesh mesh = new Mesh();
-                SVGMesh.CombineMeshes(SVGGraphics.layers.ToArray(), mesh, out outputShaders, asset._useGradients, asset._format, asset._compressDepth, asset._antialiasing);
-                if(mesh == null) return null;
-
-                if(asset._useGradients == SVGUseGradients.Always)
-                {
-                    if(outputShaders != null)
-                    {
-                        for(int i = 0; i < outputShaders.Length; i++)
-                        {
-                            if(outputShaders[i] == null) continue;
-                            if(outputShaders[i].name == SVGShader.SolidColorOpaque.name)
-                            {
-                                outputShaders[i] = SVGShader.GradientColorOpaque;
-                            } else if(outputShaders[i].name == SVGShader.SolidColorAlphaBlended.name)
-                            {
-                                outputShaders[i] = SVGShader.GradientColorAlphaBlended;
-                            } else if(outputShaders[i].name == SVGShader.SolidColorAlphaBlendedAntialiased.name)
-                            {
-                                outputShaders[i] = SVGShader.GradientColorAlphaBlendedAntialiased;
-                            }
-                        }
-                    }
-                    hasGradients = true;
-                } else {
-                    if(outputShaders != null)
-                    {
-                        for(int i = 0; i < outputShaders.Length; i++)
-                        {
-                            if(outputShaders[i] == null) continue;
-                            if(outputShaders[i].name == SVGShader.GradientColorOpaque.name ||
-                               outputShaders[i].name == SVGShader.GradientColorAlphaBlended.name ||
-                               outputShaders[i].name == SVGShader.GradientColorAlphaBlendedAntialiased.name)
-                            {
-                                hasGradients = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if(!asset.useLayers)
-                {
-                    asset._sharedMesh = mesh;
-                }
-
-                if(outputShaders != null && outputShaders.Length > 0)
-                {
-                    asset._sharedShaders = new string[outputShaders.Length];
-                    if(hasGradients)
-                    {
-                        for(int i = 0; i < outputShaders.Length; i++)
-                        {
-                            asset._sharedShaders[i] = outputShaders[i].name;
-                        }
-                    } else {
-                        for(int i = 0; i < outputShaders.Length; i++)
-                        {
-                            if(outputShaders[i].name == SVGShader.GradientColorAlphaBlended.name)
-                            {
-                                outputShaders[i] = SVGShader.SolidColorAlphaBlended;
-                            } else if(outputShaders[i].name == SVGShader.GradientColorAlphaBlendedAntialiased.name)
-                            {
-                                outputShaders[i] = SVGShader.SolidColorAlphaBlendedAntialiased;                                
-                            } else if(outputShaders[i].name == SVGShader.GradientColorOpaque.name)
-                            {
-                                outputShaders[i] = SVGShader.SolidColorOpaque;                                
-                            }
-                            asset._sharedShaders[i] = outputShaders[i].name;
-                        }
-                    }
-                }
-
-                // Handle Canvas Rectangle
-                asset._canvasRectangle = new Rect(viewport.x, viewport.y, viewport.size.x, viewport.size.y);
-                
-                if(asset.generateCollider)
-                {
-                    // Create polygon contour
-                    if(SVGGraphics.paths != null && SVGGraphics.paths.Count > 0)
-                    {
-                        List<List<Vector2>> polygons = new List<List<Vector2>>();
-                        for(int i = 0; i < SVGGraphics.paths.Count; i++)
-                        {
-                            Vector2[] points = SVGGraphics.paths[i].points;
-                            for(int j = 0; j < points.Length; j++)
-                            {
-                                points[j].x = points[j].x * SVGAssetImport.meshScale - offset.x;
-                                points[j].y = (points[j].y * SVGAssetImport.meshScale + offset.y) * -1f;
-                            }
-                            
-                            polygons.Add(new List<Vector2>(points));
-                        }
-                        
-                        polygons = SVGGeom.MergePolygon(polygons);
-                        
-                        SVGPath[] paths = new SVGPath[polygons.Count];
-                        for(int i = 0; i < polygons.Count; i++)
-                        {
-                            paths[i] = new SVGPath(polygons[i].ToArray());
-                        }
-
-                        if(paths != null && paths.Length > 0)
-                        {
-                            asset._colliderShape = paths;
-                        }
-                    }
-                }
-
-                if(hasGradients)
-                {
-                    CCGradient[] gradients = SVGAssetImport.atlasData.registeredGradients;
-                    if(gradients.Length > 0)
-                        asset._sharedGradients = gradients;
-                }
-            } catch(System.Exception exception) {
-                Debug.LogWarning("Asset Failed to import\n"+exception.Message);
-                errors.Add(SVGError.CorruptedFile);
-            }
-
-            asset._documentAsset = SVGDocumentAsset.CreateInstance(svgText, errors.ToArray());
-            if(svgDocument != null) svgDocument.Clear();
-            SVGAssetImport.Clear();
+            asset.Apply(result, options, SVGDocumentAsset.CreateInstance(options.keepSVGFile ? svgText : null, result.errors.ToArray()));
+            asset._ownsMesh = true;
             return asset;
+        }
+
+        // Assets made by Load own their mesh; imported assets' meshes belong to the asset file.
+        [System.NonSerialized] bool _ownsMesh;
+
+        protected void OnDestroy()
+        {
+            if(_ownsMesh && _sharedMesh != null)
+            {
+                if(Application.isPlaying) Destroy(_sharedMesh); else DestroyImmediate(_sharedMesh);
+            }
+        }
+
+        /// <summary>The settings the asset was imported with.</summary>
+        public SVGImportOptions importOptions
+        {
+            get {
+                return new SVGImportOptions {
+                    engine = _importEngine,
+                    format = _format, useGradients = _useGradients, antialiasing = _antialiasing,
+                    verticesPerMeter = _vpm, scale = _scale, depthOffset = _depthOffset, compressDepth = _compressDepth,
+                    customPivotPoint = _customPivotPoint, pivotPoint = _pivotPoint, border = _border, sliceMesh = _sliceMesh,
+                    ignoreSVGCanvas = _ignoreSVGCanvas, generateCollider = _generateCollider, useLayers = _useLayers,
+                    generateNormals = _generateNormals, generateTangents = _generateTangents,
+                    meshCompression = _meshCompression, optimizeMesh = _optimizeMesh, keepSVGFile = _keepSVGFile,
+                };
+            }
+        }
+
+        [SerializeField]
+        protected SVGImportEngine _importEngine = SVGImportEngine.Legacy;
+        /// <summary>Identifies the import: equal for the same SVG text and settings.</summary>
+        public long importHash
+        {
+            get { return _lastTimeModified; }
+        }
+
+        /// <summary>The engine that imported the asset.</summary>
+        public SVGImportEngine importEngine
+        {
+            get { return _importEngine; }
+        }
+
+        /// <summary>Makes this asset hold an import's result.</summary>
+        internal void Apply(SVGImportResult result, SVGImportOptions options, SVGDocumentAsset document)
+        {
+            _importEngine = result.engine;
+            _format = options.format;
+            _useGradients = options.useGradients;
+            _antialiasing = options.antialiasing;
+            _meshCompression = options.meshCompression;
+            _optimizeMesh = options.optimizeMesh;
+            _scale = options.scale;
+            _vpm = options.verticesPerMeter;
+            _depthOffset = options.depthOffset;
+            _compressDepth = options.compressDepth;
+            _customPivotPoint = options.customPivotPoint;
+            _pivotPoint = options.pivotPoint;
+            _border = options.border;
+            _sliceMesh = options.sliceMesh;
+            _generateCollider = options.generateCollider;
+            _generateNormals = options.generateNormals;
+            _generateTangents = options.generateTangents;
+            _keepSVGFile = options.keepSVGFile;
+            _useLayers = options.useLayers;
+            _ignoreSVGCanvas = options.ignoreSVGCanvas;
+
+            _sharedMesh = result.mesh;
+            _sharedShaders = result.shaders;
+            _sharedGradients = result.gradients == null ? null : System.Array.ConvertAll(result.gradients, g => g.Clone());
+            _layers = result.layers;
+            _colliderShape = result.colliderShape;
+            _canvasRectangle = result.canvasRectangle;
+            _documentAsset = document;
+            // Caches derived from the asset (runtimeMesh, atlasSlots) are keyed on it.
+            _lastTimeModified = result.importHash;
+            _runtimeMaterials = null;
         }
 
     #if UNITY_EDITOR
@@ -1482,7 +1356,23 @@ namespace SVGImporter
                 }
             }
 
-            _editor_LoadSVG();        
+            // 1.x SVG Assets are imported with the legacy engine.
+            SVGImportOptions options = importOptions;
+            options.engine = SVGImportEngine.Legacy;
+            SVGImportResult result = SVGImport.Import(svgFile, options);
+            if(result.mesh != null)
+            {
+                result.mesh.name = this.name;
+                UnityEditor.MeshUtility.SetMeshCompression(result.mesh, GetModelImporterMeshCompression(_meshCompression));
+                AddObjectToAsset<Mesh>(result.mesh, this, HideFlags.HideInHierarchy);
+            }
+            SVGDocumentAsset document = _documentAsset;
+            Apply(result, options, document);
+            foreach(string message in result.messages)
+            {
+                if(result.succeeded) Debug.LogWarning("SVG Importer: " + this.name + ": " + message, this);
+                else Debug.LogError("SVG Importer: " + this.name + ": " + message, this);
+            }
 
             // Create Document Asset
             if(_documentAsset == null)
@@ -1507,113 +1397,11 @@ namespace SVGImporter
                 _documentAsset.svgFile = null;
             }
 
-            _editor_ReportErrors();
-
+            _documentAsset.errors = result.errors.ToArray();
             UnityEditor.EditorUtility.SetDirty(_documentAsset);
 
             _svgFile = null;
-
-            _editor_PostProcessMesh();
-
-            _lastTimeModified = System.DateTime.UtcNow.Ticks;
             UnityEditor.EditorUtility.SetDirty(this);
-        }
-
-        /// <summary>
-        /// Builds the asset from SVG text without the AssetDatabase. Used by the .svg ScriptedImporter:
-        /// addObject registers each generated sub-object (identifier, object) with the import context.
-        /// The import settings must already be set on this asset.
-        /// </summary>
-        /// <param name="engine">The engine to import with; the importer decides it from the project settings.</param>
-        internal void _editor_Import(string svgText, System.Action<string, Object> addObject, SVGImportEngine engine)
-        {
-            _documentAsset = ScriptableObject.CreateInstance<SVGDocumentAsset>();
-            _documentAsset.name = this.name + " Document";
-            _documentAsset.hideFlags = HideFlags.HideInHierarchy;
-            addObject("document", _documentAsset);
-
-            _svgFile = svgText;
-            _editor_LoadSVG(mesh => addObject("mesh", mesh), engine);
-            _documentAsset.svgFile = _keepSVGFile ? svgText : null;
-            _editor_ReportErrors();
-            _svgFile = null;
-
-            _editor_PostProcessMesh();
-            _lastTimeModified = System.DateTime.UtcNow.Ticks;
-        }
-
-        void _editor_ReportErrors()
-        {
-            if(SVGAssetImport.errors != null && SVGAssetImport.errors.Count > 0)
-            {
-                _documentAsset.errors = SVGAssetImport.errors.ToArray();
-
-				bool critical = false;
-				string errors = "";
-				int errorsLength = _documentAsset.errors.Length;
-				for(int i = 0; i < errorsLength; i++)
-				{
-					if(i < errorsLength - 1)
-					{
-						errors += _documentAsset.errors[i].ToString() +", ";
-					} else {
-						errors += _documentAsset.errors[i].ToString() +".";
-					}
-
-					if(_documentAsset.errors[i] == SVGError.CorruptedFile || 
-					   _documentAsset.errors[i] == SVGError.Syntax)
-					{
-						critical = true;
-					}
-				}
-
-				if(critical)
-				{
-					Debug.LogError ("SVGAsset: "+this.name+"\nerrors: "+errors+"\npath: "+UnityEditor.AssetDatabase.GetAssetPath(this)+"\n", this);
-				} else {
-					Debug.LogWarning ("SVGAsset: "+this.name+"\nerrors: "+errors+"\npath: "+UnityEditor.AssetDatabase.GetAssetPath(this)+"\n", this);
-				}
-            }
-
-            if(SVGAssetImport.errors != null)
-            {
-                SVGAssetImport.errors.Clear();
-                SVGAssetImport.errors = null;
-            }
-        }
-
-        void _editor_PostProcessMesh()
-        {
-            if(_sharedMesh != null && _sharedMesh.vertexCount > 0)
-            {
-                _sharedMesh.name = this.name;
-
-                int vertexCount = _sharedMesh.vertexCount;
-                UnityEditor.MeshUtility.SetMeshCompression(_sharedMesh, GetModelImporterMeshCompression(_meshCompression));
-                // "Optimize Mesh" is currently a no-op: reordering triangles would break the
-                // painter's order that overlapping transparent shapes rely on.
-                if(_generateNormals)
-                {
-                    if(!_antialiasing)
-                    {
-                        Vector3[] normals = new Vector3[vertexCount];
-                        for(int i = 0; i < vertexCount; i++)
-                        {
-                            normals[i] = -Vector3.forward;
-                        }
-                        _sharedMesh.normals = normals;
-                    }
-                    if(_generateTangents)
-                    {
-                        Vector4[] tangents = new Vector4[vertexCount];
-                        for(int i = 0; i < vertexCount; i++)
-                        {
-                            tangents[i] = new Vector4(-1f, 0f, 0f, -1f);
-                        }
-                        _sharedMesh.tangents = tangents;
-                    }
-                }
-            }
         }
 
         internal UnityEditor.ModelImporterMeshCompression GetModelImporterMeshCompression(SVGMeshCompression meshCompression)
@@ -1631,57 +1419,6 @@ namespace SVGImporter
             return UnityEditor.ModelImporterMeshCompression.Off;
         }
 
-        internal void _editor_SetGradients(CCGradient[] gradients)
-        {
-            if(gradients == null || gradients.Length == 0)
-            {
-                _sharedGradients = null;
-                return;
-            }
-            
-            _sharedGradients = new CCGradient[gradients.Length];
-            for(int i = 0; i < gradients.Length; i++)
-            {
-                _sharedGradients[i] = gradients[i].Clone();
-            }
-        }
-
-        internal void _editor_SetColliderShape(SVGPath[] shape)
-        {
-            _colliderShape = shape;
-        }
-
-        internal void _editor_SetCanvasRectangle(Rect rectangle)
-        {
-            _canvasRectangle = rectangle;
-        }
-
-        internal void _editor_SetLayers(SVGLayer[] layers)
-        {
-            _layers = layers;
-        }
-
-        // SVG Assets stored as .asset files (1.x) are reimported with the legacy engine.
-        internal void _editor_LoadSVG(System.Action<Mesh> addMesh = null, SVGImportEngine engine = SVGImportEngine.Legacy)
-        {        
-            SVGAssetImport assetImport;
-            if (svgFile != null)
-            {
-                SVGAssetImport.format = _format;
-                SVGAssetImport.meshScale = _scale;
-                SVGAssetImport.border = _border;
-                SVGAssetImport.sliceMesh = _sliceMesh;
-                SVGAssetImport.minDepthOffset = _depthOffset;
-                SVGAssetImport.compressDepth = _compressDepth;
-                SVGAssetImport.ignoreSVGCanvas = _ignoreSVGCanvas;
-                SVGAssetImport.useGradients = _useGradients;
-                SVGAssetImport.antialiasing = _antialiasing;
-                SVGAssetImport.engine = engine;
-                assetImport = new SVGAssetImport(svgFile, _vpm);
-                assetImport.StartProcess(this, addMesh);
-            }
-        }
-
         internal T AddObjectToAsset<T>(T obj, SVGAsset asset, HideFlags hideFlags) where T : UnityEngine.Object
         {
             if(obj == null)
@@ -1690,6 +1427,11 @@ namespace SVGImporter
             obj.hideFlags = hideFlags;
             UnityEditor.AssetDatabase.AddObjectToAsset(obj, asset);
             return obj;
+        }
+
+        internal SVGAssetFormat _editor_format
+        {
+            set { _format = value; }
         }
 
         internal Mesh _editor_sharedMesh

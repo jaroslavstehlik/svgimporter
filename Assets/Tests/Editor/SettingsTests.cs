@@ -59,8 +59,9 @@ public static class SettingsTests
             const string svgPath = "Assets/SettingsTests.svg";
             File.WriteAllText(svgPath, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\"/></svg>");
             AssetDatabase.ImportAsset(svgPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-            Check("importer uses the project engine", SVGAssetImport.engine == settings.effectiveImportEngine,
-                "imported with " + SVGAssetImport.engine + ", effective engine " + settings.effectiveImportEngine);
+            SVGImportEngine used = AssetDatabase.LoadAssetAtPath<SVGAsset>(svgPath).importEngine;
+            Check("importer uses the project engine", used == settings.effectiveImportEngine,
+                "imported with " + used + ", effective engine " + settings.effectiveImportEngine);
             AssetDatabase.DeleteAsset(svgPath);
 
             // 2.0 projects: settings in an asset in a Resources folder are migrated once.

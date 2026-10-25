@@ -70,7 +70,10 @@ namespace SVGImporter
         [HideInInspector] public bool importNewSVGFiles = true;
 
         [Tooltip("Native: parse and tessellate with the native core (usvg and lyon), which is faster and supports more of SVG. Currently available on macOS. Legacy: the C# implementation of SVG Importer 2.x.")]
-        [System.Obsolete("Use SVGImporterProjectSettings.instance.importEngine (Editor).")]
+        /// <summary>
+        /// The engine SVGAsset.Load imports with: the project's Import Engine (kept in sync in the
+        /// Editor, included in builds).
+        /// </summary>
         [HideInInspector] public SVGImportEngine importEngine = SVGImportEngine.Legacy;
 
         public SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;

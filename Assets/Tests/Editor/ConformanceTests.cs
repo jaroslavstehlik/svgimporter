@@ -76,9 +76,7 @@ public static class ConformanceTests
         camera.backgroundColor = Color.white;
         camera.enabled = false;
 
-        var import = typeof(SVGAsset).GetMethod("_editor_Import", BindingFlags.NonPublic | BindingFlags.Instance);
         var created = new List<UnityEngine.Object>();
-        Action<string, UnityEngine.Object> add = (id, obj) => created.Add(obj);
         var categories = new SortedDictionary<string, int[]>(StringComparer.Ordinal);
         var failures = new List<string>();
 
@@ -98,7 +96,7 @@ public static class ConformanceTests
             string reason;
             try
             {
-                reason = Check(file, camera, import, add, created, saveRenders ? Path.Combine(renders, relative.Replace('/', '_').Replace('\\', '_')) : null);
+                reason = Check(file, camera, created, saveRenders ? Path.Combine(renders, relative.Replace('/', '_').Replace('\\', '_')) : null);
             }
             catch (Exception e)
             {
@@ -128,7 +126,7 @@ public static class ConformanceTests
     }
 
     /// Returns null if the file renders like its reference, otherwise the reason.
-    static string Check(string file, Camera camera, MethodInfo import, Action<string, UnityEngine.Object> add, List<UnityEngine.Object> created, string savePath)
+    static string Check(string file, Camera camera, List<UnityEngine.Object> created, string savePath)
     {
         var reference = new Texture2D(2, 2, TextureFormat.RGBA32, false);
         created.Add(reference);
@@ -140,17 +138,17 @@ public static class ConformanceTests
         var size = SVGNativeCore.Import(data, 1f, false);
         if (size.status != SVGNativeCore.Status.Ok) return "not an SVG document (" + size.status + ")";
 
-        var asset = ScriptableObject.CreateInstance<SVGAsset>();
-        created.Add(asset);
-        var flags = BindingFlags.NonPublic | BindingFlags.Instance;
-        typeof(SVGAsset).GetField("_ignoreSVGCanvas", flags).SetValue(asset, false);
-        typeof(SVGAsset).GetField("_antialiasing", flags).SetValue(asset, false);
-        typeof(SVGAsset).GetField("_format", flags).SetValue(asset, SVGAssetFormat.Transparent);
+        SVGImportOptions options = SVGImportOptions.Default;
+        options.engine = engine;
+        options.ignoreSVGCanvas = false;
+        options.antialiasing = false;
+        options.format = SVGAssetFormat.Transparent;
         // Quality 10,000 vertices per meter: curves within 0.1 user units, so the test measures
         // features rather than the default tessellation density.
-        typeof(SVGAsset).GetField("_vpm", flags).SetValue(asset, 10000f);
-        import.Invoke(asset, new object[] { Encoding.UTF8.GetString(data), add, engine });
-        if (asset.sharedMesh == null) return "no mesh";
+        options.verticesPerMeter = 10000f;
+        SVGAsset asset = SVGAsset.Load(Encoding.UTF8.GetString(data), options);
+        if (asset == null || asset.sharedMesh == null) return "no mesh";
+        created.Add(asset);
 
         int width = reference.width, height = reference.height;
         float scale = asset.scale;

@@ -591,18 +591,14 @@ namespace SVGImporter
                         EditorUtility.ClearProgressBar();
                         break;
                     } else {
-                        //assets[i]._editor_ApplyChanges();
-                        MethodInfo _editor_ApplyChanges = typeof(SVGAsset).GetMethod("_editor_ApplyChanges", BindingFlags.NonPublic | BindingFlags.Instance);
-                        _editor_ApplyChanges.Invoke(assets[i], new object[]{false});
+                        assets[i]._editor_ApplyChanges();
                         currentAssetIndex++;
                     }
                 }
 
                 EditorUtility.ClearProgressBar();
             } else {
-                //asset._editor_ApplyChanges();
-                MethodInfo _editor_ApplyChanges = typeof(SVGAsset).GetMethod("_editor_ApplyChanges", BindingFlags.NonPublic | BindingFlags.Instance);
-                _editor_ApplyChanges.Invoke(asset, new object[]{false});
+                asset._editor_ApplyChanges();
             }
 
             AssetDatabase.SaveAssets();
@@ -759,8 +755,7 @@ namespace SVGImporter
 
         protected string GetEditorInfo(SVGAsset asset)
         {
-            PropertyInfo _editor_Info = typeof(SVGAsset).GetProperty("_editor_Info", BindingFlags.NonPublic | BindingFlags.Instance);
-			string output = (string)_editor_Info.GetValue(asset, new object[0]);
+			string output = asset._editor_Info;
 
 			var fileInfo = new System.IO.FileInfo(UnityEditor.AssetDatabase.GetAssetPath(asset));
 			if(fileInfo != null)
@@ -773,8 +768,7 @@ namespace SVGImporter
 
         protected SVGError[] GetEditorErrors(SVGAsset asset)
         {
-            PropertyInfo _editor_errors = typeof(SVGAsset).GetProperty("_editor_errors", BindingFlags.NonPublic | BindingFlags.Instance);
-            return (SVGError[])_editor_errors.GetValue(asset, new object[0]);
+            return asset._editor_errors;
         }
 
 

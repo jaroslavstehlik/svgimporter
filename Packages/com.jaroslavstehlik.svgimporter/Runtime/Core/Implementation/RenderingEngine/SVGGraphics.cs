@@ -89,6 +89,15 @@ namespace SVGImporter.Rendering
 
         public static void CorrectSVGLayers(List<SVGLayer> layers, Rect viewport, SVGAsset asset, out Vector2 offset)
         {
+            CorrectSVGLayers(layers, viewport, asset.ignoreSVGCanvas, asset.pivotPoint, out offset);
+        }
+
+        /// <summary>
+        /// Flips the shapes to y-up and moves them so the pivot (of the content, or of the canvas
+        /// when ignoreSVGCanvas is off) is at the origin. viewport is the canvas in mesh units.
+        /// </summary>
+        public static void CorrectSVGLayers(List<SVGLayer> layers, Rect viewport, bool ignoreSVGCanvas, Vector2 pivotPoint, out Vector2 offset)
+        {
             offset = Vector2.zero;
             if(layers == null) return;
             int layersCount = layers.Count, layersShapesLength = 0, layersShapesVerticesLength = 0;
@@ -120,15 +129,15 @@ namespace SVGImporter.Rendering
             }
 
             Rect bounds = new Rect(minX, minY, maxX - minX, maxY - minY);
-            if(asset.ignoreSVGCanvas)
+            if(ignoreSVGCanvas)
             {
-                offset = new Vector2(bounds.min.x + bounds.size.x * asset.pivotPoint.x,
-                                     (bounds.max.y - bounds.size.y * asset.pivotPoint.y));
+                offset = new Vector2(bounds.min.x + bounds.size.x * pivotPoint.x,
+                                     (bounds.max.y - bounds.size.y * pivotPoint.y));
             } else {
                 // The vertices are flipped to y-up above, the viewport isn't: its top edge is at
                 // -viewport.min.y.
-                offset = new Vector2(viewport.min.x + viewport.size.x * asset.pivotPoint.x,
-                                     -(viewport.min.y + viewport.size.y * asset.pivotPoint.y));
+                offset = new Vector2(viewport.min.x + viewport.size.x * pivotPoint.x,
+                                     -(viewport.min.y + viewport.size.y * pivotPoint.y));
             }
 
             // update vertices

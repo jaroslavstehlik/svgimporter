@@ -150,7 +150,7 @@ namespace SVGImporter
         /// </summary>
         static bool MigrateFromAsset()
         {
-#pragma warning disable 618 // The old settings' fields are obsolete.
+#pragma warning disable 618 // importNewSVGFiles is obsolete.
             string assetPath = AssetDatabase.FindAssets("t:SVGImporterSettings", new[] { "Assets" })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .FirstOrDefault(p => p != SVGImporterBuildSettings.assetPath);
@@ -180,6 +180,7 @@ namespace SVGImporter
         {
             SVGImportEngineDependency.Register();
             SVGImporterSettings.Get.defaultAntialiasingWidth = s_Instance._antialiasingWidth;
+            SVGImporterSettings.Get.importEngine = s_Instance._importEngine;
             if (changed != null) changed();
         }
 

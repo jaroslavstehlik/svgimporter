@@ -885,11 +885,10 @@ namespace SVGImporter
 				{
 					if(_tempMesh == null) _tempMesh = new Mesh();
 					Shader[] outputShaders;
-					SVGMesh.CombineMeshes(targetObject.layers, _tempMesh, out outputShaders, targetObject.useGradients, targetObject.format, targetObject.compressDepth, targetObject.antialiasing);
+					SVGMesh.CombineMeshes(targetObject.layers, _tempMesh, out outputShaders, targetObject.useGradients, targetObject.format, targetObject.compressDepth, targetObject.antialiasing, targetObject.depthOffset);
 					return _tempMesh;
 				} else {
-					FieldInfo _sharedMesh = typeof(SVGAsset).GetField("_sharedMesh", BindingFlags.NonPublic | BindingFlags.Instance);
-					return _sharedMesh.GetValue(targetObject) as Mesh;
+					return targetObject._editor_sharedMesh;
 				}
             } catch {
                 return null;

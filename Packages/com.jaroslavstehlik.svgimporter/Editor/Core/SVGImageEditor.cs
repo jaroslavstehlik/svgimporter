@@ -161,11 +161,8 @@ namespace SVGImporter
                     EditorGUILayout.HelpBox("Vector Graphics Asset must be set to uGUI format", MessageType.Error);
                     if(GUILayout.Button("Apply"))
                     {
-                        FieldInfo _editor_format = typeof(SVGAsset).GetField("_format",  BindingFlags.NonPublic | BindingFlags.Instance);
-                        _editor_format.SetValue(newVectorGraphics, (int)SVGAssetFormat.uGUI);
-
-                        MethodInfo _editor_ApplyChanges = typeof(SVGAsset).GetMethod("_editor_ApplyChanges", BindingFlags.NonPublic | BindingFlags.Instance);
-                        _editor_ApplyChanges.Invoke(newVectorGraphics, new object[]{false});
+                        newVectorGraphics._editor_format = SVGAssetFormat.uGUI;
+                        newVectorGraphics._editor_ApplyChanges();
 
                         SVGAssetEditor.UpdateInstances(new SVGAsset[]{newVectorGraphics});
                         changed = true;
@@ -266,8 +263,7 @@ namespace SVGImporter
 
         protected string GetEditorInfo(SVGAsset asset)
         {
-            PropertyInfo _editor_Info = typeof(SVGAsset).GetProperty("_editor_Info", BindingFlags.NonPublic | BindingFlags.Instance);
-            return (string)_editor_Info.GetValue(asset, new object[0]);
+            return asset._editor_Info;
         }
 
         public override string GetInfoString()

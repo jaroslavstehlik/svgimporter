@@ -12,7 +12,7 @@ namespace SVGImporter.Geometry
     
     public class SVGMesh
     {
-        public static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out Shader[] shaders, SVGUseGradients useGradients = SVGUseGradients.Always, SVGAssetFormat format = SVGAssetFormat.Transparent, bool compressDepth = true, bool antialiased = false)
+        public static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out Shader[] shaders, SVGUseGradients useGradients = SVGUseGradients.Always, SVGAssetFormat format = SVGAssetFormat.Transparent, bool compressDepth = true, bool antialiased = false, float depthOffset = 0.01f)
         {
             #if DEBUG_IMPORT
             long timeStart = System.DateTime.Now.Ticks;
@@ -193,7 +193,7 @@ namespace SVGImporter.Geometry
                         {
                             currentVertex = vertexStart + k;
                             vertices[currentVertex] = layers[i].shapes[j].vertices[k];
-                            vertices[currentVertex].z = useOpaqueShader ? shapeDepth * -SVGAssetImport.minDepthOffset : shapeDepth;
+                            vertices[currentVertex].z = useOpaqueShader ? shapeDepth * -depthOffset : shapeDepth;
                             colors32[currentVertex].r = (byte)(finalColor.r * layers[i].shapes[j].colors[k].r / 255);
                             colors32[currentVertex].g = (byte)(finalColor.g * layers[i].shapes[j].colors[k].g / 255);
                             colors32[currentVertex].b = (byte)(finalColor.b * layers[i].shapes[j].colors[k].b / 255);
@@ -205,7 +205,7 @@ namespace SVGImporter.Geometry
                         {
                             currentVertex = vertexStart + k;
                             vertices[currentVertex] = layers[i].shapes[j].vertices[k];
-                            vertices[currentVertex].z = useOpaqueShader ? shapeDepth * -SVGAssetImport.minDepthOffset : shapeDepth;
+                            vertices[currentVertex].z = useOpaqueShader ? shapeDepth * -depthOffset : shapeDepth;
                             colors32[currentVertex] = finalColor;
                         }
                     }

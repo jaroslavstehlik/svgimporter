@@ -35,6 +35,10 @@
 - Gradients are identified by exactly what they draw. The old text hash rounded stop offsets and alphas to 1/999, so slightly different gradients could share one atlas slot. `CCGradient.GetStops()` returns a gradient's merged stops; `CCGradient.Evaluate` now matches the shaders, including hard stops. `CCGradient.hash`, `SVGFill.gradientHash` and the gradient reference counting are obsolete; `SVGAtlasData.gradientCache` is replaced by `registeredGradients`.
 - Removed the per-machine "Support Service" switch; drag and drop and gradient updates are always on. Its Start button used to turn it off.
 - Fixed dropping an SVG Asset on empty space in the Hierarchy throwing an exception.
+- One import pipeline, `SVGImport.Import(svgText, SVGImportOptions)`, used by the Editor importer, `SVGAsset.Load` and 1.x SVG Assets. Imports depend only on the SVG text and the options: the same file imports the same way every time (no time stamps), and no state is left between imports.
+- `SVGAsset.Load` imports with the project's Import Engine, works in edit mode too, and has an overload taking `SVGImportOptions`. It returns null when the document can't be imported. Assets it creates destroy their mesh when destroyed.
+- Import warnings and errors are logged by the importer, so they show again when an import comes from the cache, instead of once per import in the console.
+- New: `SVGAsset.importOptions`, `importEngine` (the engine that imported it) and `importHash`.
 - Fixed the Opaque format with **Compress Depth** throwing an exception or drawing overlapping shapes in the wrong order when an element has both a fill and a stroke.
 - Meshes may have more than 65,535 vertices (32-bit indices); before, such files imported as an empty asset with only a console error.
 - Fixed SVG files imported while the game runs in the Editor being saved empty.

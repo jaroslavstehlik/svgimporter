@@ -231,8 +231,7 @@ namespace SVGImporter
         
         protected string GetEditorInfo(SVGAsset asset)
         {
-            PropertyInfo _editor_Info = typeof(SVGAsset).GetProperty("_editor_Info", BindingFlags.NonPublic | BindingFlags.Instance);
-            return (string)_editor_Info.GetValue(asset, new object[0]);
+            return asset._editor_Info;
         }
 
         // Get the sorting layer names

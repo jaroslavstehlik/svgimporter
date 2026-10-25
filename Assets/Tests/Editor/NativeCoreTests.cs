@@ -67,13 +67,10 @@ public static class NativeCoreTests
                 files.Length + " files, " + nativeLayers + " layers, " + nativeTriangles + " triangles, " + nativeMs.ToString("0.0") + " ms");
 
             // Legacy: the 2.x C# importer, building an SVG Asset with its default settings.
-            var import = typeof(SVGAsset).GetMethod("_editor_Import", BindingFlags.NonPublic | BindingFlags.Instance);
-            var created = new List<UnityEngine.Object>();
-            Action<string, UnityEngine.Object> add = (id, obj) => created.Add(obj);
-            LegacyImport(import, texts[0], add, created);
+            LegacyImport(texts[0]);
             watch.Restart();
             for (int i = 0; i < texts.Length; i++)
-                LegacyImport(import, texts[i], add, created);
+                LegacyImport(texts[i]);
             double legacyMs = watch.Elapsed.TotalMilliseconds;
             results.Add("INFO legacy samples: " + files.Length + " files, " + legacyMs.ToString("0.0") + " ms");
             results.Add("INFO speed: native is " + (legacyMs / nativeMs).ToString("0.0") + "x faster on the samples");
@@ -86,7 +83,7 @@ public static class NativeCoreTests
                 for (int n = 0; n < 10; n++) UnityEngine.Object.DestroyImmediate(ToMesh(SVGNativeCore.Import(data[tiger])));
                 double nativeTiger = watch.Elapsed.TotalMilliseconds / 10;
                 watch.Restart();
-                for (int n = 0; n < 10; n++) LegacyImport(import, texts[tiger], add, created);
+                for (int n = 0; n < 10; n++) LegacyImport(texts[tiger]);
                 double legacyTiger = watch.Elapsed.TotalMilliseconds / 10;
                 results.Add("INFO tiger.svg: native " + nativeTiger.ToString("0.00") + " ms, legacy " + legacyTiger.ToString("0.00") + " ms");
             }
@@ -103,13 +100,13 @@ public static class NativeCoreTests
         EditorApplication.Exit(passed ? 0 : 1);
     }
 
-    static void LegacyImport(MethodInfo import, string svg, Action<string, UnityEngine.Object> add, List<UnityEngine.Object> created)
+    // The legacy importer with the default import settings.
+    static void LegacyImport(string svg)
     {
-        var asset = ScriptableObject.CreateInstance<SVGAsset>();
-        import.Invoke(asset, new object[] { svg, add, SVGImportEngine.Legacy });
-        foreach (var obj in created) UnityEngine.Object.DestroyImmediate(obj);
-        created.Clear();
-        UnityEngine.Object.DestroyImmediate(asset);
+        SVGImportOptions options = SVGImportOptions.Default;
+        options.useGradients = SVGUseGradients.Auto;
+        options.antialiasing = true;
+        UnityEngine.Object.DestroyImmediate(SVGAsset.Load(svg, options));
     }
 
     static Mesh ToMesh(SVGNativeCore.Result r)
@@ -136,18 +133,14 @@ public static class NativeCoreTests
         var lines = new List<string>();
         int mismatches = 0, files = 0;
         long legacyVertices = 0, nativeVertices = 0;
-        var flags = BindingFlags.NonPublic | BindingFlags.Instance;
-        var import = typeof(SVGAsset).GetMethod("_editor_Import", flags);
-        var created = new List<UnityEngine.Object>();
-        Action<string, UnityEngine.Object> add = (id, obj) => created.Add(obj);
         {
             foreach (string path in Directory.GetFiles("Assets/Samples", "*.svg", SearchOption.AllDirectories).OrderBy(f => f))
             {
                 files++;
                 string text = File.ReadAllText(path);
                 List<Rect> legacyBounds, nativeBounds;
-                var legacy = Layers(import, text, SVGImportEngine.Legacy, add, created, out legacyBounds);
-                var native = Layers(import, text, SVGImportEngine.Native, add, created, out nativeBounds);
+                var legacy = Layers(text, SVGImportEngine.Legacy, out legacyBounds);
+                var native = Layers(text, SVGImportEngine.Native, out nativeBounds);
                 legacyVertices += lastVertices[SVGImportEngine.Legacy];
                 nativeVertices += lastVertices[SVGImportEngine.Native];
                 bool countMatches = legacy.Count == native.Count;
@@ -171,16 +164,17 @@ public static class NativeCoreTests
 
     static readonly Dictionary<SVGImportEngine, long> lastVertices = new Dictionary<SVGImportEngine, long>();
 
-    static List<string> Layers(MethodInfo import, string svg, SVGImportEngine engine, Action<string, UnityEngine.Object> add, List<UnityEngine.Object> created, out List<Rect> bounds)
+    static List<string> Layers(string svg, SVGImportEngine engine, out List<Rect> bounds)
     {
-        var asset = ScriptableObject.CreateInstance<SVGAsset>();
-        typeof(SVGAsset).GetField("_useLayers", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asset, true);
-        import.Invoke(asset, new object[] { svg, add, engine });
+        SVGImportOptions options = SVGImportOptions.Default;
+        options.engine = engine;
+        options.useGradients = SVGUseGradients.Auto;
+        options.antialiasing = true;
+        options.useLayers = true;
+        var asset = SVGAsset.Load(svg, options);
         var names = asset.layers == null ? new List<string>() : asset.layers.Select(l => l.name ?? "").ToList();
         lastVertices[engine] = asset.layers == null ? 0 : asset.layers.Sum(l => l.shapes.Sum(sh => (long)sh.vertexCount));
         bounds = asset.layers == null ? new List<Rect>() : asset.layers.Select(LayerBounds).ToList();
-        foreach (var obj in created) UnityEngine.Object.DestroyImmediate(obj);
-        created.Clear();
         UnityEngine.Object.DestroyImmediate(asset);
         return names;
     }

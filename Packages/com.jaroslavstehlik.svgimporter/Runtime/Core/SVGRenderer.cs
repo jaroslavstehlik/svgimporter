@@ -62,11 +62,6 @@ namespace SVGImporter
         }
 
         // Tracking of modified assets
-        [FormerlySerializedAs("lastTimeModified")]
-        [SerializeField]
-        protected long _lastTimeModified;
-
-        // Tracking of modified assets
         protected Rect _rectTransformRect;
         protected Rect _lastRectTransformRect;
 
@@ -550,16 +545,12 @@ namespace SVGImporter
                 _lastType = _type;
                 _lastUseSharedMesh = useSharedMesh;                
             }
-
-#if UNITY_EDITOR
-            UpdateTimeStamp();
-#endif
         }
 
         protected void GenerateMesh()
         {
             Shader[] outputShaders;
-            SVGMesh.CombineMeshes(_layers, _mesh, out outputShaders, _vectorGraphics.useGradients, _vectorGraphics.format, _vectorGraphics.compressDepth, _vectorGraphics.antialiasing);
+            SVGMesh.CombineMeshes(_layers, _mesh, out outputShaders, _vectorGraphics.useGradients, _vectorGraphics.format, _vectorGraphics.compressDepth, _vectorGraphics.antialiasing, _vectorGraphics.depthOffset);
         }
 
 #if UNITY_EDITOR
@@ -572,25 +563,6 @@ namespace SVGImporter
             }
 
             base.Reset();
-        }
-#endif
-
-#if UNITY_EDITOR
-        void UpdateTimeStamp()
-        {
-            if(!UnityEditor.EditorApplication.isPlaying)
-            {
-                if(_vectorGraphics != null)
-                {
-                    System.Reflection.FieldInfo assetTicksInfo = typeof(SVGAsset).GetField("_lastTimeModified", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    long assetTicks = (long)assetTicksInfo.GetValue(_vectorGraphics);
-                    if(_lastTimeModified != assetTicks)
-                    {
-                        _lastTimeModified = assetTicks;
-                        //Clear();
-                    }
-                }
-            }
         }
 #endif
 

@@ -23,25 +23,25 @@ namespace SVGImporter.Native
         /// </summary>
         public static bool CanImport(string svgText)
         {
-            return svgText.IndexOf("conicalGradient", System.StringComparison.Ordinal) < 0;
+            return !System.Text.RegularExpressions.Regex.IsMatch(svgText, @"<\s*conicalGradient\b");
         }
 
         /// <summary>
-        /// Imports svgText into SVGGraphics.layers and SVGGraphics.paths, registering gradients in
-        /// SVGAssetImport.atlasData. Returns false if the document couldn't be imported.
+        /// Imports svgText into the context's layers and outlines, registering gradients in its
+        /// atlas data. Returns false if the document couldn't be imported.
         /// </summary>
-        public static bool Populate(string svgText, out Rect viewport)
+        public static bool Populate(string svgText, SVGImportOptions options, SVGImportContext context, out Rect viewport)
         {
             viewport = new Rect();
-            float meshScale = SVGAssetImport.meshScale;
-            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance());
+            float meshScale = options.scale;
+            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance(options.verticesPerMeter));
             if (result.status != SVGNativeCore.Status.Ok)
             {
-                SVGAssetImport.errors.Add(result.status == SVGNativeCore.Status.ParseError ? SVGError.Syntax : SVGError.CorruptedFile);
-                Debug.LogError("SVG Importer: " + result.status + ": " + result.errorMessage);
+                context.errors.Add(result.status == SVGNativeCore.Status.ParseError ? SVGError.Syntax : SVGError.CorruptedFile);
+                context.messages.Add(result.status + ": " + result.errorMessage);
                 return false;
             }
-            AddDiagnostics(result.diagnostics);
+            AddDiagnostics(result.diagnostics, context.errors);
 
             viewport = new Rect(0f, 0f, result.size.x, result.size.y);
             Rect scaledViewport = new Rect(0f, 0f, result.size.x * meshScale, result.size.y * meshScale);
@@ -54,23 +54,23 @@ namespace SVGImporter.Native
                 // A path's fill and stroke form one layer, as in the legacy importer.
                 if (layer.element != element)
                 {
-                    Flush(shapes, name);
+                    Flush(shapes, name, context.layers);
                     element = layer.element;
                     name = layer.name;
                 }
 
                 SVGShape shape = CreateShape(result, layer, meshScale);
-                shape.fill = CreateFill(result.paints[layer.paint], layer.opacity, viewport, scaledViewport, meshScale);
+                shape.fill = CreateFill(result.paints[layer.paint], layer.opacity, viewport, scaledViewport, meshScale, context.atlasData);
                 shapes.Add(shape);
 
                 var contours = new List<List<Vector2>>(layer.contours.Length);
                 foreach (Vector2[] contour in layer.contours)
                 {
                     contours.Add(new List<Vector2>(contour));
-                    SVGGraphics.paths.Add(new SVGPath(contour));
+                    context.paths.Add(new SVGPath(contour));
                 }
 
-                if (SVGAssetImport.antialiasing)
+                if (options.antialiasing)
                 {
                     SVGShape fringe;
                     if (SVGSimplePath.CreateAntialiasing(contours, out fringe, Color.white, -1f, ClosePathRule.ALWAYS))
@@ -85,7 +85,7 @@ namespace SVGImporter.Native
                     }
                 }
             }
-            Flush(shapes, name);
+            Flush(shapes, name, context.layers);
             return true;
         }
 
@@ -94,18 +94,18 @@ namespace SVGImporter.Native
         /// meter): the legacy importer flattens curves with a tolerance of 1000 / vertexPerMeter
         /// user units, whatever the mesh scale.
         /// </summary>
-        static float Tolerance()
+        static float Tolerance(float verticesPerMeter)
         {
-            float vpm = SVGAssetImport.vpm > 0f ? SVGAssetImport.vpm : 1000f;
+            float vpm = verticesPerMeter > 0f ? verticesPerMeter : 1000f;
             return Mathf.Clamp(1000f / vpm, 0.01f, 10f);
         }
 
-        static void Flush(List<SVGShape> shapes, string name)
+        static void Flush(List<SVGShape> shapes, string name, List<SVGLayer> layers)
         {
             if (shapes.Count == 0) return;
             // The native core turns every shape into a path, so elements without an id get the
             // legacy name for paths.
-            SVGGraphics.AddLayer(new SVGLayer { name = string.IsNullOrEmpty(name) ? "Path Element" : name, shapes = shapes.ToArray() });
+            layers.Add(new SVGLayer { name = string.IsNullOrEmpty(name) ? "Path Element" : name, shapes = shapes.ToArray() });
             shapes.Clear();
         }
 
@@ -126,7 +126,7 @@ namespace SVGImporter.Native
             return shape;
         }
 
-        static SVGFill CreateFill(SVGNativeCore.Paint paint, float opacity, Rect viewport, Rect scaledViewport, float meshScale)
+        static SVGFill CreateFill(SVGNativeCore.Paint paint, float opacity, Rect viewport, Rect scaledViewport, float meshScale, SVGAtlasData atlasData)
         {
             SVGFill fill;
             if (paint.kind == SVGNativeCore.PaintKind.Solid)
@@ -144,7 +144,7 @@ namespace SVGImporter.Native
                 fill = new SVGFill(Color.white, FILL_BLEND.OPAQUE, FILL_TYPE.GRADIENT,
                     paint.kind == SVGNativeCore.PaintKind.Radial ? GRADIENT_TYPE.RADIAL : GRADIENT_TYPE.LINEAR);
                 fill.opacity = opacity;
-                fill.gradientColors = SVGAssetImport.atlasData.AddGradient(CreateGradient(paint.stops));
+                fill.gradientColors = atlasData.AddGradient(CreateGradient(paint.stops));
                 fill.transform = LegacyGradientTransform(paint, viewport);
                 if (translucent) fill.blend = FILL_BLEND.ALPHA_BLENDED;
             }
@@ -226,16 +226,16 @@ namespace SVGImporter.Native
             return transform.Multiply(documentToGradient);
         }
 
-        static void AddDiagnostics(SVGNativeCore.Diagnostics diagnostics)
+        static void AddDiagnostics(SVGNativeCore.Diagnostics diagnostics, List<SVGError> errors)
         {
-            if ((diagnostics & SVGNativeCore.Diagnostics.ClipPath) != 0) SVGAssetImport.errors.Add(SVGError.ClipPath);
-            if ((diagnostics & SVGNativeCore.Diagnostics.Mask) != 0) SVGAssetImport.errors.Add(SVGError.Mask);
-            if ((diagnostics & SVGNativeCore.Diagnostics.Image) != 0) SVGAssetImport.errors.Add(SVGError.Image);
-            if ((diagnostics & SVGNativeCore.Diagnostics.Filter) != 0) SVGAssetImport.errors.Add(SVGError.Filter);
-            if ((diagnostics & SVGNativeCore.Diagnostics.Pattern) != 0) SVGAssetImport.errors.Add(SVGError.Pattern);
-            if ((diagnostics & SVGNativeCore.Diagnostics.BlendMode) != 0) SVGAssetImport.errors.Add(SVGError.BlendMode);
-            if ((diagnostics & SVGNativeCore.Diagnostics.GroupOpacity) != 0) SVGAssetImport.errors.Add(SVGError.GroupOpacity);
-            if ((diagnostics & SVGNativeCore.Diagnostics.TextSkipped) != 0) SVGAssetImport.errors.Add(SVGError.TextSkipped);
+            if ((diagnostics & SVGNativeCore.Diagnostics.ClipPath) != 0) errors.Add(SVGError.ClipPath);
+            if ((diagnostics & SVGNativeCore.Diagnostics.Mask) != 0) errors.Add(SVGError.Mask);
+            if ((diagnostics & SVGNativeCore.Diagnostics.Image) != 0) errors.Add(SVGError.Image);
+            if ((diagnostics & SVGNativeCore.Diagnostics.Filter) != 0) errors.Add(SVGError.Filter);
+            if ((diagnostics & SVGNativeCore.Diagnostics.Pattern) != 0) errors.Add(SVGError.Pattern);
+            if ((diagnostics & SVGNativeCore.Diagnostics.BlendMode) != 0) errors.Add(SVGError.BlendMode);
+            if ((diagnostics & SVGNativeCore.Diagnostics.GroupOpacity) != 0) errors.Add(SVGError.GroupOpacity);
+            if ((diagnostics & SVGNativeCore.Diagnostics.TextSkipped) != 0) errors.Add(SVGError.TextSkipped);
         }
     }
 }
