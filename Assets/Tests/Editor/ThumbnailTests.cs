@@ -49,6 +49,18 @@ public static class ThumbnailTests
         if (thumbnails.Contains(null) && ++s_Frames < 3000) return;
         EditorApplication.update -= Poll;
 
+        // Unity 6.0 doesn't render thumbnails in batch mode: render them as its Project window does.
+        bool direct = thumbnails.Contains(null);
+        if (direct)
+        {
+            for (int i = 0; i < paths.Count; i++)
+            {
+                var editor = UnityEditor.Editor.CreateEditor(AssetDatabase.LoadMainAssetAtPath(paths[i]));
+                thumbnails[i] = editor.RenderStaticPreview(paths[i], null, 128, 128);
+                UnityEngine.Object.DestroyImmediate(editor);
+            }
+        }
+
         var results = new List<string>();
         bool passed = true;
         for (int i = 0; i < paths.Count; i++)
@@ -70,7 +82,7 @@ public static class ThumbnailTests
             // A broken thumbnail is empty, or the first stop's colour everywhere: red at the edge too.
             bool gradient = centre.r > 0.6f && centre.b < 0.4f && edge.b > edge.r + 0.2f;
             passed &= gradient;
-            results.Add((gradient ? "PASS" : "FAIL") + " " + name + ": the thumbnail shows its gradient: centre " + centre + ", towards the edge " + edge);
+            results.Add((gradient ? "PASS" : "FAIL") + " " + name + (direct ? " (rendered directly)" : "") + ": the thumbnail shows its gradient: centre " + centre + ", towards the edge " + edge);
         }
 
         EditorSettings.defaultBehaviorMode = s_Mode;
