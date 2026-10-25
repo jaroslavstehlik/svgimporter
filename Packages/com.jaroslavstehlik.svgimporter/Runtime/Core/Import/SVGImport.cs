@@ -27,7 +27,7 @@ namespace SVGImporter
     public static class SVGImport
     {
         // Changing what an import produces changes this, and so every import hash.
-        const string pipelineVersion = "4";
+        const string pipelineVersion = "5";
 
         public static SVGImportResult Import(string svgText, SVGImportOptions options)
         {
