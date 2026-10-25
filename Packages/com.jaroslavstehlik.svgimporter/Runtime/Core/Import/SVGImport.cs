@@ -27,7 +27,7 @@ namespace SVGImporter
     public static class SVGImport
     {
         // Changing what an import produces changes this, and so every import hash.
-        const string pipelineVersion = "5";
+        const string pipelineVersion = "6";
 
         public static SVGImportResult Import(string svgText, SVGImportOptions options)
         {
@@ -56,10 +56,10 @@ namespace SVGImporter
                 SVGLayer[] layers = context.layers.ToArray();
 
                 mesh = new Mesh();
-                Shader[] shaders;
+                string[] shaders;
                 SVGMesh.CombineMeshes(layers, mesh, out shaders, options.useGradients, options.format, options.compressDepth, options.antialiasing, options.depthOffset);
                 bool hasGradients = ChooseShaders(shaders, options.useGradients);
-                result.shaders = shaders.Where(s => s != null).Select(s => s.name).ToArray();
+                result.shaders = shaders;
                 if (options.generateNormals)
                     AddNormals(mesh, options);
 
@@ -166,24 +166,23 @@ namespace SVGImporter
 
         /// <summary>
         /// Gradient shaders when gradients are used (always, or because the document has some),
-        /// solid colour shaders otherwise. Returns whether the mesh uses gradients.
+        /// solid colour shaders otherwise. Returns whether the mesh uses gradients. Shaders are
+        /// chosen by name: on a project's first import Unity may not have imported them yet.
         /// </summary>
-        static bool ChooseShaders(Shader[] shaders, SVGUseGradients useGradients)
+        static bool ChooseShaders(string[] shaders, SVGUseGradients useGradients)
         {
-            Func<Shader, Shader, bool> same = (a, b) => a != null && b != null && a.name == b.name;
-            bool hasGradients = useGradients == SVGUseGradients.Always || shaders.Any(s =>
-                same(s, SVGShader.GradientColorOpaque) || same(s, SVGShader.GradientColorAlphaBlended) || same(s, SVGShader.GradientColorAlphaBlendedAntialiased));
             var pairs = new[] {
-                new[] { SVGShader.SolidColorOpaque, SVGShader.GradientColorOpaque },
-                new[] { SVGShader.SolidColorAlphaBlended, SVGShader.GradientColorAlphaBlended },
-                new[] { SVGShader.SolidColorAlphaBlendedAntialiased, SVGShader.GradientColorAlphaBlendedAntialiased },
+                new[] { SVGShader.SolidColorOpaqueName, SVGShader.GradientColorOpaqueName },
+                new[] { SVGShader.SolidColorAlphaBlendedName, SVGShader.GradientColorAlphaBlendedName },
+                new[] { SVGShader.SolidColorAlphaBlendedAntialiasedName, SVGShader.GradientColorAlphaBlendedAntialiasedName },
             };
+            bool hasGradients = useGradients == SVGUseGradients.Always || shaders.Any(s => pairs.Any(pair => s == pair[1]));
             for (int i = 0; i < shaders.Length; i++)
             {
-                foreach (Shader[] pair in pairs)
+                foreach (string[] pair in pairs)
                 {
-                    if (hasGradients && same(shaders[i], pair[0])) shaders[i] = pair[1];
-                    else if (!hasGradients && same(shaders[i], pair[1])) shaders[i] = pair[0];
+                    if (hasGradients && shaders[i] == pair[0]) shaders[i] = pair[1];
+                    else if (!hasGradients && shaders[i] == pair[1]) shaders[i] = pair[0];
                 }
             }
             return hasGradients;

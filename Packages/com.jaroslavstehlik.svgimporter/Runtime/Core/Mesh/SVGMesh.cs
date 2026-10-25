@@ -14,11 +14,20 @@ namespace SVGImporter.Geometry
     {
         public static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out Shader[] shaders, SVGUseGradients useGradients = SVGUseGradients.Always, SVGAssetFormat format = SVGAssetFormat.Transparent, bool compressDepth = true, bool antialiased = false, float depthOffset = 0.01f)
         {
+            string[] shaderNames;
+            bool combined = CombineMeshes(layers, mesh, out shaderNames, useGradients, format, compressDepth, antialiased, depthOffset);
+            shaders = System.Array.ConvertAll(shaderNames, Shader.Find);
+            return combined;
+        }
+
+        /// <summary>As above, with the shader of each submesh by name (SVGShader's name constants).</summary>
+        internal static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out string[] shaders, SVGUseGradients useGradients, SVGAssetFormat format, bool compressDepth, bool antialiased, float depthOffset)
+        {
             #if DEBUG_IMPORT
             long timeStart = System.DateTime.Now.Ticks;
             #endif
             
-            shaders = new Shader[0];
+            shaders = new string[0];
             
             //if(SVGAssetImport.sliceMesh) Create9Slice();
             
@@ -139,7 +148,7 @@ namespace SVGImporter.Geometry
             Vector2[] uv2 = null;
             Vector3[] normals = null;
             int[][] triangles = null;
-            List<Shader> outputShaders = new List<Shader>();
+            List<string> outputShaders = new List<string>();
 
             if(antialiased) normals = new Vector3[totalVertices];
 
@@ -150,29 +159,29 @@ namespace SVGImporter.Geometry
                 
                 if(useOpaqueShader)
                 {
-                    outputShaders.Add(SVGShader.GradientColorOpaque);
+                    outputShaders.Add(SVGShader.GradientColorOpaqueName);
                 }
                 if(useTransparentShader)
                 {
                     if(antialiased)
                     {
-                        outputShaders.Add(SVGShader.GradientColorAlphaBlendedAntialiased);
+                        outputShaders.Add(SVGShader.GradientColorAlphaBlendedAntialiasedName);
                     } else {
-                        outputShaders.Add(SVGShader.GradientColorAlphaBlended);
+                        outputShaders.Add(SVGShader.GradientColorAlphaBlendedName);
                     }
                 }
             } else {
                 if(useOpaqueShader)
                 {
-                    outputShaders.Add(SVGShader.SolidColorOpaque);
+                    outputShaders.Add(SVGShader.SolidColorOpaqueName);
                 }
                 if(useTransparentShader)
                 {
                     if(antialiased)
                     {
-                        outputShaders.Add(SVGShader.SolidColorAlphaBlendedAntialiased);
+                        outputShaders.Add(SVGShader.SolidColorAlphaBlendedAntialiasedName);
                     } else {
-                        outputShaders.Add(SVGShader.SolidColorAlphaBlended);
+                        outputShaders.Add(SVGShader.SolidColorAlphaBlendedName);
                     }
                 }
             }
