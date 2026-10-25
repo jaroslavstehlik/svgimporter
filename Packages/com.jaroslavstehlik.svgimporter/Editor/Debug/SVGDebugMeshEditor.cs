@@ -101,10 +101,8 @@ public class SVGDebugMeshEditor : Editor
                     int[] triangles = mesh.triangles;
                     Vector2[] uv = mesh.uv;
                     Vector2[] uv2 = mesh.uv2;
-					#if !UNITY_4_6 && !UNITY_4_7 && !UNITY_4_8 && !UNITY_4_9
                     Vector2[] uv3 = mesh.uv3;
                     Vector2[] uv4 = mesh.uv4;
-					#endif
                     Vector3[] normals = mesh.normals;
                     Vector4[] tangents = mesh.tangents;
 
@@ -118,12 +116,10 @@ public class SVGDebugMeshEditor : Editor
                         EditorGUILayout.LabelField("uv: "+uv.Length);
                     if(uv2 != null)
                         EditorGUILayout.LabelField("uv2: "+uv2.Length);
-					#if !UNITY_4_6 && !UNITY_4_7 && !UNITY_4_8 && !UNITY_4_9
                     if(uv3 != null)
                         EditorGUILayout.LabelField("uv3: "+uv3.Length);
                     if(uv4 != null)
                         EditorGUILayout.LabelField("uv4: "+uv4.Length);
-					#endif
                     if(normals != null)
                         EditorGUILayout.LabelField("normals: "+normals.Length);
                     if(tangents != null)
@@ -162,10 +158,8 @@ public class SVGDebugMeshEditor : Editor
 //                    int[] triangles = mesh.triangles;
                     Vector2[] uv = mesh.uv;
                     Vector2[] uv2 = mesh.uv2;
-					#if !UNITY_4_6 && !UNITY_4_7 && !UNITY_4_8 && !UNITY_4_9
                     Vector2[] uv3 = mesh.uv3;
                     Vector2[] uv4 = mesh.uv4;
-					#endif
                     Vector3[] normals = mesh.normals;
                     Vector4[] tangents = mesh.tangents;
 
@@ -214,7 +208,6 @@ public class SVGDebugMeshEditor : Editor
 									if(showLabels) Handles.Label(vertices[i], uv2[i].ToString());
 									if(showNormals) Handles.DrawLine(vertices[i], vertices[i] + (Vector3)uv2[i]);
                                     break;
-								#if !UNITY_4_6 && !UNITY_4_7 && !UNITY_4_8 && !UNITY_4_9
                                 case DebugType.UV3:
                                     if(uv3 == null || uv3.Length != vertexCount) continue;
 									if(showLabels) Handles.Label(vertices[i], uv3[i].ToString());
@@ -225,7 +218,6 @@ public class SVGDebugMeshEditor : Editor
 									if(showLabels) Handles.Label(vertices[i], uv4[i].ToString());
 									if(showNormals) Handles.DrawLine(vertices[i], vertices[i] + (Vector3)uv4[i]);
                                     break;
-								#endif
                                 case DebugType.NORMALS:
                                     if(normals == null || normals.Length != vertexCount) continue;
 									if(showLabels) Handles.Label(vertices[i], normals[i].ToString());

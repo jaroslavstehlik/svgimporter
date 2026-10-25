@@ -236,12 +236,6 @@ namespace SVGImporter.Document
                 case SVGNodeName.Symbol:
                     DontPutInNodesAdd(node);
                     //                              Debug.LogError ("Unsupported Element type Symbol");
-                    /*
-                    #if UNITY_EDITOR
-                    if(!SVGAssetImport.errors.Contains(SVGError.Symbol))
-                        SVGAssetImport.errors.Add(SVGError.Symbol);
-                    #endif
-                    */
                     break;
                 case SVGNodeName.Image:
                     DontPutInNodesAdd(node);
@@ -476,13 +470,6 @@ namespace SVGImporter.Document
                                                 paintable));
                         break;
                     }
-                        /*
-                    case SVGNodeName.ClipPath:
-                        {
-                            paintable.AppendClipPath(new SVGClipPathElement(this, node));
-                            break;
-                        }
-                        */
                     case SVGNodeName.LinearGradient:
                     {
                         ResolveGradientLinks();                        

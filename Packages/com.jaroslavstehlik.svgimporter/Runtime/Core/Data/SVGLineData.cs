@@ -86,28 +86,6 @@ public class SVGLineData
         return _points.Count - 1;
     }
 
-    public void UpdateMagnitudes()
-    {
-        _totalMagnitude = 0f;
-        int edgeCount = GetEdgeCount();
-        _magnitudes = new float[edgeCount];
-        for(int i = 0; i < edgeCount; i++)
-        {
-            _magnitudes[i] = GetEdge(i).Magnitude();
-            _totalMagnitude += _magnitudes[i];
-        }
-    }
-
-    public void UpdateNormals()
-    {
-        int edgeCount = GetEdgeCount();
-        _normals = new Vector2[edgeCount];
-        for(int i = 0; i < edgeCount; i++)
-        {
-            _normals[i] = GetEdge(i).DirectionNormalized();
-        }
-    }
-
     public void UpdateAll()
     {
         int edgeCount = GetEdgeCount();
@@ -138,11 +116,6 @@ public class SVGLineData
     public Vector2 GetNormal(int index)
     {
         return _normals[index];
-    }
-
-    public float GetMagnitude(int index)
-    {
-        return _magnitudes[index];
     }
 
     public float totalMagnitude

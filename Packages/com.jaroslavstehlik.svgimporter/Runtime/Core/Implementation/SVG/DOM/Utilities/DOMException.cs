@@ -45,12 +45,6 @@ namespace SVGImporter.Document
         {
             this.code = code;
         }
-        /*
-        protected DOMException(SerializationInfo info,
-                      StreamingContext context) : base(info, context)
-        {
-        }
-        */
         private DOMExceptionType code;
 
         public DOMExceptionType Code

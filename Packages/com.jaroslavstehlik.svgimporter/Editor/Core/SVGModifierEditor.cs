@@ -267,12 +267,8 @@ namespace SVGImporter
 			Camera current = Camera.current;
 			if (current)
 			{
-                #if UNITY_5_4_OR_NEWER
                 gui = EditorGUIUtility.PointsToPixels(gui);
                 gui.y = (float)Screen.height - gui.y - (35f * EditorGUIUtility.pixelsPerPoint);
-                #else
-                gui.y = (float)Screen.height - gui.y - 35f;
-                #endif
                 return current.ScreenToWorldPoint(new Vector3(gui.x, gui.y, current.nearClipPlane));
 			}
 			return gui;

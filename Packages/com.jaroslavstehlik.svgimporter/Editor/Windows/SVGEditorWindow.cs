@@ -329,10 +329,6 @@ namespace SVGImporter
 
             if (Event.current.type == EventType.Repaint)
             {
-				#if UNITY_4_6
-				MethodInfo SetTemporarilyAllowIndieRenderTexture = typeof(EditorUtility).GetMethod("SetTemporarilyAllowIndieRenderTexture", BindingFlags.Static | BindingFlags.NonPublic);
-				SetTemporarilyAllowIndieRenderTexture.Invoke(null, new System.Object[]{(System.Object)true});
-				#endif
 				RenderSVGRenderer();
 				if (viewAlpha)
 				{
@@ -343,9 +339,6 @@ namespace SVGImporter
 
 				RenderTexture.ReleaseTemporary(editorCamera.targetTexture);
 				editorCamera.targetTexture = null;
-				#if UNITY_4_6
-				SetTemporarilyAllowIndieRenderTexture.Invoke(null, new System.Object[]{(System.Object)false});
-				#endif
             }
 
             SetupHandlesMatrix();
@@ -872,11 +865,6 @@ namespace SVGImporter
                 border.w = 1f - Mathf.Clamp(1f - border.w, border.y, 1f)
                 );
         }
-
-        public static void InitPreview(Rect r, PreviewRenderUtility previewUtility)
-        {
-            typeof(PreviewRenderUtility).GetMethod("InitPreview", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(previewUtility, new object[]{ r });
-		}
 
 		protected static Mesh GetMesh(SVGAsset targetObject)
 		{

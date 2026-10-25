@@ -28,7 +28,6 @@ namespace SVGImporter
         
         private bool m_ShowDetailedVersion;
         
-        private int m_InternalCodeProgress;
         
 //        private float m_TotalCreditsHeight = float.PositiveInfinity;
         
@@ -38,7 +37,6 @@ namespace SVGImporter
         
 //        private float m_TextInitialYPos = 120f;
 
-        const string SVG_INTERNAL_MODE = "SVG_INTERNAL_MODE";
         //
         // Static Methods
         //
@@ -116,19 +114,6 @@ namespace SVGImporter
         //
         // Methods
         //
-        private void ListenForSecretCodes()
-        {
-            if (Event.current.type != EventType.KeyDown || Event.current.character == '\0')
-            {
-                return;
-            }
-            if (this.SecretCodeHasBeenTyped("internal", ref this.m_InternalCodeProgress))
-            {
-                bool flag = !EditorPrefs.GetBool(SVG_INTERNAL_MODE, false);
-                EditorPrefs.SetBool(SVG_INTERNAL_MODE, flag);
-                base.ShowNotification(new GUIContent("Internal Mode " + ((!flag) ? "Off" : "On")));
-            }
-        }
 		
 		public void OnEnable()
 		{
@@ -171,7 +156,6 @@ namespace SVGImporter
 
 			OnLastRectClick(delegate() { Application.OpenURL("http://www.svgimporter.com"); });
 
-            this.ListenForSecretCodes();
            
             GUILayout.Space(4f);
             GUILayout.EndVertical();
@@ -218,36 +202,5 @@ namespace SVGImporter
             GUILayout.EndHorizontal();
             GUILayout.Space(5f);
         }
-        
-        private bool SecretCodeHasBeenTyped(string code, ref int characterProgress)
-        {
-            if (characterProgress < 0 || characterProgress >= code.Length || code[characterProgress] != Event.current.character)
-            {
-                characterProgress = 0;
-            }
-            if (code[characterProgress] == Event.current.character)
-            {
-                characterProgress++;
-                if (characterProgress >= code.Length)
-                {
-                    characterProgress = 0;
-                    return true;
-                }
-            }
-            return false;
-        }
-        /*
-        public void UpdateScroll()
-        {
-            double num = EditorApplication.timeSinceStartup - this.m_LastScrollUpdate;
-            this.m_TextYPos -= 40f * (float)num;
-            if (this.m_TextYPos < -this.m_TotalCreditsHeight)
-            {
-                this.m_TextYPos = this.m_TextInitialYPos;
-            }
-            base.Repaint();
-            this.m_LastScrollUpdate = EditorApplication.timeSinceStartup;
-        }
-        */
     }
 }

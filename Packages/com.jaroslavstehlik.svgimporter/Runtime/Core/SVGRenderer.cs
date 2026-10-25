@@ -826,11 +826,6 @@ namespace SVGImporter
             }
         }
 
-        internal bool AtlasContainsMaterial(Material material)
-        {
-            return SVGAtlas.Instance.ContainsMaterial(material);
-        }
-
         protected void SwapMaterials(bool transparent = true)
         {
             if(_vectorGraphics == null)

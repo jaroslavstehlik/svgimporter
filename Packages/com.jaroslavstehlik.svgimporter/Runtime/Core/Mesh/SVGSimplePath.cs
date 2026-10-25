@@ -69,15 +69,6 @@ namespace SVGImporter.Rendering
             return segments.ToArray();
         }      
 
-        public static Color GetStrokeColor(SVGPaintable paintable)
-        {   
-            Color color = paintable.strokeColor.Value.color;
-            color.a *= paintable.strokeOpacity * paintable.opacity;
-            paintable.svgFill = new SVGFill(color, FILL_BLEND.OPAQUE, FILL_TYPE.SOLID);
-            if(color.a != 1f) paintable.svgFill.blend = FILL_BLEND.ALPHA_BLENDED;
-            return color;
-        }
-
         public static List<List<Vector2>> CreateStroke(List<Vector2> inputShapes, SVGPaintable paintable, ClosePathRule closePath = ClosePathRule.NEVER)
         {
             if(inputShapes == null || inputShapes.Count == 0 || paintable == null || paintable.strokeWidth <= 0f)
@@ -101,94 +92,6 @@ namespace SVGImporter.Rendering
             }
 
             return SVGLineUtils.StrokeShape(segments, paintable.strokeWidth, Color.black, GetStrokeLineJoin(paintable.strokeLineJoin), GetStrokeLineCap(paintable.strokeLineCap), paintable.miterLimit, paintable.dashArray, paintable.dashOffset, closePath, SVGGraphics.roundQuality);
-        }
-        /*
-        public static Mesh CreateStrokeMesh(List<Vector2> inputShapes, SVGPaintable paintable, ClosePathRule closePath = ClosePathRule.NEVER)
-        {
-            if(inputShapes == null || inputShapes.Count == 0 || paintable == null || paintable.strokeWidth <= 0f)
-                return null;
-
-            return CreateStrokeMesh(new List<List<Vector2>>(){inputShapes}, paintable, closePath);
-        }
-        
-        public static Mesh CreateStrokeMesh(List<List<Vector2>> inputShapes, SVGPaintable paintable, ClosePathRule closePath = ClosePathRule.NEVER)
-        {
-            if(inputShapes == null || inputShapes.Count == 0 || paintable == null || paintable.strokeWidth <= 0f)
-                return null;
-
-            List<StrokeSegment[]> segments = new List<StrokeSegment[]>();
-            for(int i = 0; i < inputShapes.Count; i++)
-            {
-                if(inputShapes[i] == null || inputShapes[i].Count < 2)
-                    continue;
-
-                segments.Add(GetSegments(inputShapes[i]));
-            }
-
-            return SVGLineUtils.StrokeMesh(segments, paintable.strokeWidth, GetStrokeColor(paintable), GetStrokeLineJoin(paintable.strokeLineJoin), GetStrokeLineCap(paintable.strokeLineCap), paintable.miterLimit, paintable.dashArray, paintable.dashOffset, closePath, SVGGraphics.roundQuality);
-        }
-        */
-        /*
-        public static Mesh CreateStrokeSimple(SVGPaintable paintable, ClosePathRule closePath = ClosePathRule.NEVER)
-        {
-            return CreateStrokeSimple(new List<List<Vector2>>(){new List<Vector2>(SVGGraphics.position_buffer.ToArray())}, paintable, closePath);
-        }
-        */
-        public static Mesh CreateStrokeSimple(List<List<Vector2>> inputShapes, SVGPaintable paintable, ClosePathRule closePath = ClosePathRule.NEVER)
-        {
-            if(inputShapes == null || inputShapes.Count == 0 || paintable == null || paintable.strokeWidth <= 0f)
-                return null;
-
-            AddInputShape(inputShapes);
-
-            Color color = GetStrokeColor(paintable);            
-
-            float strokeWidth = paintable.strokeWidth;
-            if(inputShapes.Count > 1)
-            {
-                CombineInstance[] combineInstances = new CombineInstance[inputShapes.Count];
-                for(int i = 0; i < inputShapes.Count; i++)
-                {
-                    combineInstances[i] = new CombineInstance();
-                    SVGShape svgLayer = new SVGShape();
-                    if(SVGMeshUtils.VectorLine(inputShapes[i].ToArray(), out svgLayer, color, color, strokeWidth, 0f, closePath))
-                    {
-                        Mesh localMesh = new Mesh();
-                        int totalVertices = svgLayer.vertices.Length;
-                        Vector3[] vertices = new Vector3[totalVertices];
-                        for(int j = 0; j < totalVertices; j++)
-                        {
-                            vertices[j] = svgLayer.vertices[j];
-                        }
-                        localMesh.vertices = vertices;
-                        localMesh.triangles = svgLayer.triangles;
-                        localMesh.colors32 = svgLayer.colors;
-                        combineInstances[i].mesh = localMesh;
-                    }
-                }
-
-                Mesh mesh = new Mesh();
-                mesh.CombineMeshes(combineInstances, true, false);
-                return mesh;
-            } else {
-                SVGShape svgLayer = new SVGShape();
-                if(SVGMeshUtils.VectorLine(inputShapes[0].ToArray(), out svgLayer, color, color, strokeWidth, 0f, closePath))
-                {
-                    Mesh localMesh = new Mesh();
-                    int totalVertices = svgLayer.vertices.Length;
-                    Vector3[] vertices = new Vector3[totalVertices];
-                    for(int j = 0; j < totalVertices; j++)
-                    {
-                        vertices[j] = svgLayer.vertices[j];
-                    }
-                    localMesh.vertices = vertices;
-                    localMesh.triangles = svgLayer.triangles;
-                    localMesh.colors32 = svgLayer.colors;
-
-                    return localMesh;
-                }
-                return null;
-            }
         }
 
         public static bool CreateAntialiasing(List<List<Vector2>> inputShapes, out SVGShape svgShape, Color colorA, float width, ClosePathRule closePath = ClosePathRule.NEVER)
@@ -382,48 +285,6 @@ namespace SVGImporter.Rendering
                     layer.vertices[i] = new Vector2(tesselation.Vertices[i].Position.X, tesselation.Vertices[i].Position.Y) * SVGAssetImport.meshScale;
                 }
             }
-            /*
-            else {
-                // Use Triangle.net library
-                SVGImporter.TriangleNet.Mesh triangleMesh = new SVGImporter.TriangleNet.Mesh();
-                SVGImporter.TriangleNet.Geometry.InputGeometry triangleInput = new SVGImporter.TriangleNet.Geometry.InputGeometry();
-
-                int pathLength, m = 0;
-                for(int i = 0; i < simplifiedShapes.Count; i++)
-                {
-                    if(simplifiedShapes[i] == null)
-                        continue;
-                    
-                    pathLength = simplifiedShapes[i].Count;
-                    Vector2 position;
-                    for(int j = 0; j < pathLength; j++)
-                    {
-                        triangleInput.AddPoint(simplifiedShapes[i][j].x, simplifiedShapes[i][j].y);
-                    }
-                }
-
-                triangleMesh.Triangulate(triangleInput);
-
-                int totalVertices = triangleMesh.vertices.Count;
-                layer.vertices = new Vector2[totalVertices];
-                for(int i = 0; i < totalVertices; i++)
-                {
-                    layer.vertices[i].x = (float)triangleMesh.vertices[i].x * SVGAssetImport.meshScale;
-                    layer.vertices[i].y = (float)triangleMesh.vertices[i].y * SVGAssetImport.meshScale;
-                }
-
-                int totalTriangles = triangleMesh.triangles.Count;
-                layer.triangles = new int[totalTriangles * 3];
-                int ti = 0;
-                for(int i = 0; i < totalTriangles; i++)
-                {
-                    ti = i * 3;
-                    layer.triangles[ti] = triangleMesh.triangles[i].P0;
-                    layer.triangles[ti + 1] = triangleMesh.triangles[i].P1;
-                    layer.triangles[ti + 2] = triangleMesh.triangles[i].P2;
-                }
-            }
-            */
 
             layer.fill = paintable.svgFill;
             layer.fill.opacity = paintable.opacity;
@@ -474,27 +335,6 @@ namespace SVGImporter.Rendering
 
             return true;
         }
-
-        protected static void WriteUVGradientIndexType(ref Vector2[] uv, int meshVertexCount, SVGPaintable svgPaintable)
-        {
-            SVGFill svgFill = svgPaintable.svgFill;
-            if (svgFill.fillType == FILL_TYPE.GRADIENT && svgFill.gradientColors != null)
-            {
-                Vector2 gradientUV = new Vector2(svgFill.gradientColors.index, (int)svgFill.gradientType);
-                uv = new Vector2[meshVertexCount];
-                for (int i = 0; i < meshVertexCount; i++) {
-                    uv [i].x = gradientUV.x;
-                    uv [i].y = gradientUV.y;
-                }
-            }
-        }
-        /*
-        public static Mesh CreateAntialiasing(List<List<Vector2>> paths, Color color, float antialiasingWidth, bool isStroke = false, ClosePathRule closePath = ClosePathRule.NEVER)
-        {
-            if(SVGAssetImport.antialiasingWidth <= 0f) return null;
-            return SVGSimplePath.CreateAntialiasing(paths, color, antialiasingWidth, closePath);
-        }
-        */
         private static void UpdateMesh(Mesh mesh, SVGFill svgFill)
         {
             if (svgFill.fillType == FILL_TYPE.GRADIENT && svgFill.gradientColors != null)
@@ -573,20 +413,6 @@ namespace SVGImporter.Rendering
             }
             
             return new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
-        }
-
-        private static void OffsetPositions(Bounds bounds, List<Vector2> array)
-        {
-            if(array == null || array.Count == 0)
-                return;
-
-            int arrayLength = array.Count;
-            Vector2 boundsCenter = bounds.center;
-            for(int i = 0; i < arrayLength; i++)
-            {
-                array[i] -= boundsCenter;
-            }
-
         }
 
         // The bounding box of the shapes in the element's own coordinate system, before its transform.

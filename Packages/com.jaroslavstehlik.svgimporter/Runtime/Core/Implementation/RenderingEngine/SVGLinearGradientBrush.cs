@@ -72,10 +72,6 @@ namespace SVGImporter.Rendering
     //        _spreadMethod = _linearGradElement.spreadMethod;
 
             GetStopList();
-            /*
-            _vitriOffset = 0;
-            PreColorProcess(_vitriOffset);
-            */
         }
 
         private void CreateFill()
@@ -90,13 +86,6 @@ namespace SVGImporter.Rendering
             _gradientTransform = _linearGradElement.gradientTransform.Consolidate().matrix;
             _fill.gradientColors = SVGAssetImport.atlasData.AddGradient(ParseGradientColors());
             _fill.viewport = _viewport;
-            /*
-            _fill.transform = _transform;
-            _fill.gradientStartX = _x1;
-            _fill.gradientStartY = _y1;
-            _fill.gradientEndX = _x2;
-            _fill.gradientEndY = _y2;
-            */
         }
 
         private void CreateFill(Rect bounds, Rect localBounds)
@@ -111,14 +100,6 @@ namespace SVGImporter.Rendering
 
             CCGradientColorKey[] colorKeys = new CCGradientColorKey[length];
             CCGradientAlphaKey[] alphaKeys = new CCGradientAlphaKey[length];
-            /*
-            string debugColor = "";
-            for(int i = 0; i < length; i++)
-            {
-                debugColor += _stopColorList[i].ToString()+" ";
-            }
-            Debug.Log("GradientColors, count: "+length+" Colors: "+debugColor);
-            */
             float currentStopOffset = 0f;
             
             for(int i = 0; i < length; i++)

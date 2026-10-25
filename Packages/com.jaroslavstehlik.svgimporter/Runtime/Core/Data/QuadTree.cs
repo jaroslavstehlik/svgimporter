@@ -237,68 +237,6 @@ namespace SVGImporter.Data
                 node._depth = this._depth;
                 nodes.Add(node);
                 //return node;
-                /*
-                // TODO Expanding quadTree
-
-                // It is outside our region
-                bool outsideLeft = node.bounds.minX < this.bounds.minX;
-                bool outsideRight = node.bounds.maxX > this.bounds.maxX;
-                bool outsideTop = node.bounds.maxY > this.bounds.maxY;
-                bool outsideBottom = node.bounds.minY < this.bounds.minY;
-
-                //bool left = node.bounds.center.x < this.bounds.center.x;
-                //bool right = node.bounds.center.x >= this.bounds.center.x;
-                //bool top = node.bounds.center.y >= this.bounds.center.y;
-                //bool bottom = node.bounds.center.y < this.bounds.center.y;
-                //Debug.Log("Out of region: "+data.GetHashCode()+", outsideLeft: "+outsideLeft+", outsideRight: "+outsideRight+", outsideTop: "+outsideTop+", outsideBottom: "+outsideBottom);
-
-                if (outsideTop)
-                {
-                    if (outsideLeft)
-                    {
-                        parent = new QuadTreeCell<T>(new SVGBounds(this.bounds.minX - this.bounds.size.x, this.bounds.minY, this.bounds.maxX, this.bounds.maxY + this.bounds.size.y), null, this.quadTree, maxCapacity);
-                        if (!isCellEmpty)
-                        {
-                            parent.bottomRight = this;
-                        }
-                        quadTree._root = parent;
-                        parent._depth = _depth - 1;
-                        parent.Add(node);
-                    } 
-
-                    if (outsideRight)
-                    {
-                        parent = new QuadTreeCell<T>(new SVGBounds(this.bounds.minX, this.bounds.minY, this.bounds.maxX + this.bounds.size.x, this.bounds.maxY + this.bounds.size.y), null, this.quadTree, maxCapacity);
-                        if (!isCellEmpty)
-                            parent.bottomLeft = this;
-                        quadTree._root = parent;
-                        parent._depth = _depth - 1;
-                        parent.Add(node);
-                    }
-                } 
-                if (outsideBottom)
-                {
-                    if (outsideLeft)
-                    {
-                        parent = new QuadTreeCell<T>(new SVGBounds(this.bounds.minX - this.bounds.size.x, this.bounds.minY - this.bounds.size.y, this.bounds.maxX, this.bounds.maxY), null, this.quadTree, maxCapacity);
-                        if (!isCellEmpty)
-                            parent.topRight = this;
-                        quadTree._root = parent;
-                        parent._depth = _depth - 1;
-                        parent.Add(node);
-                    }
-
-                    if (outsideRight)
-                    {
-                        parent = new QuadTreeCell<T>(new SVGBounds(this.bounds.minX, this.bounds.minY - this.bounds.size.y, this.bounds.maxX + this.bounds.size.x, this.bounds.maxY), null, this.quadTree, maxCapacity);
-                        if (!isCellEmpty)    
-                            parent.topLeft = this;
-                        quadTree._root = parent;
-                        parent._depth = _depth - 1;
-                        parent.Add(node);
-                    }
-                }
-                */
             }
 
             return node;

@@ -15,14 +15,6 @@ namespace SVGImporter.Rendering
                 _previousPoint = segment.currentPoint;
             _currentPoint = value;
 
-            /*
-            if (value.x == float.MinValue && value.y == float.MinValue)
-            {
-                _currentPoint = _previousPoint;
-            } else {
-                _currentPoint = value;
-            } 
-            */
         }
     }
 }

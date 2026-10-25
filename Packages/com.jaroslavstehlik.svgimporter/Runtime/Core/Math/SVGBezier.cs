@@ -17,125 +17,6 @@ namespace SVGImporter.Rendering
         const float PI2 = Mathf.PI * 2f;
 
     //    static int adaptiveIteration;
-
-        public static Vector3[] QuadraticBezierCurve(int segments, Vector3 start, Vector3 handle, Vector3 end)
-        {
-            Vector3[] output = new Vector3[segments];
-            float t, invT, invTxInvT, invTxTx2, tXt;
-            float segmentsf = (float)segments - 1f;
-    		
-            for (int i = 0; i < segments; i++)
-            {
-                t = (float)i / segmentsf;
-                invT = 1f - t;
-    			
-                invTxInvT = invT * invT;
-                invTxTx2 = invT * t * 2f;
-                tXt = t * t;
-
-                output [i].x = invTxInvT * start.x + invTxTx2 * handle.x + tXt * end.x;
-                output [i].y = invTxInvT * start.y + invTxTx2 * handle.y + tXt * end.y;
-                output [i].z = invTxInvT * start.z + invTxTx2 * handle.z + tXt * end.z;
-            }
-    		
-            return output;
-        }
-    	
-        public static Vector2[] QuadraticBezierCurve(int segments, Vector2 start, Vector2 handle, Vector2 end)
-        {
-            Vector2[] output = new Vector2[segments];
-            float t, invT, invTxInvT, invTxTx2, tXt;
-            float segmentsf = (float)segments - 1f;
-    		
-            for (int i = 0; i < segments; i++)
-            {
-                t = (float)i / segmentsf;
-                invT = 1f - t;
-    			
-                invTxInvT = invT * invT;
-                invTxTx2 = invT * t * 2f;
-                tXt = t * t;
-
-                output [i].x = invTxInvT * start.x + invTxTx2 * handle.x + tXt * end.x;
-                output [i].y = invTxInvT * start.y + invTxTx2 * handle.y + tXt * end.y;
-            }
-    		
-            return output;
-        }
-
-        public static Vector3[] CubicBezierCurve(int segments, Vector3 start, Vector3 handle0, Vector3 handle1, Vector3 end)
-        {
-            Vector3[] output = new Vector3[segments];
-			float t, tXt, tXtXt, tx3, txTx3, invT, invTxInvT, invTxInvTxInvT;//, invTxTx2;
-            float segmentsf = (float)segments - 1f;
-    		
-            for (int i = 0; i < segments; i++)
-            {
-                t = (float)i / segmentsf;
-                tXt = t * t;
-                tXtXt = tXt * t;
-    			
-                tx3 = t * 3f;
-                invT = 1f - t;
-                txTx3 = tXt * 3f;
-    			
-                invTxInvT = invT * invT;
-                invTxInvTxInvT = invTxInvT * invT;			
-                //invTxTx2 = invT * t * 2f;
-    			
-                output [i].x = invTxInvTxInvT * start.x + tx3 * invTxInvT * handle0.x + txTx3 * invT * handle1.x + tXtXt * end.x;
-                output [i].y = invTxInvTxInvT * start.y + tx3 * invTxInvT * handle0.y + txTx3 * invT * handle1.y + tXtXt * end.y;
-                output [i].z = invTxInvTxInvT * start.z + tx3 * invTxInvT * handle0.z + txTx3 * invT * handle1.z + tXtXt * end.z;
-            }
-    		
-            return output;
-        }
-
-        public static float ClosestPointOnCubicBezierCurve(int segments, Vector3 start, Vector3 handle0, Vector3 handle1, Vector3 end, Vector3 point, out Vector3 pointOnLine)
-        {
-			float t, tXt, tXtXt, tx3, txTx3, invT, invTxInvT, invTxInvTxInvT;//, invTxTx2;
-            float segmentsf = (float)segments - 1f;
-
-            Vector3 currentPoint = Vector3.zero, lastPoint = Vector3.zero;
-            Vector3 tempPoint;
-            float minDistance = float.MaxValue;
-            float tempDistance;
-
-            pointOnLine = Vector3.zero;
-
-            for (int i = 0; i < segments; i++)
-            {
-                t = (float)i / segmentsf;
-                tXt = t * t;
-                tXtXt = tXt * t;
-                
-                tx3 = t * 3f;
-                invT = 1f - t;
-                txTx3 = tXt * 3f;
-                
-                invTxInvT = invT * invT;
-                invTxInvTxInvT = invTxInvT * invT;          
-                //invTxTx2 = invT * t * 2f;
-
-                currentPoint.x = invTxInvTxInvT * start.x + tx3 * invTxInvT * handle0.x + txTx3 * invT * handle1.x + tXtXt * end.x;
-                currentPoint.y = invTxInvTxInvT * start.y + tx3 * invTxInvT * handle0.y + txTx3 * invT * handle1.y + tXtXt * end.y;
-                currentPoint.z = invTxInvTxInvT * start.z + tx3 * invTxInvT * handle0.z + txTx3 * invT * handle1.z + tXtXt * end.z;
-
-                if(i != 0)
-                {
-                    tempDistance = ClosestPointToLine(lastPoint, currentPoint, point, out tempPoint);
-                    if(tempDistance < minDistance)
-                    {
-                        minDistance = tempDistance;
-                        pointOnLine = tempPoint;
-                    }
-                }
-
-                lastPoint = currentPoint;
-            }
-            
-            return minDistance;
-        }
         
         public static float ClosestPointToLine(Vector3 lineStart, Vector3 lineEnd, Vector3 point, out Vector3 pointOnLine)
         {
@@ -162,33 +43,6 @@ namespace SVGImporter.Rendering
         }
 
     	
-        public static Vector2[] CubicBezierCurve(int segments, Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
-        {
-            Vector2[] output = new Vector2[segments];
-			float t, tXt, tXtXt, tx3, txTx3, invT, invTxInvT, invTxInvTxInvT;//, invTxTx2;
-            float segmentsf = (float)segments - 1f;
-    		
-            for (int i = 0; i < segments; i++)
-            {
-                t = (float)i / segmentsf;
-                tXt = t * t;
-                tXtXt = tXt * t;
-    			
-                tx3 = t * 3f;
-                invT = 1f - t;
-                txTx3 = tXt * 3f;
-    			
-                invTxInvT = invT * invT;
-                invTxInvTxInvT = invTxInvT * invT;			
-                //invTxTx2 = invT * t * 2f;
-    			
-                output [i].x = invTxInvTxInvT * start.x + tx3 * invTxInvT * handle0.x + txTx3 * invT * handle1.x + tXtXt * end.x;
-                output [i].y = invTxInvTxInvT * start.y + tx3 * invTxInvT * handle0.y + txTx3 * invT * handle1.y + tXtXt * end.y;
-            }
-    		
-            return output;
-        }
-    	
 		public static List<Vector2> Optimise(List<Vector2> pointList, float precision, int startPosition = 0, int endPosition = -1) 
 		{
 			precision *= 0.1f;
@@ -199,39 +53,6 @@ namespace SVGImporter.Rendering
         {
             precision *= 0.1f;
             return RamerDouglasPeucker(new List<Vector2>(pointList), precision, startPosition, endPosition).ToArray();
-        }
-        
-        public static List<int> RamerDouglasPeuckerIndex(Vector2[] pointArray, float precision, int startPosition = 0, int endPosition = -1) 
-        {
-            float dmax = 0.0f;
-            int index = -1;
-            
-            List<int> resultList = new List<int>();
-            
-            if (endPosition < 0) {
-                endPosition = pointArray.Length-1;
-            }
-            
-            for (int i = startPosition; i < endPosition; i++) {
-                float d = PerpendicularDistance(pointArray[i], pointArray[startPosition], pointArray[endPosition]);
-                if (d > dmax) {
-                    index = i;
-                    dmax = d;
-                }
-            }
-            
-            if (dmax >= precision) {
-                List<int> result2 = RamerDouglasPeuckerIndex(pointArray, precision, index, endPosition);
-                resultList = RamerDouglasPeuckerIndex(pointArray, precision, startPosition, index);
-                
-                result2.RemoveAt(0);
-                resultList.AddRange(result2);
-            } else {
-                resultList.Add(startPosition);
-                resultList.Add(endPosition);
-            }
-            
-            return resultList;
         }
 
 		protected static List<Vector2> RamerDouglasPeucker(List<Vector2> pointList, float precision, int startPosition = 0, int endPosition = -1) 
@@ -267,12 +88,6 @@ namespace SVGImporter.Rendering
 			return resultList;
 		}
 
-		private static float PointDistance(Vector2 point1, Vector2 point2) {
-			float dx = point1.x - point2.x;
-			float dy = point1.y - point2.y;
-			return (float)Mathf.Sqrt( dx*dx + dy*dy );
-		}
-
 		private static float AngularCoefficient(Vector2 point1, Vector2 point2) {
 			float yDiff = (point1.y - point2.y);
 			float xDiff = (point1.x - point2.x);
@@ -304,75 +119,6 @@ namespace SVGImporter.Rendering
 		}
     	
 
-
-        public static float CurveLength(Vector3[] points)
-        {
-            float length = 0f;
-    		
-            if (points == null || points.Length <= 1)
-                return 0f;
-    		
-            Vector3 lastPoint = points [0];
-            Vector3 diff;
-            for (int i = 1; i < points.Length; i++)
-            {
-    			
-                diff.x = points [i].x - lastPoint.x;
-                diff.y = points [i].y - lastPoint.y;
-                diff.z = points [i].z - lastPoint.z;
-    			
-                length += Mathf.Sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
-    			
-                lastPoint.x = points [i].x;
-                lastPoint.y = points [i].y;
-                lastPoint.z = points [i].z;
-            }
-    		
-            return length;
-        }
-    	
-        public static float CurveLength(Vector2[] points)
-        {
-            float length = 0f;
-    		
-            if (points == null || points.Length <= 1)
-                return 0f;
-    		
-            Vector2 lastPoint = points [0];
-            Vector2 diff;
-            for (int i = 1; i < points.Length; i++)
-            {
-    			
-                diff.x = points [i].x - lastPoint.x;
-                diff.y = points [i].y - lastPoint.y;
-    			
-                length += Mathf.Sqrt(diff.x * diff.x + diff.y * diff.y);
-    			
-                lastPoint.x = points [i].x;
-                lastPoint.y = points [i].y;
-            }
-    		
-            return length;
-        }
-
-        public static SVGBounds GetLooseBounds(Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
-        {
-            SVGBounds output = SVGBounds.InfiniteInverse;
-            output.Encapsulate(start);
-            output.Encapsulate(handle0);
-            output.Encapsulate(handle1);
-            output.Encapsulate(end);
-            return output;
-        }
-
-        public static SVGBounds GetLooseBounds(Vector2 start, Vector2 handle, Vector2 end)
-        {
-            SVGBounds output = SVGBounds.InfiniteInverse;
-            output.Encapsulate(start);
-            output.Encapsulate(handle);
-            output.Encapsulate(end);
-            return output;
-        }
 
         public static List<float> GetExtremes(Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
         {
@@ -493,75 +239,6 @@ namespace SVGImporter.Rendering
             RecursiveBezier(points, distanceTolerance, x1234, y1234, x234, y234, x34, y34, x4, y4); 
         }
 
-        public static Vector2[] GetExtremePoints(Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
-        {
-            List<float> extremes = GetExtremes(start, handle0, handle1, end);
-            int extremesCount = extremes.Count;
-            Vector2[] points = new Vector2[extremesCount];
-
-            float mt, mtmtmt, mtmt, t, ttt, tt;
-            for (int i = 0; i < extremesCount; i++)
-            {
-                t = extremes [i];
-                mt = 1f - t;
-                
-                tt = t * t;
-                ttt = tt * t;
-                
-                mtmt = mt * mt;
-                mtmtmt = mtmt * mt;
-                
-                points [i].x = (mtmtmt * start.x) + (3f * mtmt * t * handle0.x) + (3f * mt * tt * handle1.x) + (ttt * end.x);
-                points [i].y = (mtmtmt * start.y) + (3f * mtmt * t * handle0.y) + (3f * mt * tt * handle1.y) + (ttt * end.y);
-            }
-
-            return points;
-        }
-
-        public static float GetApproxLength(Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
-        {
-            List<float> interval = new List<float>{0f, 1f};
-            interval.InsertRange(1, GetExtremes(start, handle0, handle1, end));
-            int intervalCount = interval.Count;
-            Vector2 currentPoint, lastPoint;
-
-            float mt, mtmtmt, mtmt, t, ttt, tt;
-            float distance = 0f;
-
-            t = interval [0];
-            mt = 1f - t;
-            
-            tt = t * t;
-            ttt = tt * t;
-            
-            mtmt = mt * mt;
-            mtmtmt = mtmt * mt;
-            
-            lastPoint.x = (mtmtmt * start.x) + (3f * mtmt * t * handle0.x) + (3f * mt * tt * handle1.x) + (ttt * end.x);
-            lastPoint.y = (mtmtmt * start.y) + (3f * mtmt * t * handle0.y) + (3f * mt * tt * handle1.y) + (ttt * end.y);
-
-            for (int i = 1; i < intervalCount; i++)
-            {
-                t = interval [i];
-                mt = 1f - t;
-                
-                tt = t * t;
-                ttt = tt * t;
-                
-                mtmt = mt * mt;
-                mtmtmt = mtmt * mt;
-                
-                currentPoint.x = (mtmtmt * start.x) + (3f * mtmt * t * handle0.x) + (3f * mt * tt * handle1.x) + (ttt * end.x);
-                currentPoint.y = (mtmtmt * start.y) + (3f * mtmt * t * handle0.y) + (3f * mt * tt * handle1.y) + (ttt * end.y);
-
-                distance += Vector2.Distance(currentPoint, lastPoint);
-
-                currentPoint = lastPoint;
-            }
-
-            return distance;
-        }
-
         public static SVGBounds GetBounds(Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
         {
             float minX = Mathf.Min(start.x, end.x);
@@ -597,68 +274,6 @@ namespace SVGImporter.Rendering
             }
 
             return new SVGBounds(minX, minY, maxX, maxY);
-        }
-
-        public static Vector3[] PathControlPointGenerator(Vector3[] path)
-        {
-            Vector3[] suppliedPath;
-            Vector3[] vector3s;
-            
-            //create and store path points:
-            suppliedPath = path;
-            
-            //populate calculate path;
-            int offset = 2;
-            vector3s = new Vector3[suppliedPath.Length + offset];
-            System.Array.Copy(suppliedPath, 0, vector3s, 1, suppliedPath.Length);
-            
-            //populate start and end control points:
-            //vector3s[0] = vector3s[1] - vector3s[2];
-            vector3s [0] = vector3s [1] + (vector3s [1] - vector3s [2]);
-            vector3s [vector3s.Length - 1] = vector3s [vector3s.Length - 2] + (vector3s [vector3s.Length - 2] - vector3s [vector3s.Length - 3]);
-            
-            //is this a closed, continuous loop? yes? well then so let's make a continuous Catmull-Rom spline!
-            if (vector3s [1] == vector3s [vector3s.Length - 2])
-            {
-                Vector3[] tmpLoopSpline = new Vector3[vector3s.Length];
-                System.Array.Copy(vector3s, tmpLoopSpline, vector3s.Length);
-                tmpLoopSpline [0] = tmpLoopSpline [tmpLoopSpline.Length - 3];
-                tmpLoopSpline [tmpLoopSpline.Length - 1] = tmpLoopSpline [2];
-                vector3s = new Vector3[tmpLoopSpline.Length];
-                System.Array.Copy(tmpLoopSpline, vector3s, tmpLoopSpline.Length);
-            }        
-            return(vector3s);
-        }
-
-        public static Vector2[] PathControlPointGenerator(Vector2[] path)
-        {
-            Vector2[] suppliedPath;
-            Vector2[] vector2s;
-            
-            //create and store path points:
-            suppliedPath = path;
-            
-            //populate calculate path;
-            int offset = 2;
-            vector2s = new Vector2[suppliedPath.Length + offset];
-            System.Array.Copy(suppliedPath, 0, vector2s, 1, suppliedPath.Length);
-            
-            //populate start and end control points:
-            //vector2s[0] = vector2s[1] - vector2s[2];
-            vector2s [0] = vector2s [1] + (vector2s [1] - vector2s [2]);
-            vector2s [vector2s.Length - 1] = vector2s [vector2s.Length - 2] + (vector2s [vector2s.Length - 2] - vector2s [vector2s.Length - 3]);
-            
-            //is this a closed, continuous loop? yes? well then so let's make a continuous Catmull-Rom spline!
-            if (vector2s [1] == vector2s [vector2s.Length - 2])
-            {
-                Vector2[] tmpLoopSpline = new Vector2[vector2s.Length];
-                System.Array.Copy(vector2s, tmpLoopSpline, vector2s.Length);
-                tmpLoopSpline [0] = tmpLoopSpline [tmpLoopSpline.Length - 3];
-                tmpLoopSpline [tmpLoopSpline.Length - 1] = tmpLoopSpline [2];
-                vector2s = new Vector2[tmpLoopSpline.Length];
-                System.Array.Copy(tmpLoopSpline, vector2s, tmpLoopSpline.Length);
-            }        
-            return(vector2s);
         }
 
         public static Vector3 Interpolate(Vector3[] points, float t)

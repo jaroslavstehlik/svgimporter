@@ -489,24 +489,6 @@ namespace SVGImporter
             }
         }
 
-        public bool ContainsMaterial(Material material)
-        {
-            if(material == _ui) return true;
-            if(material == _uiAntialiased) return true;
-            if(material == _opaqueSolid) return true;
-            if(material == _transparentSolid) return true;
-            if(material == _transparentSolidAntialiased) return true;
-            if(material == _opaqueGradient) return true;
-            if(material == _transparentGradient) return true;
-            if(material == _transparentGradientAntialiased) return true;
-
-            if(materials != null) {
-                if(materials.Contains(material)) return true;
-            }
-
-            return false;
-        }
-
         public void UpdateMaterialList()
         {
             if(materials == null) materials = new List<Material>();
@@ -518,11 +500,6 @@ namespace SVGImporter
             if(_opaqueGradient != null) materials.Add(_opaqueGradient);
             if(_transparentGradient != null) materials.Add(_transparentGradient);
             if(_transparentGradientAntialiased != null) materials.Add(_transparentGradientAntialiased);
-        }
-
-        public void UpdateGradientList()
-        {
-
         }
 
         /// <summary>
@@ -910,14 +887,6 @@ namespace SVGImporter
                 case FILL_BLEND.ALPHA_BLENDED:
                     shader = SVGShader.GradientColorAlphaBlended;
                     break;
-                    /*
-                case FILL_BLEND.ADDITIVE:
-                    shader = SVGShader.GradientColorAdditive;
-                    break;
-                case FILL_BLEND.MULTIPLY:
-                    shader = SVGShader.GradientColorMultiply;
-                    break;
-                    */
                 default:
                     shader = SVGShader.GradientColorOpaque;
                     break;
@@ -964,14 +933,6 @@ namespace SVGImporter
                 case FILL_BLEND.ALPHA_BLENDED:
                     shader = SVGShader.SolidColorAlphaBlended;
                     break;
-                    /*
-                case FILL_BLEND.ADDITIVE:
-                    shader = SVGShader.SolidColorAdditive;
-                    break;
-                case FILL_BLEND.MULTIPLY:
-                    shader = SVGShader.SolidColorMultiply;
-                    break;
-                    */
                 default:
                     shader = SVGShader.SolidColorOpaque;
                     break;
@@ -997,27 +958,6 @@ namespace SVGImporter
         {
             get {
                 return new Vector4 (atlasTextureWidth, atlasTextureHeight, gradientWidth, gradientHeight);
-            }
-        }
-
-        protected string GetMegaBytes(int bits)
-        {
-            float size = bits / 1024 / 1024 / 8;
-            if (size < 1f)
-            {
-                return Mathf.FloorToInt(bits / 1024 / 8).ToString() + " KB";
-            } else
-            {
-                return size.ToString(".0") + " MB";
-            }
-        }
-
-        public void ClearAllData ()
-        {       
-            Debug.Log("Clear Atlas Data");
-            if(_atlasData != null)
-            {
-                _atlasData.Clear();
             }
         }
 
@@ -1061,11 +1001,6 @@ namespace SVGImporter
                 UnityEngine.Object.DestroyImmediate(target, true);
             }
         }
-
-        internal static Camera[] GetAllCameras()
-        {
-            return Camera.allCameras;
-        }
         
         internal static void AddComponent<T>(Component component) where T : MonoBehaviour
         {
@@ -1086,36 +1021,6 @@ namespace SVGImporter
         public const string _GradientColorKey = "_GradientColor";
         public const string _GradientShapeKey = "_GradientShape";
         public const string _ParamsKey = "_Params";
-        public static void AssignMaterialGradients(Material material, Texture2D gradientAtlas, Texture2D gradientShape, int gradientWidth, int gradientHeight)
-        {
-            if(material == null)
-                return;
-            
-            if(material.HasProperty(_GradientColorKey))
-            {
-                material.SetTexture(_GradientColorKey, gradientAtlas);
-            }
-            if(material.HasProperty(_GradientShapeKey))
-            {
-                material.SetTexture(_GradientShapeKey, gradientShape);
-            }
-            if(material.HasProperty(_ParamsKey) && gradientAtlas != null)
-            {
-                Vector4 materialParams = new Vector4(gradientAtlas.width, gradientAtlas.height, gradientWidth, gradientHeight);
-                material.SetVector(_ParamsKey, materialParams);
-            }
-        }
-        
-        public static void AssignMaterialGradients(Material[] materials, Texture2D gradientAtlas, Texture2D gradientShape, int gradientWidth, int gradientHeight)
-        {
-            if(materials == null || materials.Length == 0)
-                return;
-            
-            for(int i = 0; i < materials.Length; i++)
-            {
-                AssignMaterialGradients(materials[i], gradientAtlas, gradientShape, gradientWidth, gradientHeight);
-            }
-        }
 
         public Material GetTransparentMaterial(bool antialiasing, bool hasGradients)
         {

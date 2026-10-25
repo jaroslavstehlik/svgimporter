@@ -98,11 +98,7 @@ namespace SVGImporter
         public ISVGRenderer svgRenderer
         {
             get {
-#if UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_4_8 || UNITY_4_9
-				if(_svgRenderer == null) _svgRenderer = GetComponent(typeof(ISVGRenderer)) as ISVGRenderer;
-#else
                 if(_svgRenderer == null) _svgRenderer = GetComponent<ISVGRenderer>();
-#endif
                 return _svgRenderer;
             }
         }

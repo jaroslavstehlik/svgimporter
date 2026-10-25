@@ -146,24 +146,8 @@ namespace SVGImporter.Utils
             point = matrix.Transform(point);
             return point;
         }
-        
-        private static float BelongPosition(Vector2 a, Vector2 b, Vector2 c) {
-            float _up, _under, _r;
-            _up = ((a.y - c.y) * (b.x - a.x)) - ((a.x - c.x) * (b.y - a.y));
-            _under = ((b.x - a.x) * (b.x - a.x)) + ((b.y - a.y) * (b.y - a.y));
-            _r = _up / _under;
-            return _r;
-        }
         //Caculate Distance from c point to line segment [a,b]
         //return d point is the point on that line segment.
-        private static int NumberOfLimitForCubic(Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
-            float _r1 = BelongPosition(a, d, b);
-            float _r2 = BelongPosition(a, d, c);
-            if((_r1 * _r2) > 0)
-                return 0;
-            else
-                return 1;
-        }
         private static float Distance(Vector2 a, Vector2 b, Vector2 c) {
             float _up, _under, _distance;
             _up = ((a.y - c.y) * (b.x - a.x)) - ((a.x - c.x) * (b.y - a.y));
@@ -300,85 +284,12 @@ namespace SVGImporter.Utils
             return new List<Vector2>(SVGBezier.AdaptiveCubicCurve(SVGGraphics.vpm, p1, p2, p3, p4));
         }
 
-        /*
-        public static List<Vector2> QuadraticCurve(Vector2 p1, Vector2 p2, Vector2 p3) {
-            return new List<Vector2>(SVGBezier.AdaptiveCubicCurve(SVGGraphics.vpm, p1, p2, p2, p3));
-        }
-        */
 
         public static List<Vector2> QuadraticCurve(Vector2 p1, Vector2 p2, Vector2 p3) {
             var cP2 = p1 + (2f / 3f) * (p2 - p1);
             var cP3 = p3 + (2f / 3f) * (p2 - p3);
             
             return new List<Vector2>(SVGBezier.AdaptiveCubicCurve(SVGGraphics.vpm, p1, cP2, cP3, p3));
-        }
-
-        public static bool IsWindingClockWise(List<Vector2> points)
-        {
-            if(points == null || points.Count < 2) return false;
-            int pointsCount = points.Count;
-            Vector2 lastPoint = points[0];
-            float sum = 0f;
-            for(int i = 1; i < pointsCount; i++)
-            {
-                sum += (points[i].x - lastPoint.x) * (points[i].y + lastPoint.y);
-                lastPoint = points[i];
-            }
-
-            return sum >= 0;
-        }
-
-        public static bool IsWindingClockWise(Vector2[] points)
-        {
-            if(points == null || points.Length < 2) return false;
-            int pointsCount = points.Length;
-            Vector2 lastPoint = points[0];
-            float sum = 0f;
-            for(int i = 1; i < pointsCount; i++)
-            {
-                sum += (points[i].x - lastPoint.x) * (points[i].y + lastPoint.y);
-                lastPoint = points[i];
-            }
-            
-            return sum >= 0;
-        }
-
-        public static Vector2[] GetPathNormals(List<Vector2> points)
-        {
-            if(points == null || points.Count < 2) return null;
-            Vector2[] normals = new Vector2[points.Count];
-            int pointsCount = points.Count;
-            Vector2 lastPoint = points[0];
-            Vector2 normal;
-            for(int i = 1; i < pointsCount; i++)
-            {
-                normal = (points[i] - lastPoint).normalized;
-                normals[i].x = normal.y;
-                normals[i].y = -normal.x;
-                lastPoint = points[i];
-            }
-            normal = (points[0] - lastPoint).normalized;
-            normals[0] = new Vector2(normal.y, -normal.x);
-            return normals;
-        }
-
-        public static Vector2[] GetPathNormals(Vector2[] points)
-        {
-            if(points == null || points.Length < 2) return null;
-            Vector2[] normals = new Vector2[points.Length];
-            int pointsCount = points.Length;
-            Vector2 lastPoint = points[0];
-            Vector2 normal;
-            for(int i = 1; i < pointsCount; i++)
-            {
-                normal = (points[i] - lastPoint).normalized;
-                normals[i].x = normal.y;
-                normals[i].y = -normal.x;
-                lastPoint = points[i];
-            }
-            normal = (points[0] - lastPoint).normalized;
-            normals[0] = new Vector2(normal.y, -normal.x);
-            return normals;
         }
 
         public static Vector2[] OffsetVerts(Vector2[] aSegment, float scale) {

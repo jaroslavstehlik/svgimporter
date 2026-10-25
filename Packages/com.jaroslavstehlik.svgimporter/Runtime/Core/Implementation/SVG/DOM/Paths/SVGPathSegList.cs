@@ -55,16 +55,6 @@ namespace SVGImporter.Rendering
         internal SVGPathSeg GetPreviousSegment(int index)
         {
             return this.GetItem(index - 1);
-            /*
-            int index = this._segList.IndexOf(seg);
-            if (index <= 0)
-            {
-                return null;
-            } else
-            {
-                return (SVGPathSeg)GetItem(index - 1);
-            }
-            */
         }
         /***********************************************************************************/
         private void SetList(SVGPathSeg newItem)

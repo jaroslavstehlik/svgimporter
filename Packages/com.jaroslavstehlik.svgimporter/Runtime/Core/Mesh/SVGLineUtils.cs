@@ -158,12 +158,6 @@ namespace SVGImporter.Utils
                 for(i = 1; i < segmentsLength; i++)
                 {
                     i1 = i - 1;
-                    /*
-                    if(segments[i1].length == 0f || segments[i].length == 0)
-                    {
-                        continue;
-                    }
-                    */
                     segmentsAngle = Vector2.Dot(segments[i].directionNormalized, segments[i1].directionNormalized);
                     segmentsAngleRotated = Vector2.Dot(segments[i].directionNormalized, segments[i1].directionNormalizedRotated);
                     
@@ -441,15 +435,6 @@ namespace SVGImporter.Utils
             return innerPoints;
         }
 
-        public static Mesh StrokeMesh(StrokeSegment[] segments, float thickness, Color32 color, StrokeLineJoin lineJoin, StrokeLineCap lineCap, float miterLimit = 4f, float[] dashArray = null, float dashOffset = 0f, ClosePathRule closeLine = ClosePathRule.NEVER, float roundQuality = 10f)
-        {           
-            if(segments == null || segments.Length == 0)
-                return null;
-
-            List<List<Vector2>> finalPoints = StrokeShape(new List<StrokeSegment[]>(){segments}, thickness, color, lineJoin, lineCap, miterLimit, dashArray, dashOffset, closeLine, roundQuality);
-            return TessellateStroke(finalPoints, color);
-        }
-
         public static List<List<Vector2>> StrokeShape(List<StrokeSegment[]> segments, float thickness, Color32 color, StrokeLineJoin lineJoin, StrokeLineCap lineCap, float miterLimit = 4f, float[] dashArray = null, float dashOffset = 0f, ClosePathRule closeLine = ClosePathRule.NEVER, float roundQuality = 10f)
         {
             if(segments == null || segments.Count == 0)
@@ -511,13 +496,6 @@ namespace SVGImporter.Utils
                 return null;
             }
         }
-        /*
-        public static Mesh StrokeMesh(List<StrokeSegment[]> segments, float thickness, Color32 color, StrokeLineJoin lineJoin, StrokeLineCap lineCap, float miterLimit = 4f, float[] dashArray = null, float dashOffset = 0f, ClosePathRule closeLine = ClosePathRule.NEVER, float roundQuality = 10f)
-        {           
-            List<List<Vector2>> finalPoints = StrokeShape(segments, thickness, color, lineJoin, lineCap, miterLimit, dashArray, dashOffset, closeLine, roundQuality);
-            return TessellateStroke(finalPoints, color);
-        }
-        */
         protected static List<StrokeSegment[]> CreateDashedStroke(StrokeSegment[] segments, float[] dashArray, float dashOffset, ref ClosePathRule closeLine)
         {
             if(segments == null || segments.Length == 0)
@@ -601,122 +579,6 @@ namespace SVGImporter.Utils
             
             if(dashLength == 0f)
                 useDash = false;
-        }
-
-        public static void TesselateStroke(List<List<Vector2>> inputShapes, Color32 color, out List<List<Vector2>> simplifiedShapes, out Vector3[] vertices, out int[] triangles, out Color32[] colors32)
-        {
-            simplifiedShapes = null;
-            vertices = null;
-            triangles = null;
-            colors32 = null;
-
-            if(inputShapes == null || inputShapes.Count == 0) return;
-            
-            int i, j;
-            
-            simplifiedShapes = new List<List<Vector2>>();
-            
-            PolyFillType fillType = PolyFillType.pftNonZero;
-            
-            for(i = 0; i < inputShapes.Count; i++)
-            {
-                if(inputShapes[i] == null || inputShapes.Count == 0)
-                    continue;
-                
-                List<List<Vector2>> output = SVGGeom.SimplifyPolygon(inputShapes[i], fillType);
-                if(output == null || output.Count == 0)
-                {
-                    simplifiedShapes.Add(inputShapes[i]);
-                } else {
-                    simplifiedShapes.AddRange(output);
-                }
-            }
-            
-            LibTessDotNet.Tess tesselation = new LibTessDotNet.Tess();
-            
-            LibTessDotNet.ContourVertex[] path;
-            for(i = 0; i < simplifiedShapes.Count; i++)
-            {
-                if(simplifiedShapes[i] == null || simplifiedShapes[i].Count < 2)
-                    continue;
-                
-                path = new LibTessDotNet.ContourVertex[simplifiedShapes[i].Count];
-                for(j = 0; j < simplifiedShapes[i].Count; j++)
-                {
-                    path[j].Position = new LibTessDotNet.Vec3{X = simplifiedShapes[i][j].x, Y = simplifiedShapes[i][j].y, Z = 0f };
-                }
-                tesselation.AddContour(path);
-            }
-            
-            tesselation.Tessellate(LibTessDotNet.WindingRule.Positive, LibTessDotNet.ElementType.Polygons, 3);
-            if(tesselation.Vertices == null || tesselation.Vertices.Length == 0) return;
-
-            int numVertices = tesselation.Vertices.Length;
-            int numTriangles = tesselation.ElementCount * 3;
-            
-            triangles = new int[numTriangles];
-            vertices = new Vector3[numVertices];
-            colors32 = new Color32[numVertices];
-            
-            for(i = 0; i < numVertices; i++)
-            {
-                vertices[i] = new Vector3(tesselation.Vertices[i].Position.X, tesselation.Vertices[i].Position.Y, 0f);
-                colors32[i] = color;
-            }
-            for (i = 0; i < numTriangles; i += 3)
-            {
-                triangles[i] = tesselation.Elements[i];
-                triangles[i + 1] = tesselation.Elements[i + 1];
-                triangles[i + 2] = tesselation.Elements[i + 2];
-            }
-        }
-
-        public static Mesh TessellateStroke(List<List<Vector2>> inputShapes, Color32 color)
-        {            
-            List<List<Vector2>> simplifiedShapes;
-            Vector3[] vertices;
-            int[] triangles;
-            Color32[] colors32;
-            
-            TesselateStroke(inputShapes, color, out simplifiedShapes, out vertices, out triangles, out colors32);
-            if(vertices == null) return null;
-
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices;
-            mesh.triangles = triangles;
-            mesh.colors32 = colors32;
-            
-            return mesh;
-        }
-        /*
-        public static Mesh TessellateStroke(List<List<Vector2>> inputShapes, Color32 color)
-        {            
-            List<List<Vector2>> simplifiedShapes;
-            Vector3[] vertices;
-            int[] triangles;
-            Color32[] colors32;
-
-            TesselateStroke(inputShapes, color, out simplifiedShapes, out vertices, out triangles, out colors32);
-            if(vertices == null) return null;
-
-            //antialiasingMesh = SVGSimplePath.CreateAntialiasing(simplifiedShapes, color, SVGAssetImport.antialiasingWidth, true, SVGImporter.Utils.ClosePathRule.ALWAYS);
-
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices;
-            mesh.triangles = triangles;
-            mesh.colors32 = colors32;
-            
-            return mesh;
-        }
-        */
-        public static float DeltaAngleRad(float current, float target)
-        {
-            float num = Mathf.Repeat(target - current, Mathf.PI * 2f);
-            if (num > Mathf.PI)
-            {
-                num -= Mathf.PI * 2f;
-            }
-            return num;
         }
     }
 }

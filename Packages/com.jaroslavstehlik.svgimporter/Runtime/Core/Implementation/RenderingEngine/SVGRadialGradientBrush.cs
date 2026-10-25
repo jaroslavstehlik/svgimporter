@@ -77,11 +77,6 @@ namespace SVGImporter.Rendering
     //        _spreadMethod = _radialGradElement.spreadMethod;
 
             GetStopList();
-            /*
-            FixF();
-            _vitriOffset = 0;
-            PreColorProcess(_vitriOffset);
-            */
         }
 
         private void CreateFill()
@@ -96,13 +91,6 @@ namespace SVGImporter.Rendering
             _gradientTransform = _radialGradElement.gradientTransform.Consolidate().matrix;
             _fill.gradientColors = SVGAssetImport.atlasData.AddGradient(ParseGradientColors());
             _fill.viewport = _viewport;
-            /*
-            _fill.transform = _transform;
-            _fill.gradientStartX = _cx;
-            _fill.gradientStartY = _cy;
-            _fill.gradientEndX = _r;
-            _fill.gradientEndY = _r;
-            */
         }
 
         private void CreateFill(Rect bounds, Rect localBounds)

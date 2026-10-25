@@ -400,38 +400,5 @@ namespace SVGImporter.Geometry
             
             return true;
         }
-        /*
-        protected static void Create9Slice()
-        {
-            int meshCount = SVGGraphics.layers.Count;
-            SVGBounds meshBounds = SVGBounds.InfiniteInverse;
-            for (int i = 0; i < meshCount; i++)
-            {
-                if (SVGGraphics.layers [i].size.sqrMagnitude == 0f) continue;                
-                meshBounds.Encapsulate(SVGGraphics.layers [i].center, SVGGraphics.layers [i].size);
-            }
-
-            // 9-slice
-            if(SVGAssetImport.border.sqrMagnitude > 0f)
-            {
-                Vector2 min = meshBounds.min;
-                Vector2 max = meshBounds.max;
-
-                float bottom = Mathf.Lerp(min.y, max.y, 0.5f);
-
-                for(int i = 0; i < meshCount; i++)
-                {
-                    if(SVGAssetImport.border.x > 0)
-                        SVGMeshCutter.MeshSplit(SVGGraphics.layers [i], new Vector2(Mathf.Lerp(min.x, max.x, SVGAssetImport.border.x), 0f), Vector2.up); 
-                    if(SVGAssetImport.border.y > 0)
-                        SVGMeshCutter.MeshSplit(SVGGraphics.layers [i], new Vector2(0f, bottom), Vector2.right);                     
-                    if(SVGAssetImport.border.z > 0)
-                        SVGMeshCutter.MeshSplit(SVGGraphics.layers [i], new Vector2(Mathf.Lerp(min.x, max.x, 1f - SVGAssetImport.border.z), 0f), Vector2.up);                     
-                    if(SVGAssetImport.border.w > 0)
-                        SVGMeshCutter.MeshSplit(SVGGraphics.layers [i], new Vector2(0f, Mathf.Lerp(min.y, max.y, SVGAssetImport.border.w)), Vector2.right); 
-                }
-            }
-        }
-        */
     }
 }

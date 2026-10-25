@@ -12,11 +12,7 @@ namespace SVGImporter.Utils
 		public static GUIStyle helpBox
 		{
 			get {
-#if UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_4_8 || UNITY_4_9
-				return typeof(EditorStyles).GetProperty("helpBox", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic).GetValue(null, null) as GUIStyle;
-#else
 				return EditorStyles.helpBox;
-#endif
 			}
 		}
 

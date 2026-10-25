@@ -169,21 +169,6 @@ namespace SVGImporter
                     }
                     EditorGUILayout.EndHorizontal();
                 } else {
-                    #if UNITY_4_6 || UNITY_4_7 || UNITY_4_8 || UNITY_4_9 || UNITY_5_0 || UNITY_5_1
-                    int vertexCount = newVectorGraphics.uiVertexCount;
-                    int percent = Mathf.RoundToInt(((float)vertexCount / 65534f) * 100f);
-                    if(vertexCount > 128)
-                    {
-                        GUIContent infoContent = new GUIContent("Asset takes "+percent+"% of this Canvas, "+vertexCount+" vertices"+
-                            "\nUI Canvas has limit of 65,534 vertices in total.");
-
-						EditorStyles s_Current = (EditorStyles)typeof(EditorStyles).GetField("s_Current", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-						GUIStyle helpBoxStyle = (GUIStyle)typeof(EditorStyles).GetField("m_HelpBox", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(s_Current);
-						Rect helpRect = GUILayoutUtility.GetRect(infoContent, helpBoxStyle);
-                        EditorGUI.ProgressBar(helpRect, percent * 0.01f, "");
-                        EditorGUI.HelpBox(helpRect, infoContent.text, MessageType.Warning);
-                    }
-					#endif
                 }
             }
 

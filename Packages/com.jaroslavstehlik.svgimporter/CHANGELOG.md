@@ -38,6 +38,7 @@
 - One import pipeline, `SVGImport.Import(svgText, SVGImportOptions)`, used by the Editor importer, `SVGAsset.Load` and 1.x SVG Assets. Imports depend only on the SVG text and the options: the same file imports the same way every time (no time stamps), and no state is left between imports.
 - `SVGAsset.Load` imports with the project's Import Engine, works in edit mode too, and has an overload taking `SVGImportOptions`. It returns null when the document can't be imported. Assets it creates destroy their mesh when destroyed.
 - Import warnings and errors are logged by the importer, so they show again when an import comes from the cache, instead of once per import in the console.
+- Removed code that was no longer used: the `SVGStrokeRenderer`, `SVGRenderTexture` and `StrokeRendererLegacy` components, the additive and multiply "Others" shaders, the SVG utility window, `SVGCombineMesh`, `SVGMeshCutter`, unused math, Bézier and mesh helpers (for example `SVGMeshUtils.MergeMeshes`, `SVGAsset.MergeLayersToShapes`, `SVGAtlas.AssignMaterialGradients`), Unity 4 and 5 code paths and commented-out code.
 - New: `SVGAsset.importOptions`, `importEngine` (the engine that imported it) and `importHash`.
 - Fixed the Opaque format with **Compress Depth** throwing an exception or drawing overlapping shapes in the wrong order when an element has both a fill and a stroke.
 - Meshes may have more than 65,535 vertices (32-bit indices); before, such files imported as an empty asset with only a console error.
