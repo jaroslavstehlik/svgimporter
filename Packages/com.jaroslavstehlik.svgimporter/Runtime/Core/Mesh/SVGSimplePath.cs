@@ -467,6 +467,37 @@ namespace SVGImporter.Rendering
         }
 
         //const float defaultViewportScale = 800f;
+        /// <summary>
+        /// A radial gradient's focal point relative to its centre, and its focal radius, in the
+        /// space GetFillTransform maps the gradient to (centre at 0.5, radius 0.5). The lengths are
+        /// resolved as GetFillTransform resolves the centre and radius.
+        /// </summary>
+        internal static void GetRadialFocus(Rect bounds, Rect localBounds, bool objectBoundingBox, SVGLength cx, SVGLength cy, SVGLength r,
+            SVGLength fx, SVGLength fy, SVGLength fr, out Vector2 focalOffset, out float focalRadius)
+        {
+            focalOffset = Vector2.zero;
+            focalRadius = 0f;
+            Vector2 centre, focus;
+            float radius, focusRadius;
+            if(objectBoundingBox && localBounds.width > 0f && localBounds.height > 0f)
+            {
+                centre = new Vector2(GetUnitValue(cx), GetUnitValue(cy));
+                focus = new Vector2(GetUnitValue(fx), GetUnitValue(fy));
+                radius = GetUnitValue(r);
+                focusRadius = GetUnitValue(fr);
+            } else {
+                centre = GetGradientVector(cx, cy, bounds);
+                focus = GetGradientVector(fx, fy, bounds);
+                radius = GetGradientVector(r, r, bounds).x;
+                if(r.unitType == SVGLengthType.Percentage) radius *= 0.5f;
+                focusRadius = GetGradientVector(fr, fr, bounds).x;
+                if(fr.unitType == SVGLengthType.Percentage) focusRadius *= 0.5f;
+            }
+            if(radius <= 0f) return;
+            focalOffset = (focus - centre) / (radius * 2f);
+            focalRadius = Mathf.Max(focusRadius, 0f) / (radius * 2f);
+        }
+
         public static SVGMatrix GetFillTransform(SVGFill svgFill, Rect bounds, Rect localBounds, bool objectBoundingBox, SVGLength[] gradientStart, SVGLength[] gradientEnd, SVGMatrix fillTransform, SVGMatrix gradientTransform)
         {
             SVGMatrix transform = SVGMatrix.identity;

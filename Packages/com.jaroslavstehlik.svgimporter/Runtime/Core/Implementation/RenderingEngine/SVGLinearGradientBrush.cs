@@ -18,7 +18,6 @@ namespace SVGImporter.Rendering
         private List<Color> _stopColorList;
         private List<float> _stopOffsetList;
         //-----
-    //    private SVGSpreadMethod _spreadMethod;
     //    private Rect bounds;
 
         protected bool _alphaBlended = false;
@@ -69,7 +68,6 @@ namespace SVGImporter.Rendering
 
             _stopColorList = new List<Color>();
             _stopOffsetList = new List<float>();
-    //        _spreadMethod = _linearGradElement.spreadMethod;
 
             GetStopList();
         }
@@ -109,7 +107,9 @@ namespace SVGImporter.Rendering
                 alphaKeys[i] = new CCGradientAlphaKey(_stopColorList[i].a, currentStopOffset);
             }
             
-            return new CCGradient(colorKeys, alphaKeys);
+            CCGradient gradient = new CCGradient(colorKeys, alphaKeys);
+            gradient.spreadMethod = _linearGradElement.spreadMethod;
+            return gradient;
         }
 
         //-----

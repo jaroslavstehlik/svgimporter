@@ -69,17 +69,19 @@ namespace SVGImporter.Rendering
             _cy = _radialGradElement.cy;
 
             _r = _radialGradElement.r;
-    //        _fx = _radialGradElement.fx.value;
-    //        _fy = _radialGradElement.fy.value;
 
             _stopColorList = new List<Color>();
             _stopOffsetList = new List<float>();
-    //        _spreadMethod = _radialGradElement.spreadMethod;
 
             GetStopList();
         }
 
         private void CreateFill()
+        {
+            CreateFill(ParseGradientColors());
+        }
+
+        private void CreateFill(CCGradient gradient)
         {                
             if(_alphaBlended)
             {
@@ -89,14 +91,18 @@ namespace SVGImporter.Rendering
             }
 
             _gradientTransform = _radialGradElement.gradientTransform.Consolidate().matrix;
-            _fill.gradientColors = SVGAssetImport.atlasData.AddGradient(ParseGradientColors());
+            _fill.gradientColors = SVGAssetImport.atlasData.AddGradient(gradient);
             _fill.viewport = _viewport;
         }
 
         private void CreateFill(Rect bounds, Rect localBounds)
         {        
-            CreateFill();
-            _fill.transform = SVGSimplePath.GetFillTransform(_fill, bounds, localBounds, _radialGradElement.gradientUnits == SVGGradientUnit.ObjectBoundingBox, new SVGLength[]{_cx, _cy}, new SVGLength[]{_r, _r}, _transform, _gradientTransform);
+            bool objectBoundingBox = _radialGradElement.gradientUnits == SVGGradientUnit.ObjectBoundingBox;
+            CCGradient gradient = ParseGradientColors();
+            SVGSimplePath.GetRadialFocus(bounds, localBounds, objectBoundingBox, _cx, _cy, _r,
+                _radialGradElement.fx, _radialGradElement.fy, _radialGradElement.fr, out gradient.focalOffset, out gradient.focalRadius);
+            CreateFill(gradient);
+            _fill.transform = SVGSimplePath.GetFillTransform(_fill, bounds, localBounds, objectBoundingBox, new SVGLength[]{_cx, _cy}, new SVGLength[]{_r, _r}, _transform, _gradientTransform);
         }
         
         public CCGradient ParseGradientColors()
@@ -114,7 +120,9 @@ namespace SVGImporter.Rendering
                 alphaKeys[i] = new CCGradientAlphaKey(_stopColorList[i].a, currentStopOffset);
             }
             
-            return new CCGradient(colorKeys, alphaKeys);
+            CCGradient gradient = new CCGradient(colorKeys, alphaKeys);
+            gradient.spreadMethod = _radialGradElement.spreadMethod;
+            return gradient;
         }
 
         private void GetStopList()

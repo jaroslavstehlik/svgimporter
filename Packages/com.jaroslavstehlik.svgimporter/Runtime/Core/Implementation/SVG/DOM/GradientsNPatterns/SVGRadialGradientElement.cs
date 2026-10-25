@@ -15,6 +15,7 @@ namespace SVGImporter.Rendering
         private SVGLength _r;
         private SVGLength _fx;
         private SVGLength _fy;
+        private SVGLength _fr;
       
         public SVGLength cx
         {
@@ -40,6 +41,11 @@ namespace SVGImporter.Rendering
         {
             get { return _fy; }
         }
+
+        public SVGLength fr
+        {
+            get { return _fr; }
+        }
       
         public SVGRadialGradientElement(SVGParser xmlImp, Node node) : base(xmlImp, node)
         {
@@ -53,11 +59,15 @@ namespace SVGImporter.Rendering
             temp = _attrList.GetValue("r");
             _r = new SVGLength((temp == "") ? "50%" : temp);
 
+            // The focal point defaults to the centre.
             temp = _attrList.GetValue("fx");
-            _fx = new SVGLength((temp == "") ? "50%" : temp);
+            _fx = (temp == "") ? _cx : new SVGLength(temp);
 
             temp = _attrList.GetValue("fy");
-            _fy = new SVGLength((temp == "") ? "50%" : temp);
+            _fy = (temp == "") ? _cy : new SVGLength(temp);
+
+            temp = _attrList.GetValue("fr");
+            _fr = new SVGLength((temp == "") ? "0" : temp);
         }
     }
 }

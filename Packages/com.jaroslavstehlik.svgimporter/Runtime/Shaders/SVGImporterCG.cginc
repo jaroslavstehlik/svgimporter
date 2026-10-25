@@ -44,17 +44,6 @@ float4 Antialiasing(float4 vertex, float3 normal)
 	return output;
 }
 
-// The position along the gradient for each gradient type (x linear, y radial, z conical, w solid),
-// computed rather than read from a lookup texture, so it is exact at any zoom (DESIGN.md, 7.1).
-// uv is the point in the gradient's unit square: linear gradients run along x from 0 to 1, radial
-// and conical gradients are centred at (0.5, 0.5) and radial ones end at a radius of 0.5. Outside
-// that range the position is clamped, which pads with the end colours.
-float4 SVGGradientShape(float2 uv)
-{
-	float2 d = uv - 0.5;
-	return saturate(float4(uv.x, length(d) * 2.0, frac(atan2(d.y, d.x) * 0.15915494 + 1.0), 1.0));
-}
-
 // Adds up to half an 8-bit step of noise to a colour before it is written to an 8-bit target, as
 // browsers do for gradients, so long and subtle gradients don't show bands (DESIGN.md, 7.1). The
 // noise is interleaved gradient noise from the pixel position: arithmetic only, no texture. A colour

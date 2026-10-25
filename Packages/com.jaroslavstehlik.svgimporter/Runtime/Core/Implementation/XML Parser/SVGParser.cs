@@ -549,7 +549,10 @@ namespace SVGImporter.Document
                 if (_defs.ContainsKey(xlink))
                 {
                     Node definitionNode = _defs [xlink];
-                    if (definitionNode != null && definitionNode != node)
+                    // Gradients inherit attributes and stops from other gradients only.
+                    bool isGradient = definitionNode != null && (definitionNode.name == SVGNodeName.LinearGradient
+                        || definitionNode.name == SVGNodeName.RadialGradient || definitionNode.name == SVGNodeName.ConicalGradient);
+                    if (isGradient && definitionNode != node)
                     {
                         MergeNodeAttributes(definitionNode, node);
                         List<Node> injectNodes = definitionNode.GetNodes();

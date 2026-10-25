@@ -43,6 +43,15 @@ public static class GradientTests
             CCGradient shuffled = new CCGradient(a.colorKeys.Reverse().ToArray(), a.alphaKeys.Reverse().ToArray());
             Check("key order doesn't matter", a.GradientEquals(shuffled), "");
 
+            // The spread method and focal point are part of what a gradient draws.
+            CCGradient reflected = a.Clone(), focused = a.Clone(), padded = a.Clone();
+            reflected.spreadMethod = SVGSpreadMethod.Reflect;
+            focused.focalOffset = new Vector2(0.25f, 0f);
+            padded.spreadMethod = SVGSpreadMethod.Pad;
+            Check("spread and focal point tell gradients apart", !a.GradientEquals(reflected) && !a.GradientEquals(focused)
+                && data.AddGradient(reflected).index != ra.index && data.AddGradient(focused).index != ra.index, "");
+            Check("an unset spread method is pad", a.GradientEquals(padded), "");
+
             // A hard stop at 0.5: red before it, blue from it on, as the shaders draw it.
             CCGradient hard = Gradient(new[] { (0f, Color.red), (0.5f, Color.red), (0.5f, Color.blue), (1f, Color.blue) });
             List<CCGradientStop> stops = hard.GetStops();

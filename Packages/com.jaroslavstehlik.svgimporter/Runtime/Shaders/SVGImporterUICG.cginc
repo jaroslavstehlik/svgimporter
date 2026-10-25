@@ -70,13 +70,13 @@ vertex_output vertexGradientsAntialiased(vertex_input v)
 
 half4 fragmentGradientsOpaque(vertex_output i) : SV_Target
 {
-	float4 gradientColor = SVGGradientColor(i.uv0.zw, dot(SVGGradientShape(i.uv0.xy), i.uv1));
+	float4 gradientColor = SVGGradientFill(i.uv0.zw, i.uv0.xy, i.uv1);
 	return float4(SVGDither((gradientColor.rgb + _TextureSampleAdd) * i.color.rgb, 1.0, i.vertex.xy), 1.0);
 }
 
 half4 fragmentGradientsAlphaBlended(vertex_output i) : SV_Target
 {
-	float4 gradientColor = SVGGradientColor(i.uv0.zw, dot(SVGGradientShape(i.uv0.xy), i.uv1));
+	float4 gradientColor = SVGGradientFill(i.uv0.zw, i.uv0.xy, i.uv1);
 	half4 output = (gradientColor + _TextureSampleAdd) * i.color;
 	
 	output.a *= UnityGet2DClipping(i.worldPosition.xy, _ClipRect);

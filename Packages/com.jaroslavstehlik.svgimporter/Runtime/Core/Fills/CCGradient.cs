@@ -57,8 +57,9 @@ namespace SVGImporter.Rendering
     }
 
     /// <summary>
-    /// What a gradient draws, compared exactly: its stops (GetStops). Gradients with equal keys
-    /// share an atlas slot; different gradients never do, whatever their hash codes.
+    /// What a gradient draws, compared exactly: its stops (GetStops), spread method and focal
+    /// point. Gradients with equal keys share an atlas slot; different gradients never do,
+    /// whatever their hash codes.
     /// </summary>
     internal readonly struct GradientKey : IEquatable<GradientKey>
     {
@@ -68,7 +69,7 @@ namespace SVGImporter.Rendering
         public GradientKey (CCGradient gradient)
         {
             List<CCGradientStop> stops = gradient.GetStops();
-            bits = new int[stops.Count * 5];
+            bits = new int[stops.Count * 5 + 4];
             for (int i = 0; i < stops.Count; i++)
             {
                 bits[i * 5] = BitConverter.SingleToInt32Bits(stops[i].offset);
@@ -77,6 +78,11 @@ namespace SVGImporter.Rendering
                 bits[i * 5 + 3] = BitConverter.SingleToInt32Bits(stops[i].color.b);
                 bits[i * 5 + 4] = BitConverter.SingleToInt32Bits(stops[i].color.a);
             }
+            int end = stops.Count * 5;
+            bits[end] = (int)gradient.spreadMode;
+            bits[end + 1] = BitConverter.SingleToInt32Bits(gradient.focalOffset.x);
+            bits[end + 2] = BitConverter.SingleToInt32Bits(gradient.focalOffset.y);
+            bits[end + 3] = BitConverter.SingleToInt32Bits(gradient.focalRadius);
             // FNV-1a over the values.
             uint hash = 2166136261;
             foreach (int value in bits)
@@ -102,6 +108,22 @@ namespace SVGImporter.Rendering
         public const string DEFAULT_GRADIENT_HASH = "GC999FFFFFFC000FFFFFFA999999A000999";
     	public CCGradientColorKey[] colorKeys;
     	public CCGradientAlphaKey[] alphaKeys;
+
+        /// <summary>How the gradient continues before its first and after its last stop.</summary>
+        public SVGSpreadMethod spreadMethod;
+        /// <summary>
+        /// Radial gradients: the focal point relative to the centre, and the focal radius, in the
+        /// gradient's normalised space, where the centre is at (0.5, 0.5) and the radius is 0.5.
+        /// Zero for a gradient that starts at its centre.
+        /// </summary>
+        public Vector2 focalOffset;
+        public float focalRadius;
+
+        /// <summary>The spread method, with Unknown read as Pad, the SVG default.</summary>
+        internal SVGSpreadMethod spreadMode
+        {
+            get { return spreadMethod == SVGSpreadMethod.Unknown ? SVGSpreadMethod.Pad : spreadMethod; }
+        }
 
         /// <summary>
         /// A text form of the gradient's content. Equal for gradients that draw the same; different
@@ -324,6 +346,9 @@ namespace SVGImporter.Rendering
                                                  (CCGradientAlphaKey[])this.alphaKeys.Clone(), false);
             gradient.index = this.index;
             gradient.atlasIndex = this.atlasIndex;
+            gradient.spreadMethod = this.spreadMethod;
+            gradient.focalOffset = this.focalOffset;
+            gradient.focalRadius = this.focalRadius;
             return gradient;
         }
 
@@ -352,7 +377,7 @@ namespace SVGImporter.Rendering
             return output;
         }
 
-        /// <summary>Whether both gradients draw the same: equal stops (see GetStops), compared exactly.</summary>
+        /// <summary>Whether both gradients draw the same: equal stops (see GetStops), spread and focal point, compared exactly.</summary>
         public bool GradientEquals(CCGradient gradient)
         {
             if (gradient == null || !gradient.initialised || !initialised) return false;

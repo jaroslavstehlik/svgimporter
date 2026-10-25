@@ -144,7 +144,7 @@ namespace SVGImporter.Native
                 fill = new SVGFill(Color.white, FILL_BLEND.OPAQUE, FILL_TYPE.GRADIENT,
                     paint.kind == SVGNativeCore.PaintKind.Radial ? GRADIENT_TYPE.RADIAL : GRADIENT_TYPE.LINEAR);
                 fill.opacity = opacity;
-                fill.gradientColors = atlasData.AddGradient(CreateGradient(paint.stops));
+                fill.gradientColors = atlasData.AddGradient(CreateGradient(paint));
                 fill.transform = LegacyGradientTransform(paint, viewport);
                 if (translucent) fill.blend = FILL_BLEND.ALPHA_BLENDED;
             }
@@ -157,7 +157,26 @@ namespace SVGImporter.Native
             return fill;
         }
 
-        /// <summary>Gradient stops as a CCGradient, with the end colours extended to 0 and 1 as the legacy brushes do.</summary>
+        /// <summary>
+        /// The paint's gradient: its stops, with the end colours extended to 0 and 1 as the legacy
+        /// brushes do, its spread method and, for radial gradients, the focal point in the space
+        /// LegacyGradientTransform maps to (centre at 0.5, radius 0.5).
+        /// </summary>
+        static CCGradient CreateGradient(SVGNativeCore.Paint paint)
+        {
+            CCGradient gradient = CreateGradient(paint.stops);
+            gradient.spreadMethod = paint.spread == SVGNativeCore.Spread.Reflect ? SVGSpreadMethod.Reflect
+                : paint.spread == SVGNativeCore.Spread.Repeat ? SVGSpreadMethod.Repeat : SVGSpreadMethod.Pad;
+            float[] g = paint.geometry;
+            if (paint.kind == SVGNativeCore.PaintKind.Radial && g[2] > 0f)
+            {
+                float diameter = g[2] * 2f;
+                gradient.focalOffset = new Vector2((g[3] - g[0]) / diameter, (g[4] - g[1]) / diameter);
+                gradient.focalRadius = g[5] / diameter;
+            }
+            return gradient;
+        }
+
         static CCGradient CreateGradient(SVGNativeCore.Stop[] stops)
         {
             var colorKeys = new List<CCGradientColorKey>();

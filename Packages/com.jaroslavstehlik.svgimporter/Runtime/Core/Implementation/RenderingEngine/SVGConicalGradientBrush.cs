@@ -68,12 +68,9 @@ namespace SVGImporter.Rendering
             _cx = _conicalGradElement.cx;
             _cy = _conicalGradElement.cy;
             _r = _conicalGradElement.r;
-    //        _fx = _conicalGradElement.fx.value;
-    //        _fy = _conicalGradElement.fy.value;
 
             _stopColorList = new List<Color>();
             _stopOffsetList = new List<float>();
-    //        _spreadMethod = _conicalGradElement.spreadMethod;
 
             GetStopList();
         }

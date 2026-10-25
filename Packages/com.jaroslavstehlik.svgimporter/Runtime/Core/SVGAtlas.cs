@@ -584,8 +584,14 @@ namespace SVGImporter
                 pixels[i * 2] = stops[i].color;
                 pixels[i * 2 + 1] = new Color(stops[i].offset, 0f, 0f, 0f);
             }
+            // Row 1: the stop count and spread method (0 pad, 1 reflect, 2 repeat), the focal offset,
+            // then the focal radius.
             if (gradientHeight > 1)
-                pixels[gradientWidth] = new Color(stops.Count, 0f, 0f, 0f);
+            {
+                int spread = gradient.spreadMode == SVGSpreadMethod.Reflect ? 1 : gradient.spreadMode == SVGSpreadMethod.Repeat ? 2 : 0;
+                pixels[gradientWidth] = new Color(stops.Count, spread, gradient.focalOffset.x, gradient.focalOffset.y);
+                pixels[gradientWidth + 1] = new Color(gradient.focalRadius, 0f, 0f, 0f);
+            }
             texture.SetPixels(x, y, gradientWidth, gradientHeight, pixels);
         }
 
