@@ -32,6 +32,7 @@ Shader "SVG Importer/GradientColor/GradientColorAdditive" {
 			CGPROGRAM
 			#pragma vertex vertexGradients
 			#pragma fragment fragmentGradientsAlphaBlended
+			#pragma target 3.5
 			#include "UnityCG.cginc"
 			#include "../SVGImporterGradientCG.cginc"			
 			ENDCG

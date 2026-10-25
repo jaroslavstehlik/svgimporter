@@ -41,6 +41,18 @@ float4 SVGGradientShape(float2 uv)
 	return saturate(float4(uv.x, length(d) * 2.0, frac(atan2(d.y, d.x) * 0.15915494 + 1.0), 1.0));
 }
 
+// Exact sRGB transfer functions (Unity's GammaToLinearSpace is an approximation).
+float3 SVGLinearToSRGB(float3 c)
+{
+	c = max(c, 0.0);
+	return lerp(1.055 * pow(c, 1.0 / 2.4) - 0.055, c * 12.92, step(c, 0.0031308));
+}
+
+float3 SVGSRGBToLinear(float3 c)
+{
+	return lerp(pow((max(c, 0.0) + 0.055) / 1.055, 2.4), c / 12.92, step(c, 0.04045));
+}
+
 // Adds up to half an 8-bit step of noise to a colour before it is written to an 8-bit target, as
 // browsers do for gradients, so long and subtle gradients don't show bands (DESIGN.md, 7.1). The
 // noise is interleaved gradient noise from the pixel position: arithmetic only, no texture. A colour
@@ -53,9 +65,6 @@ float3 SVGDither(float3 color, float alpha, float2 pixel)
 	return color + noise;
 #else
 	// The target stores sRGB, so the noise is added in sRGB: half a step in dark tones too.
-	float3 c = max(color, 0.0);
-	float3 srgb = lerp(1.055 * pow(c, 1.0 / 2.4) - 0.055, c * 12.92, step(c, 0.0031308));
-	srgb += noise;
-	return lerp(pow((max(srgb, 0.0) + 0.055) / 1.055, 2.4), srgb / 12.92, step(srgb, 0.04045));
+	return SVGSRGBToLinear(SVGLinearToSRGB(color) + noise);
 #endif
 }

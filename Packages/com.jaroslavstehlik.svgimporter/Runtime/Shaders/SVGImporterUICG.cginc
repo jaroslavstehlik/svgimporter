@@ -1,8 +1,8 @@
 
 
 #include "SVGImporterCG.cginc"
+#include "SVGImporterGradientColor.cginc"
 
-sampler2D _GradientColor;
 float4 _Params;
 
 float4 _ClipRect;
@@ -37,16 +37,12 @@ vertex_output vertexGradients(vertex_input v)
 	o.uv0.xy = v.texcoord0.xy;
 	o.color = v.color;
 
-	// half pixel
-	float2 texelOffset = float2(0.5 / _Params.x, 0.5 / _Params.y);
-	float imageIndex = v.texcoord1.x * _Params.z;
-
-	// Horizontal Start
-	o.uv0.z = saturate((fmod(imageIndex, _Params.x) / _Params.x) + texelOffset.x);
-	// Horizontal Width
-	o.uv1 = saturate((1.0 - abs(float4(0.0, 1.0, 2.0, 3.0) - v.texcoord1.y)) * (_Params.z / _Params.x - texelOffset.x * 2.0));
-	// Vertical Start
-	o.uv0.w = saturate((floor((imageIndex / _Params.x) * _Params.w) / _Params.y) + texelOffset.y);
+	// The gradient's slot in the atlas (_Params: atlas width and height, slot width and height),
+	// in texels, and which gradient position to use (x linear, y radial, z conical, w solid).
+	float slotIndex = v.texcoord1.x * _Params.z;
+	o.uv0.z = fmod(slotIndex, _Params.x);
+	o.uv0.w = floor(slotIndex / _Params.x) * _Params.w;
+	o.uv1 = saturate(1.0 - abs(float4(0.0, 1.0, 2.0, 3.0) - v.texcoord1.y));
 
     return o;
 }
@@ -63,32 +59,26 @@ vertex_output vertexGradientsAntialiased(vertex_input v)
     o.uv0.xy = v.texcoord0.xy;
     o.color = v.color;
 	
-	// half pixel
-	float2 texelOffset = float2(0.5 / _Params.x, 0.5 / _Params.y);
-	float imageIndex = v.texcoord1.x * _Params.z;
-	
-	// Horizontal Start
-    o.uv0.z = saturate((fmod(imageIndex, _Params.x) / _Params.x) + texelOffset.x);
-    // Horizontal Width
-    o.uv1 = saturate((1.0 - abs(float4(0.0, 1.0, 2.0, 3.0) - v.texcoord1.y)) * (_Params.z / _Params.x - texelOffset.x * 2.0));
-    // Vertical Start
-    o.uv0.w = saturate((floor((imageIndex / _Params.x) * _Params.w) / _Params.y) + texelOffset.y);    
+	// The gradient's slot in the atlas (_Params: atlas width and height, slot width and height),
+	// in texels, and which gradient position to use (x linear, y radial, z conical, w solid).
+	float slotIndex = v.texcoord1.x * _Params.z;
+	o.uv0.z = fmod(slotIndex, _Params.x);
+	o.uv0.w = floor(slotIndex / _Params.x) * _Params.w;
+	o.uv1 = saturate(1.0 - abs(float4(0.0, 1.0, 2.0, 3.0) - v.texcoord1.y));
     
     return o;
 }
 
 half4 fragmentGradientsOpaque(vertex_output i) : SV_Target
 {
-	float gradient = dot(SVGGradientShape(i.uv0.xy), i.uv1) ;
-	float2 gradientColorUV = float2(i.uv0.z + gradient, i.uv0.w);
-	return float4(SVGDither((tex2D(_GradientColor, gradientColorUV).rgb + _TextureSampleAdd) * i.color.rgb, 1.0, i.vertex.xy), 1.0);
+	float4 gradientColor = SVGGradientColor(i.uv0.zw, dot(SVGGradientShape(i.uv0.xy), i.uv1));
+	return float4(SVGDither((gradientColor.rgb + _TextureSampleAdd) * i.color.rgb, 1.0, i.vertex.xy), 1.0);
 }
 
 half4 fragmentGradientsAlphaBlended(vertex_output i) : SV_Target
 {
-	float gradient = dot(SVGGradientShape(i.uv0.xy), i.uv1) ;
-	float2 gradientColorUV = float2(i.uv0.z + gradient, i.uv0.w);
-	half4 output = (tex2D(_GradientColor, gradientColorUV) + _TextureSampleAdd) * i.color;
+	float4 gradientColor = SVGGradientColor(i.uv0.zw, dot(SVGGradientShape(i.uv0.xy), i.uv1));
+	half4 output = (gradientColor + _TextureSampleAdd) * i.color;
 	
 	output.a *= UnityGet2DClipping(i.worldPosition.xy, _ClipRect);
 	output.rgb = SVGDither(output.rgb, output.a, i.vertex.xy);

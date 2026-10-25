@@ -50,6 +50,7 @@ Shader "SVG Importer/UI/UI" {
 			CGPROGRAM
 			#pragma vertex vertexGradients
 			#pragma fragment fragmentGradientsAlphaBlended
+			#pragma target 3.5
 			#pragma fragmentoption ARB_precision_hint_fastest
 			#pragma glsl_no_auto_normalization 
 			#include "UnityCG.cginc"			

@@ -3,6 +3,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SVGImporter
 {
@@ -544,26 +545,94 @@ namespace SVGImporter
             }
     	}
     	
-        const int pixelOffset = 1;
+        /// <summary>The most stops a gradient keeps; gradients with more are resampled.</summary>
+        public const int maxStops = 64;
+
+        /// <summary>
+        /// Writes a gradient's stops into its slot of the atlas (DESIGN.md, 7.1): row 0 holds two
+        /// texels per stop, its colour (sRGB, straight alpha) and its offset; row 1 starts with the
+        /// stop count. The gradient shaders find the stops around a position and interpolate.
+        /// </summary>
         public static void RenderGradient (Texture2D texture, CCGradient gradient, int x, int y, int gradientWidth, int gradientHeight)
         {
-            //Debug.Log(string.Format("x: {0}, y: {1}, gradient: {2}", x, y, gradient));
             if (texture == null || gradient == null || !gradient.initialised)
                 return;
-            
-            float tempWidth = gradientWidth - 1 - pixelOffset * 2;
+
+            List<Stop> stops = GetStops(gradient, Mathf.Min(maxStops, gradientWidth / 2));
             Color[] pixels = new Color[gradientWidth * gradientHeight];
-            
-            Color pixel;
-            
-            for (int i = 0; i < gradientWidth; i++) {
-                pixel = gradient.Evaluate ((float)(i - pixelOffset) / tempWidth);
-                for(int j = 0; j < gradientHeight; j++) {
-                    pixels [gradientWidth * j + i] = pixel;
-                }
+            for (int i = 0; i < stops.Count; i++)
+            {
+                pixels[i * 2] = stops[i].color;
+                pixels[i * 2 + 1] = new Color(stops[i].offset, 0f, 0f, 0f);
             }
-            
+            if (gradientHeight > 1)
+                pixels[gradientWidth] = new Color(stops.Count, 0f, 0f, 0f);
             texture.SetPixels(x, y, gradientWidth, gradientHeight, pixels);
+        }
+
+        struct Stop
+        {
+            public float offset;
+            public Color color;
+        }
+
+        /// <summary>
+        /// The gradient's colour and alpha keys merged into stops in offset order. Keys at the same
+        /// offset (hard stops) keep their order.
+        /// </summary>
+        static List<Stop> GetStops(CCGradient gradient, int limit)
+        {
+            // CCGradient keeps its keys in descending time order.
+            CCGradientColorKey[] colors = gradient.colorKeys.Reverse().ToArray();
+            CCGradientAlphaKey[] alphas = gradient.alphaKeys.Reverse().ToArray();
+            var stops = new List<Stop>();
+            int c = 0, a = 0;
+            while (c < colors.Length || a < alphas.Length)
+            {
+                float colorTime = c < colors.Length ? colors[c].time : float.MaxValue;
+                float alphaTime = a < alphas.Length ? alphas[a].time : float.MaxValue;
+                float time = Mathf.Min(colorTime, alphaTime);
+                Color color = colorTime == time ? (Color)colors[c].color : ColorAt(colors, c, time);
+                color.a = alphaTime == time ? alphas[a].alpha : AlphaAt(alphas, a, time);
+                stops.Add(new Stop { offset = Mathf.Clamp01(time), color = color });
+                if (colorTime == time) c++;
+                if (alphaTime == time) a++;
+            }
+            if (stops.Count == 0)
+                stops.Add(new Stop { offset = 0f, color = Color.black });
+            if (stops.Count <= limit)
+                return stops;
+
+            // Too many stops: resample evenly.
+            var resampled = new List<Stop>(limit);
+            for (int i = 0; i < limit; i++)
+            {
+                float t = i / (float)(limit - 1);
+                int k = stops.FindLastIndex(stop => stop.offset <= t);
+                Stop from = stops[Mathf.Max(k, 0)], to = stops[Mathf.Min(k + 1, stops.Count - 1)];
+                float f = to.offset > from.offset ? Mathf.Clamp01((t - from.offset) / (to.offset - from.offset)) : 0f;
+                resampled.Add(new Stop { offset = t, color = Color.Lerp(from.color, to.color, f) });
+            }
+            return resampled;
+        }
+
+        // The colour between keys[next - 1] and keys[next] at time.
+        static Color ColorAt(CCGradientColorKey[] keys, int next, float time)
+        {
+            if (keys.Length == 0) return Color.black;
+            if (next <= 0) return keys[0].color;
+            if (next >= keys.Length) return keys[keys.Length - 1].color;
+            CCGradientColorKey from = keys[next - 1], to = keys[next];
+            return Color.Lerp(from.color, to.color, to.time > from.time ? (time - from.time) / (to.time - from.time) : 0f);
+        }
+
+        static float AlphaAt(CCGradientAlphaKey[] keys, int next, float time)
+        {
+            if (keys.Length == 0) return 1f;
+            if (next <= 0) return keys[0].alpha;
+            if (next >= keys.Length) return keys[keys.Length - 1].alpha;
+            CCGradientAlphaKey from = keys[next - 1], to = keys[next];
+            return Mathf.Lerp(from.alpha, to.alpha, to.time > from.time ? (time - from.time) / (to.time - from.time) : 0f);
         }
 
     	public int imagePerRow {
@@ -614,8 +683,10 @@ namespace SVGImporter
 
 		public static Texture2D CreateTexture(int width, int height)
 		{
-			Texture2D texture = new Texture2D (width, height, TextureFormat.ARGB32, false);
-			texture.filterMode = FilterMode.Bilinear;
+			// Stop data, not an image: half floats for the offsets, no sRGB decoding (the shaders
+			// interpolate in sRGB) and no filtering.
+			Texture2D texture = new Texture2D (width, height, TextureFormat.RGBAHalf, false, true);
+			texture.filterMode = FilterMode.Point;
 			texture.wrapMode = TextureWrapMode.Clamp;
 //			texture.alphaIsTransparency = true;
 			texture.anisoLevel = 0;

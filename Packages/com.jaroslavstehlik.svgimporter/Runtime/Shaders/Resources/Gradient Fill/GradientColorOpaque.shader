@@ -32,6 +32,7 @@ Shader "SVG Importer/GradientColor/GradientColorOpaque" {
 			CGPROGRAM
 			#pragma vertex vertexGradients
 			#pragma fragment fragmentGradientsOpaque
+			#pragma target 3.5
 			#include "UnityCG.cginc"
 			#include "../../SVGImporterGradientCG.cginc"			
 			ENDCG

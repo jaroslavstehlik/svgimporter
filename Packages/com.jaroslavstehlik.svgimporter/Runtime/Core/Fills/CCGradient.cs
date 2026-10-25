@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using System;
+using System.Linq;
 
 namespace SVGImporter.Rendering
 {
@@ -157,8 +158,11 @@ namespace SVGImporter.Rendering
 
             if(sort)
             {
-                Array.Sort<CCGradientColorKey>(this.colorKeys, (x, y) => y.time.CompareTo(x.time));
-                Array.Sort<CCGradientAlphaKey>(this.alphaKeys, (x, y) => y.time.CompareTo(x.time));
+                // Descending time; keys at the same time (hard stops) end up in reverse order, so
+                // that reading the array backwards gives their original order. Array.Sort isn't
+                // stable and could swap them.
+                this.colorKeys = this.colorKeys.Select((key, i) => new { key, i }).OrderByDescending(k => k.key.time).ThenByDescending(k => k.i).Select(k => k.key).ToArray();
+                this.alphaKeys = this.alphaKeys.Select((key, i) => new { key, i }).OrderByDescending(k => k.key.time).ThenByDescending(k => k.i).Select(k => k.key).ToArray();
             }
 
             if (this.alphaKeys == null || this.alphaKeys.Length == 0) {
