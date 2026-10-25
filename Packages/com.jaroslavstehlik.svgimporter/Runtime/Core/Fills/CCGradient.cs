@@ -43,32 +43,77 @@ namespace SVGImporter.Rendering
         }
     }
 
+    /// <summary>A gradient stop: a colour (sRGB, straight alpha) at an offset along the gradient.</summary>
+    [System.Serializable]
+    public struct CCGradientStop {
+        public float offset;
+        public Color color;
+
+        public CCGradientStop (float offset, Color color)
+        {
+            this.offset = offset;
+            this.color = color;
+        }
+    }
+
+    /// <summary>
+    /// What a gradient draws, compared exactly: its stops (GetStops). Gradients with equal keys
+    /// share an atlas slot; different gradients never do, whatever their hash codes.
+    /// </summary>
+    internal readonly struct GradientKey : IEquatable<GradientKey>
+    {
+        readonly int[] bits;
+        readonly int hashCode;
+
+        public GradientKey (CCGradient gradient)
+        {
+            List<CCGradientStop> stops = gradient.GetStops();
+            bits = new int[stops.Count * 5];
+            for (int i = 0; i < stops.Count; i++)
+            {
+                bits[i * 5] = BitConverter.SingleToInt32Bits(stops[i].offset);
+                bits[i * 5 + 1] = BitConverter.SingleToInt32Bits(stops[i].color.r);
+                bits[i * 5 + 2] = BitConverter.SingleToInt32Bits(stops[i].color.g);
+                bits[i * 5 + 3] = BitConverter.SingleToInt32Bits(stops[i].color.b);
+                bits[i * 5 + 4] = BitConverter.SingleToInt32Bits(stops[i].color.a);
+            }
+            // FNV-1a over the values.
+            uint hash = 2166136261;
+            foreach (int value in bits)
+                hash = (hash ^ (uint)value) * 16777619;
+            hashCode = (int)hash;
+        }
+
+        public bool Equals (GradientKey other)
+        {
+            if (hashCode != other.hashCode || bits.Length != other.bits.Length) return false;
+            for (int i = 0; i < bits.Length; i++)
+                if (bits[i] != other.bits[i]) return false;
+            return true;
+        }
+
+        public override bool Equals (object obj) { return obj is GradientKey && Equals((GradientKey)obj); }
+        public override int GetHashCode () { return hashCode; }
+    }
+
     [System.Serializable]
     public class CCGradient : System.Object {
+        [System.Obsolete("Gradients are identified by their content; see GradientEquals.")]
         public const string DEFAULT_GRADIENT_HASH = "GC999FFFFFFC000FFFFFFA999999A000999";
     	public CCGradientColorKey[] colorKeys;
     	public CCGradientAlphaKey[] alphaKeys;
-    	
+
+        /// <summary>
+        /// A text form of the gradient's content. Equal for gradients that draw the same; different
+        /// gradients can share it (it's a hash), so compare them with GradientEquals.
+        /// </summary>
+        [System.Obsolete("Compare gradients with GradientEquals.")]
     	public string hash {
     		get {
-                string hash = "G";
-                
-                if (colorKeys != null && colorKeys.Length > 0) {
-                    for (int i = 0; i < colorKeys.Length; i++) {
-                        hash += "C"+(Mathf.RoundToInt(colorKeys[i].time * 999)).ToString("000") + ColorToHex (colorKeys[i].color);
-                    }
-                }
-                
-                if (alphaKeys != null && alphaKeys.Length > 0) {
-                    for (int i = 0; i < alphaKeys.Length; i++) {
-                        //                    Debug.Log(alphaKeys[i]);
-                        hash += "A"+(Mathf.RoundToInt(alphaKeys [i].time * 999)).ToString("000") + (Mathf.RoundToInt(alphaKeys [i].alpha * 999)).ToString("000");
-                    }
-                }
-                return hash;
+                return "G" + new GradientKey(this).GetHashCode().ToString("X8");
     		}
     	}
-    	
+
     	public int index;
 
         [HideInInspector]
@@ -90,6 +135,7 @@ namespace SVGImporter.Rendering
         [System.NonSerialized]
         public System.Action<ISVGReference> onReferenceRemoved;
         
+        [System.Obsolete("The atlas no longer counts references; gradients stay registered while it exists.")]
         public bool AddReference(ISVGReference reference)
         {
             if(_references == null)
@@ -109,6 +155,7 @@ namespace SVGImporter.Rendering
             }
         }
         
+        [System.Obsolete("The atlas no longer counts references; gradients stay registered while it exists.")]
         public bool RemoveReference(ISVGReference reference)
         {
             if(_references != null)
@@ -124,6 +171,7 @@ namespace SVGImporter.Rendering
             }
         }
 
+        [System.Obsolete("The atlas no longer counts references; gradients stay registered while it exists.")]
         public int CountReferences(ISVGReference reference)
         {
             int count = 0;
@@ -138,6 +186,7 @@ namespace SVGImporter.Rendering
             return count;
         }
         
+        [System.Obsolete("The atlas no longer counts references; gradients stay registered while it exists.")]
         public int referenceCount
         {
             get {
@@ -173,86 +222,71 @@ namespace SVGImporter.Rendering
     		}	    		
     	}
     	
+        /// <summary>
+        /// The gradient as stops in offset order: the colour keys and alpha keys merged, each
+        /// stop with both a colour and an alpha. Keys at the same offset (hard stops) keep their
+        /// order. This is what the gradient draws, and what the atlas stores.
+        /// </summary>
+        public List<CCGradientStop> GetStops ()
+        {
+            var stops = new List<CCGradientStop>();
+            if (colorKeys == null || alphaKeys == null) return stops;
+            // The keys are kept in descending time order (see SetKeys).
+            CCGradientColorKey[] colors = colorKeys.Reverse().ToArray();
+            CCGradientAlphaKey[] alphas = alphaKeys.Reverse().ToArray();
+            int c = 0, a = 0;
+            while (c < colors.Length || a < alphas.Length)
+            {
+                float colorTime = c < colors.Length ? colors[c].time : float.MaxValue;
+                float alphaTime = a < alphas.Length ? alphas[a].time : float.MaxValue;
+                float time = Mathf.Min(colorTime, alphaTime);
+                Color color = colorTime == time ? (Color)colors[c].color : ColorAt(colors, c, time);
+                color.a = alphaTime == time ? alphas[a].alpha : AlphaAt(alphas, a, time);
+                stops.Add(new CCGradientStop(Mathf.Clamp01(time), color));
+                if (colorTime == time) c++;
+                if (alphaTime == time) a++;
+            }
+            return stops;
+        }
+
+        // The colour between keys[next - 1] and keys[next] at time.
+        static Color ColorAt (CCGradientColorKey[] keys, int next, float time)
+        {
+            if (keys.Length == 0) return Color.black;
+            if (next <= 0) return keys[0].color;
+            if (next >= keys.Length) return keys[keys.Length - 1].color;
+            CCGradientColorKey from = keys[next - 1], to = keys[next];
+            return Color.Lerp(from.color, to.color, to.time > from.time ? (time - from.time) / (to.time - from.time) : 0f);
+        }
+
+        static float AlphaAt (CCGradientAlphaKey[] keys, int next, float time)
+        {
+            if (keys.Length == 0) return 1f;
+            if (next <= 0) return keys[0].alpha;
+            if (next >= keys.Length) return keys[keys.Length - 1].alpha;
+            CCGradientAlphaKey from = keys[next - 1], to = keys[next];
+            return Mathf.Lerp(from.alpha, to.alpha, to.time > from.time ? (time - from.time) / (to.time - from.time) : 0f);
+        }
+
+        /// <summary>
+        /// The colour at a position along the gradient, as the gradient shaders compute it: at a
+        /// hard stop, the stop after it.
+        /// </summary>
     	public Color32 Evaluate (float time)
     	{
-    		time = Mathf.Clamp01 (time);
-            Color32 output;
-    		
-            if(colorKeys == null || colorKeys.Length == 0)
-            {
-                output = new Color32(0, 0, 0, 255);
-            } else if (colorKeys.Length == 1) {
-                output = colorKeys [0].color;
-    		} else {
-                int colorKeysCount = colorKeys.Length;
-    			float minDistance = float.MaxValue;
-    			float distance = 0f;
-    			int tempIndex = 0;
-    			
-    			for (int i = 0; i < colorKeysCount; i++) {
-    				distance = Mathf.Abs (colorKeys [i].time - time);
-    				if (distance < minDistance) {
-    					minDistance = distance;
-                        tempIndex = i;
-    				} else if (distance > minDistance) {
-    					break;
-    				} else {
-    					minDistance = distance;
-                        tempIndex = i;					
-    					break;
-    				}
-    			}
+            return Evaluate(GetStops(), time);
+        }
 
-                if (colorKeys [tempIndex].time > time) {
-    				int minIndex = tempIndex, maxIndex = Mathf.Clamp (tempIndex + 1, 0, colorKeysCount - 1);
-    				output = Color32.Lerp (colorKeys [minIndex].color, colorKeys [maxIndex].color, Mathf.InverseLerp (colorKeys [minIndex].time, colorKeys [maxIndex].time, time));
-    			} else if (colorKeys [tempIndex].time < time) {
-    				int minIndex = Mathf.Clamp (tempIndex - 1, 0, colorKeysCount - 1), maxIndex = tempIndex;
-    				output = Color32.Lerp (colorKeys [minIndex].color, colorKeys [maxIndex].color, Mathf.InverseLerp (colorKeys [minIndex].time, colorKeys [maxIndex].time, time));				
-    			} else {
-    				output = colorKeys [tempIndex].color;
-    			}		
-    		}
-    		
-            if (alphaKeys == null || alphaKeys.Length == 0) 
-            {
-                output.a = 255;
-            } else if (alphaKeys.Length == 1) {
-    			output.a = (byte)(Mathf.RoundToInt (alphaKeys [0].alpha * 255));
-    		} else {
-                int alphaKeysCount = alphaKeys.Length;
-    			float minDistance = float.MaxValue;
-    			float distance = 0f;
-    			int tempIndex = 0;
-    			
-    			for (int i = 0; i < alphaKeysCount; i++) {
-    				distance = Mathf.Abs (alphaKeys [i].time - time);
-    				if (distance < minDistance) {
-    					minDistance = distance;
-    					tempIndex = i;
-    				} else if (distance > minDistance) {
-    					break;
-    				} else {
-    					minDistance = distance;
-    					tempIndex = i;
-    					break;
-    				}
-    			}
-    			
-                if (alphaKeys [tempIndex].time > time) {				
-    				int minIndex = tempIndex, maxIndex = Mathf.Clamp (tempIndex + 1, 0, alphaKeysCount - 1);				
-    				output.a = (byte)(Mathf.RoundToInt (Mathf.Lerp ((float)alphaKeys [minIndex].alpha, (float)alphaKeys [maxIndex].alpha, Mathf.InverseLerp (alphaKeys [minIndex].time, alphaKeys [maxIndex].time, time)) * 255));
-    			} else if (alphaKeys [tempIndex].time < time) {
-    				int minIndex = Mathf.Clamp (tempIndex - 1, 0, alphaKeysCount - 1), maxIndex = tempIndex;
-    				output.a = (byte)(Mathf.RoundToInt (Mathf.Lerp ((float)alphaKeys [minIndex].alpha, (float)alphaKeys [maxIndex].alpha, Mathf.InverseLerp (alphaKeys [minIndex].time, alphaKeys [maxIndex].time, time)) * 255));
-    			} else {
-    				output.a = (byte)Mathf.RoundToInt (alphaKeys [tempIndex].alpha * 255);
-    			}
-    		}
-    		
-    		return output;
+        internal static Color Evaluate (List<CCGradientStop> stops, float time)
+        {
+            if (stops.Count == 0) return Color.black;
+            int last = stops.FindLastIndex(stop => stop.offset <= time);
+            if (last < 0) return stops[0].color;
+            if (last == stops.Count - 1) return stops[last].color;
+            CCGradientStop from = stops[last], to = stops[last + 1];
+            return Color.Lerp(from.color, to.color, to.offset > from.offset ? (time - from.offset) / (to.offset - from.offset) : 0f);
     	}
-    	
+
     	public Color32 ApproximateColor (int samples)
     	{
     		int r = 0, g = 0, b = 0, a = 0;
@@ -295,7 +329,7 @@ namespace SVGImporter.Rendering
 
         public override string ToString()
         {
-            string output = string.Format("[CCGradient: initialised={0}, index={1}, atlasIndex={2}]",  hash, initialised, index, atlasIndex);
+            string output = string.Format("[CCGradient: initialised={0}, index={1}, atlasIndex={2}]", initialised, index, atlasIndex);
 
             if(colorKeys != null && colorKeys.Length > 0)
             {
@@ -318,43 +352,11 @@ namespace SVGImporter.Rendering
             return output;
         }
 
-        private static bool CompareRGBA(Color32 a, Color32 b)
-        {
-	        return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
-        }
-
+        /// <summary>Whether both gradients draw the same: equal stops (see GetStops), compared exactly.</summary>
         public bool GradientEquals(CCGradient gradient)
         {
-	        if (gradient == null)
-	        {
-		        return false;
-	        }
-
-	        if (gradient.colorKeys == null || gradient.colorKeys.Length != colorKeys.Length ||
-	            gradient.alphaKeys == null || gradient.alphaKeys.Length != alphaKeys.Length)
-	        {
-		        return false;
-	        }
-
-	        for (int i = 0; i < gradient.colorKeys.Length; i++)
-	        {
-		        if (!CompareRGBA(gradient.colorKeys[i].color, colorKeys[i].color) ||
-		            gradient.colorKeys[i].time != this.colorKeys[i].time)
-		        {
-			        return false;
-		        }
-	        }
-
-	        for (int i = 0; i < gradient.alphaKeys.Length; i++)
-	        {
-		        if (gradient.alphaKeys[i].alpha != alphaKeys[i].alpha ||
-		            gradient.alphaKeys[i].time != alphaKeys[i].time)
-		        {
-			        return false;
-		        }
-	        }
-
-	        return true;
+            if (gradient == null || !gradient.initialised || !initialised) return false;
+            return new GradientKey(this).Equals(new GradientKey(gradient));
         }
 
         // Note that Color32 and Color implictly convert to each other. You may pass a Color object to this method without first casting it.

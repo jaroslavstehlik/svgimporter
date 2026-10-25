@@ -1421,17 +1421,9 @@ namespace SVGImporter
 
                 if(hasGradients)
                 {
-                    if(SVGAssetImport.atlasData.gradientCache != null && SVGAssetImport.atlasData.gradientCache.Count > 0)
-                    {
-                        int gradientsCount = SVGAssetImport.atlasData.gradientCache.Count;
-                        CCGradient[] gradients = new CCGradient[gradientsCount];
-                        int i = 0;
-                        foreach(KeyValuePair<string, CCGradient> entry in SVGAssetImport.atlasData.gradientCache)
-                        {
-                            gradients[i++] = entry.Value;
-                        }
+                    CCGradient[] gradients = SVGAssetImport.atlasData.registeredGradients;
+                    if(gradients.Length > 0)
                         asset._sharedGradients = gradients;
-                    }
                 }
             } catch(System.Exception exception) {
                 Debug.LogWarning("Asset Failed to import\n"+exception.Message);

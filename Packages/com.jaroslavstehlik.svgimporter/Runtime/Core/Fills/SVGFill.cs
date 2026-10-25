@@ -44,6 +44,7 @@ namespace SVGImporter.Rendering
         public SVGMatrix transform;
 
         public string gradientId;
+        [System.Obsolete("Compare gradients with CCGradient.GradientEquals.")]
         public string gradientHash {
             get {
                 return gradientColors.hash;

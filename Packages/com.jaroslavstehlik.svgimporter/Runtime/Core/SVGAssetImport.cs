@@ -283,17 +283,9 @@ namespace SVGImporter
                 _editor_SetGradients.Invoke(asset, new object[]{null});
                 if(hasGradients)
                 {
-                    if(atlasData.gradientCache != null && atlasData.gradientCache.Count > 0)
-                    {
-                        int gradientsCount = SVGAssetImport.atlasData.gradientCache.Count;
-                        CCGradient[] gradients = new CCGradient[gradientsCount];
-                        int i = 0;
-                        foreach(KeyValuePair<string, CCGradient> entry in SVGAssetImport.atlasData.gradientCache)
-                        {
-                            gradients[i++] = entry.Value;
-                        }
+                    CCGradient[] gradients = atlasData.registeredGradients;
+                    if(gradients.Length > 0)
                         _editor_SetGradients.Invoke(asset, new object[]{gradients});
-                    }
                 }
 
                 System.Reflection.MethodInfo _editor_SetLayers = typeof(SVGAsset).GetMethod("_editor_SetLayers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

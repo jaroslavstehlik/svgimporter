@@ -10,45 +10,47 @@ namespace SVGImporter
     using Rendering;
 	using Utils;
 
+    /// <summary>
+    /// The gradients of an atlas, by slot, and an index of them by content (GradientKey): a
+    /// gradient that draws the same as a registered one gets that one's slot. Also used during
+    /// import, where the slots become the asset's gradient indices.
+    /// </summary>
     public class SVGAtlasData
     {
         public CCGradient[] gradients;
-        public Dictionary<string, CCGradient> gradientCache;
+        Dictionary<GradientKey, CCGradient> byContent;
         private static readonly CCGradient DefaultGradient = GetDefaultGradient();
 
         public void Init(int length)
-            {
+        {
             gradients = new CCGradient[length];
-            gradientCache = new Dictionary<string, CCGradient> ();
+            byContent = new Dictionary<GradientKey, CCGradient>();
         }
 
-        public void ClearGradientCache()
+        /// <summary>The registered gradients, in slot order.</summary>
+        public CCGradient[] registeredGradients
         {
-            if (gradientCache != null) gradientCache.Clear ();            
-            gradientCache = null;
+            get { return gradients == null ? new CCGradient[0] : gradients.Where(g => g != null).ToArray(); }
         }
 
-        public void InitGradientCache()
+        /// <summary>Rebuilds the content index from the slots.</summary>
+        public void RebuildGradientCache()
         {
-            string gradientHash;
-            if (gradientCache == null) {
-                gradientCache = new Dictionary<string, CCGradient> ();
-                int gradientsLength = gradients.Length;
-                for (int i = 0; i < gradientsLength; i++) {
-                    if(gradients [i] == null) continue;
-                    gradientHash = gradients [i].hash;
-                    if (!gradientCache.ContainsKey (gradientHash)) {
-                        gradientCache.Add (gradientHash, gradients [i]);
-                    }
-                }
+            byContent = new Dictionary<GradientKey, CCGradient>();
+            if (gradients == null) return;
+            foreach (CCGradient gradient in gradients)
+            {
+                if (gradient == null || !gradient.initialised) continue;
+                GradientKey key = new GradientKey(gradient);
+                if (!byContent.ContainsKey(key)) byContent.Add(key, gradient);
             }
         }
 
-        public void RebuildGradientCache()
-        {
-            ClearGradientCache ();
-            InitGradientCache ();
-        }
+        [System.Obsolete("Use RebuildGradientCache.")]
+        public void InitGradientCache() { if (byContent == null) RebuildGradientCache(); }
+
+        [System.Obsolete("Use RebuildGradientCache.")]
+        public void ClearGradientCache() { byContent = null; }
 
         public static CCGradient GetDefaultGradient()
         {
@@ -72,29 +74,32 @@ namespace SVGImporter
             return AddGradient(gradient, out gradientExist);
         }
 
+        /// <summary>
+        /// Returns the registered gradient that draws the same as gradient, or registers gradient
+        /// in a free slot (setting its index). Null if there is no free slot.
+        /// </summary>
         public CCGradient AddGradient(CCGradient gradient, out bool gradientExist)
         {
             gradientExist = false;
-            if (gradient == null || !gradient.initialised)
+            if (gradient == null || !gradient.initialised || gradients == null)
                 return null;
-            
-            if (gradientCache == null || gradientCache.Count == 0)
-                RebuildGradientCache ();
+            if (byContent == null)
+                RebuildGradientCache();
 
-            string gradientHash = gradient.hash;
-            if (gradientCache.ContainsKey (gradientHash)) {          
-                gradient = gradientCache [gradientHash];
+            GradientKey key = new GradientKey(gradient);
+            CCGradient registered;
+            if (byContent.TryGetValue(key, out registered))
+            {
                 gradientExist = true;
-            } else {
-                int slot = System.Array.IndexOf(gradients, null);
-                if (slot < 0)
-                    return null; // Full: SVGAtlas grows the atlas and tries again.
-                gradient.index = slot;
-                gradients[slot] = gradient;
-                gradientCache.Add (gradientHash, gradient);
-                gradientExist = false;
+                return registered;
             }
-            return  gradient;
+            int slot = System.Array.IndexOf(gradients, null);
+            if (slot < 0)
+                return null; // Full: SVGAtlas grows the atlas and tries again.
+            gradient.index = slot;
+            gradients[slot] = gradient;
+            byContent.Add(key, gradient);
+            return gradient;
         }
 
         /// <summary>Adds empty slots at the end; existing gradients keep theirs.</summary>
@@ -106,19 +111,16 @@ namespace SVGImporter
 
         public bool RemoveGradient(CCGradient gradient)
         {
-            if (gradient == null || !gradient.initialised)
+            if (gradient == null || !gradient.initialised || gradients == null || byContent == null)
                 return false;
-            
-            if (gradientCache == null || gradientCache.Count == 0)
+            GradientKey key = new GradientKey(gradient);
+            CCGradient registered;
+            if (!byContent.TryGetValue(key, out registered))
                 return false;
-            
-            string gradientHash = gradient.hash;
-            if (gradientCache.ContainsKey (gradientHash)) {
-                gradientCache.Remove(gradientHash);
-                gradients[gradient.index] = null;
-                return true;
-            }
-            return false;
+            byContent.Remove(key);
+            if (registered.index >= 0 && registered.index < gradients.Length && gradients[registered.index] == registered)
+                gradients[registered.index] = null;
+            return true;
         }
         
         public CCGradient GetGradient (int index)
@@ -132,46 +134,27 @@ namespace SVGImporter
             gradient.gradientColors = GetGradient (gradient.gradientColors);
             return gradient;
         }
-        
+
+        /// <summary>The registered gradient that draws the same as gradient, or null.</summary>
         public CCGradient GetGradient (CCGradient gradient)
         {
-            if (gradient == null || !gradient.initialised || gradientCache == null)
+            if (gradient == null || !gradient.initialised || gradients == null)
                 return null;
-
-            string gradientHash = gradient.hash;
-            if (gradientCache.ContainsKey (gradientHash)) {
-                return gradientCache [gradientHash];
-            } else {
-                return null;
-            }
+            if (byContent == null)
+                RebuildGradientCache();
+            CCGradient registered;
+            return byContent.TryGetValue(new GradientKey(gradient), out registered) ? registered : null;
         }
 
         public bool HasGradient (CCGradient gradient)
         {
-            if (gradient == null || !gradient.initialised || gradientCache == null)
-                return false;
-            
-            string gradientHash = gradient.hash;
-            if (gradientCache.ContainsKey (gradientHash)) {            
-                gradient = gradientCache [gradientHash];
-                return true;
-            } else {
-                return false;
-            }
+            return GetGradient(gradient) != null;
         }
 
         public void Clear()
         {
-            if(gradients != null)
-            {
-                gradients = null;
-            }
-
-            if(gradientCache != null)
-            {
-                gradientCache.Clear();
-                gradientCache = null;
-            }
+            gradients = null;
+            byContent = null;
         }
     }
 
@@ -610,7 +593,7 @@ namespace SVGImporter
             if (texture == null || gradient == null || !gradient.initialised)
                 return;
 
-            List<Stop> stops = GetStops(gradient, Mathf.Min(maxStops, gradientWidth / 2));
+            List<CCGradientStop> stops = LimitStops(gradient.GetStops(), Mathf.Min(maxStops, gradientWidth / 2));
             Color[] pixels = new Color[gradientWidth * gradientHeight];
             for (int i = 0; i < stops.Count; i++)
             {
@@ -622,69 +605,20 @@ namespace SVGImporter
             texture.SetPixels(x, y, gradientWidth, gradientHeight, pixels);
         }
 
-        struct Stop
+        // Gradients with more stops than a slot holds are resampled evenly.
+        static List<CCGradientStop> LimitStops(List<CCGradientStop> stops, int limit)
         {
-            public float offset;
-            public Color color;
-        }
-
-        /// <summary>
-        /// The gradient's colour and alpha keys merged into stops in offset order. Keys at the same
-        /// offset (hard stops) keep their order.
-        /// </summary>
-        static List<Stop> GetStops(CCGradient gradient, int limit)
-        {
-            // CCGradient keeps its keys in descending time order.
-            CCGradientColorKey[] colors = gradient.colorKeys.Reverse().ToArray();
-            CCGradientAlphaKey[] alphas = gradient.alphaKeys.Reverse().ToArray();
-            var stops = new List<Stop>();
-            int c = 0, a = 0;
-            while (c < colors.Length || a < alphas.Length)
-            {
-                float colorTime = c < colors.Length ? colors[c].time : float.MaxValue;
-                float alphaTime = a < alphas.Length ? alphas[a].time : float.MaxValue;
-                float time = Mathf.Min(colorTime, alphaTime);
-                Color color = colorTime == time ? (Color)colors[c].color : ColorAt(colors, c, time);
-                color.a = alphaTime == time ? alphas[a].alpha : AlphaAt(alphas, a, time);
-                stops.Add(new Stop { offset = Mathf.Clamp01(time), color = color });
-                if (colorTime == time) c++;
-                if (alphaTime == time) a++;
-            }
             if (stops.Count == 0)
-                stops.Add(new Stop { offset = 0f, color = Color.black });
+                stops.Add(new CCGradientStop(0f, Color.black));
             if (stops.Count <= limit)
                 return stops;
-
-            // Too many stops: resample evenly.
-            var resampled = new List<Stop>(limit);
+            var resampled = new List<CCGradientStop>(limit);
             for (int i = 0; i < limit; i++)
             {
                 float t = i / (float)(limit - 1);
-                int k = stops.FindLastIndex(stop => stop.offset <= t);
-                Stop from = stops[Mathf.Max(k, 0)], to = stops[Mathf.Min(k + 1, stops.Count - 1)];
-                float f = to.offset > from.offset ? Mathf.Clamp01((t - from.offset) / (to.offset - from.offset)) : 0f;
-                resampled.Add(new Stop { offset = t, color = Color.Lerp(from.color, to.color, f) });
+                resampled.Add(new CCGradientStop(t, CCGradient.Evaluate(stops, t)));
             }
             return resampled;
-        }
-
-        // The colour between keys[next - 1] and keys[next] at time.
-        static Color ColorAt(CCGradientColorKey[] keys, int next, float time)
-        {
-            if (keys.Length == 0) return Color.black;
-            if (next <= 0) return keys[0].color;
-            if (next >= keys.Length) return keys[keys.Length - 1].color;
-            CCGradientColorKey from = keys[next - 1], to = keys[next];
-            return Color.Lerp(from.color, to.color, to.time > from.time ? (time - from.time) / (to.time - from.time) : 0f);
-        }
-
-        static float AlphaAt(CCGradientAlphaKey[] keys, int next, float time)
-        {
-            if (keys.Length == 0) return 1f;
-            if (next <= 0) return keys[0].alpha;
-            if (next >= keys.Length) return keys[keys.Length - 1].alpha;
-            CCGradientAlphaKey from = keys[next - 1], to = keys[next];
-            return Mathf.Lerp(from.alpha, to.alpha, to.time > from.time ? (time - from.time) / (to.time - from.time) : 0f);
         }
 
         int slotCount
