@@ -43,6 +43,7 @@
 - Fixed SVG Collider 2D keeping the previous asset's shape when the renderer's asset changed or was reimported.
 - Fixed meshes leaking: a renderer's own mesh (tinted, sliced or layered) is freed with the renderer, and meshes derived from an asset with it.
 - Fixed assets imported with Use Layers drawing a white rectangle in SVG Image, and producing invalid vertices in sliced renderers: they now have a mesh and bounds built from their layers.
+- The **Antialiasing** import setting is now called **Soft Edges**, and the project setting **Antialiasing Width** is **Soft Edge Width**, in screen pixels (the default, 1, is the previous 2). It adds a soft edge to the mesh; it isn't MSAA. For MSAA, turn Soft Edges off and enable MSAA on the camera. The script API (`antialiasing`) is unchanged.
 - Removed code that was no longer used: the `SVGStrokeRenderer`, `SVGRenderTexture` and `StrokeRendererLegacy` components, the additive and multiply "Others" shaders, the SVG utility window, `SVGCombineMesh`, `SVGMeshCutter`, unused math, Bézier and mesh helpers (for example `SVGMeshUtils.MergeMeshes`, `SVGAsset.MergeLayersToShapes`, `SVGAtlas.AssignMaterialGradients`), Unity 4 and 5 code paths and commented-out code.
 - New: `SVGAsset.importOptions`, `importEngine` (the engine that imported it) and `importHash`.
 - Fixed the Opaque format with **Compress Depth** throwing an exception or drawing overlapping shapes in the wrong order when an element has both a fill and a stroke.

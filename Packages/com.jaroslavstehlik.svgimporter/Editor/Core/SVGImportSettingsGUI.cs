@@ -50,6 +50,8 @@ namespace SVGImporter
             EditorGUILayout.PropertyField(format, SVGAssetEditor.FORMAT_LABEL);
             EditorGUILayout.PropertyField(useGradients, SVGAssetEditor.USE_GRADIENTS_LABEL);
             EditorGUILayout.PropertyField(antialiasing, SVGAssetEditor.ANTIALIASING_LABEL);
+            if (!antialiasing.hasMultipleDifferentValues && !antialiasing.boolValue)
+                EditorGUILayout.LabelField(" ", SVGAssetEditor.SHARP_EDGES_HINT, EditorStyles.miniLabel);
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Meshes", EditorStyles.boldLabel);

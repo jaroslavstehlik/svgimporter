@@ -19,7 +19,7 @@ namespace SVGImporter
             {
                 label = "SVG Importer",
                 guiHandler = _ => Draw(),
-                keywords = new HashSet<string>(new[] { "SVG", "Import", "Engine", "Native", "Antialiasing", "Vector" }),
+                keywords = new HashSet<string>(new[] { "SVG", "Import", "Engine", "Native", "Antialiasing", "Soft Edges", "MSAA", "Vector" }),
             };
         }
 
@@ -45,7 +45,12 @@ namespace SVGImporter
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(s_Settings.FindProperty("_antialiasingWidth"), SVGAssetEditor.ANTIALIASING_WIDTH_LABEL);
+            // Stored in half pixels, the unit the shaders and 1.x projects use; shown in pixels.
+            SerializedProperty width = s_Settings.FindProperty("_antialiasingWidth");
+            EditorGUI.BeginChangeCheck();
+            float pixels = EditorGUILayout.FloatField(SVGAssetEditor.ANTIALIASING_WIDTH_LABEL, width.floatValue * 0.5f);
+            if (EditorGUI.EndChangeCheck())
+                width.floatValue = Mathf.Max(0f, pixels) * 2f;
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Defaults for New SVG Files", EditorStyles.boldLabel);
