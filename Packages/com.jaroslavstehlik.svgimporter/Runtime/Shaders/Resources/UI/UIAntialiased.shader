@@ -3,8 +3,6 @@
 Shader "SVG Importer/UI/UIAntialiased" {
 	
 	Properties {
-		_GradientColor ("Gradient Color (RGBA)", 2D) = "white" { }
-		_Params ("Params", Vector) = (1.0, 1.0, 1.0, 1.0)
 		
 		_Color ("Tint", Color) = (1,1,1,1)
 		

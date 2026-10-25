@@ -63,9 +63,6 @@ namespace SVGImporter
         /// to the asset's file through the AssetDatabase; a ScriptedImporter passes its context instead.</param>
         public void StartProcess(SVGAsset asset, System.Action<Mesh> addMesh = null)
         {
-            if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-                return;
-
             if(errors == null)
             {
                 errors = new List<SVGError>();

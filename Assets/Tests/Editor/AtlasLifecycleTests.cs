@@ -82,6 +82,7 @@ public static class AtlasLifecycleTests
             if (SessionState.GetInt(RecordedKey, -1) >= step) return;
             SessionState.SetInt(RecordedKey, step);
             Record(step);
+            if (Steps[step] == "enter play mode") ImportDuringPlayMode();
             Next(step + 1);
         }
         catch (Exception e)
@@ -160,6 +161,17 @@ public static class AtlasLifecycleTests
         bool failed = File.ReadAllText(ResultsPath).Contains("FAIL") || File.ReadAllText(ResultsPath).Contains("EXCEPTION");
         File.AppendAllText(ResultsPath, failed ? "RESULT: FAIL\n" : "RESULT: PASS\n");
         EditorApplication.Exit(failed ? 1 : 0);
+    }
+
+    // An SVG imported while the game runs (edited on disk, auto refresh) used to be saved empty.
+    static void ImportDuringPlayMode()
+    {
+        string path = Root + "/played.svg";
+        File.WriteAllText(path, Svgs[0]);
+        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+        var asset = AssetDatabase.LoadAssetAtPath<SVGAsset>(path);
+        int vertices = asset != null && asset.sharedMesh != null ? asset.sharedMesh.vertexCount : 0;
+        File.AppendAllText(ResultsPath, string.Format("{0} import during play mode: {1} vertices\n", vertices > 0 ? "PASS" : "FAIL", vertices));
     }
 
     static void CreateScene()

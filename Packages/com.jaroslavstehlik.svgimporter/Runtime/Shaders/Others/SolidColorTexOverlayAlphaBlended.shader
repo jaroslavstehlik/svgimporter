@@ -23,6 +23,7 @@ Shader "SVG Importer/SolidColor/SolidColorTexOverlayAlphaBlended" {
 			#pragma fragment fragmentColor
 			#pragma fragmentoption ARB_precision_hint_fastest
 			#include "UnityCG.cginc"
+			#include "../SVGImporterCG.cginc"
 			
 			sampler2D _MainTex;
 			
@@ -44,7 +45,7 @@ Shader "SVG Importer/SolidColor/SolidColorTexOverlayAlphaBlended" {
 			{
 			    vertex_output o;
 			    o.vertex = UnityObjectToClipPos(v.vertex);    
-			    o.color = v.color;
+			    o.color = SVGVertexColor(v.color);
 			    o.uv = v.uv;
 			    return o;
 			}

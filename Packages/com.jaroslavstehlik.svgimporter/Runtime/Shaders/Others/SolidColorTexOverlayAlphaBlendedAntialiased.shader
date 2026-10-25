@@ -47,7 +47,7 @@ Shader "SVG Importer/SolidColor/SolidColorTexOverlayAlphaBlendedAntialiased" {
 			    vertex_output o;
 	
 				o.vertex = UnityObjectToClipPos(Antialiasing(v.vertex, v.normal));			    
-			    o.color = v.color;
+			    o.color = SVGVertexColor(v.color);
 			    o.uv = v.uv;
 			    return o;
 			}

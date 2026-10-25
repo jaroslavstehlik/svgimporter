@@ -26,6 +26,7 @@ namespace SVGImporter
                     int shapesLength = layers[i].shapes.Length;
                     for(int j = 0; j < shapesLength; j++)
                     {
+                        if(layers[i].shapes[j].fill == null) continue;
                         layers[i].shapes[j].fill.color *= color;
                     }
                 }
@@ -42,11 +43,9 @@ namespace SVGImporter
                         int shapesLength = layers[layerIndex].shapes.Length;
                         for (int j = 0; j < shapesLength; j++)
                         {
-                            int vertexCount = layers[layerIndex].shapes[j].vertexCount;
-                            for (int k = 0; k < vertexCount; k++)
-                            {
-                                layers[layerIndex].shapes[j].fill.color *= color;
-                            }
+                            // Once per shape: the colour is the fill's, not the vertices'.
+                            if (layers[layerIndex].shapes[j].fill == null) continue;
+                            layers[layerIndex].shapes[j].fill.color *= color;
                         }
                     }
                 }

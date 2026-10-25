@@ -51,7 +51,15 @@ namespace SVGImporter
         /// </summary>
         [FormerlySerializedAs("type")]
         [SerializeField] private Type _type = Type.Simple;
-        public Type type { get { return _type; } set { _type = value; } }
+        public Type type
+        {
+            get { return _type; }
+            set {
+                if(_type == value) return;
+                _type = value;
+                if(!meshRenderer.isPartOfStaticBatch) PrepareForRendering();
+            }
+        }
 
         // Tracking of modified assets
         [FormerlySerializedAs("lastTimeModified")]
@@ -109,7 +117,9 @@ namespace SVGImporter
                 return _color;
             }
             set {
+                if(_color == value) return;
                 _color = value;
+                if(!meshRenderer.isPartOfStaticBatch) PrepareForRendering();
             }
         }
         
@@ -419,6 +429,13 @@ namespace SVGImporter
                 }
                 Clear();
             } else {
+                // Cached vertices and colours are copies of the asset's mesh: start over when the
+                // asset changes or everything is rebuilt.
+                if(force || _lastVectorGraphics != _vectorGraphics)
+                {
+                    CleanCache();
+                    _sharedMesh = null;
+                }
                 bool meshChanged = force || _lastType != _type || meshFilter.sharedMesh == null;
                 bool colorChanged = force || _lastColor != _color;
                 bool materialChanged = force || _lastOpaqueMaterial != _opaqueMaterial || _lastTransparentMaterial != _transparentMaterial;
@@ -580,7 +597,13 @@ namespace SVGImporter
         protected Color32[] _finalColors;
         protected void UpdateColors(bool force = false)
         {
-            if(_color == Color.white) return;
+            if(_color == Color.white)
+            {
+                // Back to the asset's own colours on a mesh that was tinted before.
+                if(!useLayers && _mesh != null && _sharedMesh != null && meshFilter.sharedMesh == _mesh && _mesh.vertexCount == _sharedMesh.vertexCount)
+                    _mesh.colors32 = _sharedMesh.colors32;
+                return;
+            }
             if(useLayers)
             {
                 Color32 tempColor = _color;

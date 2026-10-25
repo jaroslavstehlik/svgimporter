@@ -35,6 +35,15 @@
 - Gradients are identified by exactly what they draw. The old text hash rounded stop offsets and alphas to 1/999, so slightly different gradients could share one atlas slot. `CCGradient.GetStops()` returns a gradient's merged stops; `CCGradient.Evaluate` now matches the shaders, including hard stops. `CCGradient.hash`, `SVGFill.gradientHash` and the gradient reference counting are obsolete; `SVGAtlasData.gradientCache` is replaced by `registeredGradients`.
 - Removed the per-machine "Support Service" switch; drag and drop and gradient updates are always on. Its Start button used to turn it off.
 - Fixed dropping an SVG Asset on empty space in the Hierarchy throwing an exception.
+- Fixed the Opaque format with **Compress Depth** throwing an exception or drawing overlapping shapes in the wrong order when an element has both a fill and a stroke.
+- Meshes may have more than 65,535 vertices (32-bit indices); before, such files imported as an empty asset with only a console error.
+- Fixed SVG files imported while the game runs in the Editor being saved empty.
+- Fixed the Color Modifier with a layer selection darkening colours once per vertex.
+- SVG Images no longer reset the canvas's additional shader channels, which TextMeshPro on the same canvas needs.
+- Fixed tinted or sliced SVG Renderers keeping the previous asset's colours or vertices after switching asset, and `SVGRenderer.color` and `type` having no effect when set from a script.
+- Gradient shaders read the atlas from global shader properties (`_SVGGradientAtlas`), so custom materials on SVG Renderers and Images always draw gradients correctly, also after the atlas grows or is replaced.
+- Fixed the Texture Overlay shaders looking washed out in Linear color space. Vertex colours use the exact sRGB curve, as gradient stops do.
+- The native core refuses documents larger than 64 MB and imports producing more than 16 million vertices, instead of possibly running out of memory.
 - Fixed SVG Renderers with **Use Layers** (used by modifiers) drawing another asset's gradient colours.
 - Scenes update when an SVG file changes on disk; before, only after **Apply** in the Inspector.
 - Gradients are dithered, as in browsers: up to half an 8-bit step of noise per pixel, so subtle gradients don't show bands. Flat colours are unchanged.

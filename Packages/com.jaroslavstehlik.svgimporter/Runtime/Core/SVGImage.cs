@@ -393,14 +393,13 @@ namespace SVGImporter
             
             if(vertexStream == null || vertexStream.Length != tempVBOLength) vertexStream = new UIVertex[tempVBOLength];
             
+            // Add the channels SVG meshes need; other graphics on the canvas (TextMeshPro, for
+            // example) need theirs.
+            AdditionalCanvasShaderChannels channels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.TexCoord2;
             if (_vectorGraphics.antialiasing || _vectorGraphics.generateNormals)
-            {
-                canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.TexCoord2 | AdditionalCanvasShaderChannels.Normal;
-            }
-            else
-            {
-                canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.TexCoord2;
-            }
+                channels |= AdditionalCanvasShaderChannels.Normal;
+            if ((canvas.additionalShaderChannels & channels) != channels)
+                canvas.additionalShaderChannels |= channels;
 
             Bounds bounds = sharedMesh.bounds;
             if(m_UsePivot)

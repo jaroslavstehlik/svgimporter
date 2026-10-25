@@ -3,7 +3,6 @@
 #include "SVGImporterCG.cginc"
 #include "SVGImporterGradientColor.cginc"
 
-float4 _Params;
 
 float4 _ClipRect;
 fixed4 _TextureSampleAdd;
@@ -37,11 +36,11 @@ vertex_output vertexGradients(vertex_input v)
 	o.uv0.xy = v.texcoord0.xy;
 	o.color = v.color;
 
-	// The gradient's slot in the atlas (_Params: atlas width and height, slot width and height),
+	// The gradient's slot in the atlas (atlas width and height, slot width and height),
 	// in texels, and which gradient position to use (x linear, y radial, z conical, w solid).
-	float slotIndex = v.texcoord1.x * _Params.z;
-	o.uv0.z = fmod(slotIndex, _Params.x);
-	o.uv0.w = floor(slotIndex / _Params.x) * _Params.w;
+	float slotIndex = v.texcoord1.x * _SVGGradientAtlasParams.z;
+	o.uv0.z = fmod(slotIndex, _SVGGradientAtlasParams.x);
+	o.uv0.w = floor(slotIndex / _SVGGradientAtlasParams.x) * _SVGGradientAtlasParams.w;
 	o.uv1 = saturate(1.0 - abs(float4(0.0, 1.0, 2.0, 3.0) - v.texcoord1.y));
 
     return o;
@@ -59,11 +58,11 @@ vertex_output vertexGradientsAntialiased(vertex_input v)
     o.uv0.xy = v.texcoord0.xy;
     o.color = v.color;
 	
-	// The gradient's slot in the atlas (_Params: atlas width and height, slot width and height),
+	// The gradient's slot in the atlas (atlas width and height, slot width and height),
 	// in texels, and which gradient position to use (x linear, y radial, z conical, w solid).
-	float slotIndex = v.texcoord1.x * _Params.z;
-	o.uv0.z = fmod(slotIndex, _Params.x);
-	o.uv0.w = floor(slotIndex / _Params.x) * _Params.w;
+	float slotIndex = v.texcoord1.x * _SVGGradientAtlasParams.z;
+	o.uv0.z = fmod(slotIndex, _SVGGradientAtlasParams.x);
+	o.uv0.w = floor(slotIndex / _SVGGradientAtlasParams.x) * _SVGGradientAtlasParams.w;
 	o.uv1 = saturate(1.0 - abs(float4(0.0, 1.0, 2.0, 3.0) - v.texcoord1.y));
     
     return o;

@@ -3,10 +3,24 @@
 // SVG colors are authored in sRGB and stored as vertex colors. In a Linear color space
 // project they must be converted, or they render washed out. (UI shaders do not need
 // this: the Canvas converts its vertex colors itself.)
+// Exact sRGB transfer functions (Unity's GammaToLinearSpace is an approximation), so that solid
+// colours and gradient stops convert the same.
+float3 SVGLinearToSRGB(float3 c)
+{
+	c = max(c, 0.0);
+	return lerp(1.055 * pow(c, 1.0 / 2.4) - 0.055, c * 12.92, step(c, 0.0031308));
+}
+
+float3 SVGSRGBToLinear(float3 c)
+{
+	return lerp(pow((max(c, 0.0) + 0.055) / 1.055, 2.4), c / 12.92, step(c, 0.04045));
+}
+
+// Vertex colours are sRGB; Linear color space projects need them linear.
 half4 SVGVertexColor(half4 color)
 {
 #ifndef UNITY_COLORSPACE_GAMMA
-    color.rgb = GammaToLinearSpace(color.rgb);
+    color.rgb = SVGSRGBToLinear(color.rgb);
 #endif
     return color;
 }
@@ -39,18 +53,6 @@ float4 SVGGradientShape(float2 uv)
 {
 	float2 d = uv - 0.5;
 	return saturate(float4(uv.x, length(d) * 2.0, frac(atan2(d.y, d.x) * 0.15915494 + 1.0), 1.0));
-}
-
-// Exact sRGB transfer functions (Unity's GammaToLinearSpace is an approximation).
-float3 SVGLinearToSRGB(float3 c)
-{
-	c = max(c, 0.0);
-	return lerp(1.055 * pow(c, 1.0 / 2.4) - 0.055, c * 12.92, step(c, 0.0031308));
-}
-
-float3 SVGSRGBToLinear(float3 c)
-{
-	return lerp(pow((max(c, 0.0) + 0.055) / 1.055, 2.4), c / 12.92, step(c, 0.04045));
 }
 
 // Adds up to half an 8-bit step of noise to a colour before it is written to an 8-bit target, as

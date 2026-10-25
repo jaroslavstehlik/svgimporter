@@ -263,7 +263,6 @@ namespace SVGImporter
                 {
                     _ui = new Material(SVGShader.UI);
                     _ui.hideFlags = HideFlags.DontSave;
-                    UpdateMaterialProperties(_ui);
                 }
                 return _ui;
             }
@@ -277,7 +276,6 @@ namespace SVGImporter
                 {
                     _uiAntialiased = new Material(SVGShader.UIAntialiased);
                     _uiAntialiased.hideFlags = HideFlags.DontSave;
-                    UpdateMaterialProperties(_uiAntialiased);
                 }
                 return _uiAntialiased;
             }
@@ -330,7 +328,6 @@ namespace SVGImporter
                 {
                     _opaqueGradient = new Material(SVGShader.GradientColorOpaque);
                     _opaqueGradient.hideFlags = HideFlags.DontSave;
-                    UpdateMaterialProperties(_opaqueGradient);
                 }
                 return _opaqueGradient;
             }
@@ -344,7 +341,6 @@ namespace SVGImporter
                 {
                     _transparentGradient = new Material(SVGShader.GradientColorAlphaBlended);
                     _transparentGradient.hideFlags = HideFlags.DontSave;
-                    UpdateMaterialProperties(_transparentGradient);
                 }
                 return _transparentGradient;
             }
@@ -358,22 +354,29 @@ namespace SVGImporter
                 {
                     _transparentGradientAntialiased = new Material(SVGShader.GradientColorAlphaBlendedAntialiased);
                     _transparentGradientAntialiased.hideFlags = HideFlags.DontSave;
-                    UpdateMaterialProperties(_transparentGradientAntialiased);
                 }
                 return _transparentGradientAntialiased;
             }
         }
 
+        /// <summary>Kept for compatibility: the atlas is bound globally (see BindGlobals), not per material.</summary>
         public void UpdateMaterialProperties(Material material)
         {
-            if(material == null) return;
-            if(atlasTextures != null && atlasTextures.Count > 0)
-            {
-                if(material.HasProperty(_GradientColorKey))
-                    material.SetTexture (_GradientColorKey, atlasTextures[0]);
-            }
-            if(material.HasProperty(_ParamsKey))
-                material.SetVector (_ParamsKey, new Vector4 (atlasTextureWidth, atlasTextureHeight, gradientWidth, gradientHeight));
+        }
+
+        /// <summary>Global shader properties: the atlas texture and its layout.</summary>
+        public const string globalAtlasKey = "_SVGGradientAtlas";
+        public const string globalAtlasParamsKey = "_SVGGradientAtlasParams";
+
+        /// <summary>
+        /// Binds the atlas for every SVG material, including custom ones: one texture serves all of
+        /// them, so it is a global shader property rather than a material property.
+        /// </summary>
+        void BindGlobals()
+        {
+            if (atlasTextures == null || atlasTextures.Count == 0 || atlasTextures[0] == null) return;
+            Shader.SetGlobalTexture(globalAtlasKey, atlasTextures[0]);
+            Shader.SetGlobalVector(globalAtlasParamsKey, new Vector4(atlasTextureWidth, atlasTextureHeight, gradientWidth, gradientHeight));
         }
 
     	public List<Texture2D> atlasTextures;		
@@ -454,6 +457,7 @@ namespace SVGImporter
                 UpdateMaterialList();
 #endif
             }
+            BindGlobals();
         }
 
         protected static SVGAtlas _Instance;
@@ -659,12 +663,6 @@ namespace SVGImporter
             texture.hideFlags = HideFlags.DontSave;
             texture.name = "Atlas "+index.ToString();
 
-            AssignMaterialGradients(_opaqueGradient, texture, null, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_transparentGradient, texture, null, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_transparentGradientAntialiased, texture, null, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_ui, texture, null, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_uiAntialiased, texture, null, gradientWidth, gradientHeight);
-
 
             if (index >= atlasTextures.Count - 1) {               
                 atlasTextures.Add (texture);
@@ -739,9 +737,6 @@ namespace SVGImporter
                     texture.Reinitialize(atlasTextureWidth, atlasTextureHeight, UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat, false);
                 }
             }
-            Material[] own = { _ui, _uiAntialiased, _opaqueGradient, _transparentGradient, _transparentGradientAntialiased };
-            foreach (Material material in own.Concat(materials ?? new List<Material>()))
-                UpdateMaterialProperties(material);
             _atlasHasChanged = true;
         }
 

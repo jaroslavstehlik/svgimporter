@@ -59,7 +59,20 @@ fn system_fonts() -> Arc<usvg::fontdb::Database> {
         .clone()
 }
 
+/// Limits (DESIGN.md, 6.6): a document that exceeds one is an import error, not a hang or an
+/// out-of-memory abort of the host. They also keep every count in the C ABI within `u32`.
+pub const MAX_INPUT_BYTES: usize = 64 * 1024 * 1024;
+pub const MAX_VERTICES: usize = 16 * 1024 * 1024;
+pub const MAX_INDICES: usize = 48 * 1024 * 1024;
+/// Curves are flattened no finer than this fraction of a path's size.
+const MIN_RELATIVE_TOLERANCE: f32 = 1e-6;
+/// Dash patterns that would produce more dashes than this are refused.
+const MAX_DASHES: f32 = 1_000_000.0;
+
 pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
+    if data.len() > MAX_INPUT_BYTES {
+        return Err(format!("the document is larger than {} MB", MAX_INPUT_BYTES / (1024 * 1024)));
+    }
     let mut usvg_options = usvg::Options {
         dpi: options.dpi,
         ..usvg::Options::default()
@@ -81,9 +94,13 @@ pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
         fill: FillTessellator::new(),
         stroke: StrokeTessellator::new(),
         clip: None,
+        limit_exceeded: None,
     };
     importer.group(tree.root(), 1.0);
-    Ok(importer.output)
+    match importer.limit_exceeded {
+        Some(limit) => Err(limit),
+        None => Ok(importer.output),
+    }
 }
 
 struct Importer<'a> {
@@ -97,6 +114,8 @@ struct Importer<'a> {
     stroke: StrokeTessellator,
     /// The clip region of the current group in document space, or None if nothing clips it.
     clip: Option<Region>,
+    /// Set when the output reaches a limit; the walk stops and the import fails with this message.
+    limit_exceeded: Option<String>,
 }
 
 /// An area in document space: closed contours, without overlaps, holes wound opposite to their
@@ -149,6 +168,9 @@ impl Importer<'_> {
         let opacity = opacity * group_opacity;
 
         for node in group.children() {
+            if self.limit_exceeded.is_some() {
+                break;
+            }
             match node {
                 usvg::Node::Group(child) => self.group(child, opacity),
                 usvg::Node::Path(path) => self.path(path, opacity),
@@ -318,8 +340,11 @@ impl Importer<'_> {
             return;
         }
         // Tessellate in the path's own coordinates, so strokes follow SVG semantics under
-        // non-uniform transforms; the tolerance is converted into those coordinates.
-        let tolerance = self.options.tolerance / scale;
+        // non-uniform transforms; the tolerance is converted into those coordinates. A tolerance
+        // far below the path's size would only produce a flood of vertices.
+        let bounds = path.data().bounds();
+        let size = bounds.width().max(bounds.height());
+        let tolerance = (self.options.tolerance / scale).max(size * MIN_RELATIVE_TOLERANCE);
 
         self.element += 1;
         let fill_first = path.paint_order() == usvg::PaintOrder::FillAndStroke;
@@ -366,6 +391,13 @@ impl Importer<'_> {
         let Some(paint) = self.paint(stroke.paint(), transform) else { return };
 
         // Dashes are applied to the path before stroking.
+        if let Some(array) = stroke.dasharray() {
+            let period: f32 = array.iter().sum();
+            if period > 0.0 && outline_length(path.data()) / period > MAX_DASHES {
+                self.limit_exceeded = Some(format!("a dash pattern produces more than {} dashes", MAX_DASHES));
+                return;
+            }
+        }
         let dashed;
         let data = match stroke
             .dasharray()
@@ -443,6 +475,12 @@ impl Importer<'_> {
         transform: &Transform,
     ) {
         if buffers.indices.is_empty() {
+            return;
+        }
+        if self.output.vertices.len() / 2 + buffers.vertices.len() > MAX_VERTICES
+            || self.output.indices.len() + buffers.indices.len() > MAX_INDICES
+        {
+            self.limit_exceeded = Some(format!("the document produces more than {} vertices or {} indices", MAX_VERTICES, MAX_INDICES));
             return;
         }
         // Only the vertices triangles use: lyon keeps the points of zero-area spans, which would
@@ -699,6 +737,12 @@ fn flatten(path: &tiny_skia_path::Path, transform: &Transform, tolerance: f32) -
     contours
 }
 
+/// An upper bound on a path's length: the length of its control polygon.
+fn outline_length(path: &tiny_skia_path::Path) -> f32 {
+    let points = path.points();
+    points.windows(2).map(|p| ((p[1].x - p[0].x).powi(2) + (p[1].y - p[0].y).powi(2)).sqrt()).sum()
+}
+
 fn flatten_shapes(shapes: Vec<Vec<Vec<[f64; 2]>>>) -> Region {
     shapes.into_iter().flatten().collect()
 }
@@ -949,6 +993,31 @@ mod tests {
             <rect width="100" height="100" mask="url(#m)"/></svg>"#);
         assert_ne!(out.diagnostics & SVGI_DIAG_MASK, 0);
         assert!((layer_area(&out, &out.layers[0]) - 10000.0).abs() < 1e-1);
+    }
+
+    #[test]
+    fn oversized_input_is_refused() {
+        let svg = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><!--{}--></svg>", " ".repeat(MAX_INPUT_BYTES));
+        let error = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false }).err().expect("an error");
+        assert!(error.contains("larger than"), "{error}");
+    }
+
+    #[test]
+    fn dash_flood_is_refused() {
+        let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <path d="M0 0 H1000000000" stroke="black" stroke-dasharray="0.001 0.001"/></svg>"#,
+            &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false });
+        assert!(out.err().expect("an error").contains("dash"));
+    }
+
+    #[test]
+    fn tiny_tolerance_is_bounded_by_path_size() {
+        // A 10-million-unit circle with a 1e-9 tolerance: the tolerance is raised to a millionth
+        // of the circle, so the output stays small.
+        let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <circle cx="0" cy="0" r="10000000"/></svg>"#,
+            &ImportOptions { tolerance: 1e-9, dpi: 96.0, convert_text: false }).unwrap();
+        assert!(out.vertices.len() / 2 < 100_000, "{} vertices", out.vertices.len() / 2);
     }
 
     #[test]

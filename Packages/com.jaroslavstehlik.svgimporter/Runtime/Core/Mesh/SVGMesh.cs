@@ -31,94 +31,76 @@ namespace SVGImporter.Geometry
             int totalLayers = layers.Length, totalTriangles = 0, opaqueTriangles = 0, transparentTriangles = 0;
             FILL_BLEND lastBlendType = FILL_BLEND.ALPHA_BLENDED;
             
-            // Z Sort meshes
+            // Depth of each shape (Opaque format), numbered across all layers in drawing order. Kept
+            // here: the layers belong to the caller and are drawn again later.
+            int shapeCount = 0;
+            for(int i = 0; i < totalLayers; i++) shapeCount += layers[i].shapes.Length;
+            float[] depths = new float[shapeCount];
             if(format == SVGAssetFormat.Opaque)
             {
-                SVGShape shape;
                 if(compressDepth)
                 {
+                    // Shapes that overlap nothing drawn before them share depth 0; otherwise a shape
+                    // goes in front of the highest one it overlaps.
                     SVGBounds quadTreeBounds = SVGBounds.InfiniteInverse;
                     for(int i = 0; i < totalLayers; i++)
                     {
-                        int totalShapes = layers[i].shapes.Length;
-                        for (int j = 0; j < totalShapes; j++)
+                        foreach(SVGShape shape in layers[i].shapes)
                         {
-                            shape = layers[i].shapes[j];
                             if (shape.bounds.size.sqrMagnitude == 0f) continue;
                             quadTreeBounds.Encapsulate(shape.bounds.center, shape.bounds.size);
                         }
                     }
-                    
-                    quadTreeBounds.size *= 1.2f;
-                    
+
                     if(!quadTreeBounds.isInfiniteInverse)
                     {
+                        quadTreeBounds.size *= 1.2f;
                         SVGDepthTree depthTree = new SVGDepthTree(quadTreeBounds);
+                        FILL_BLEND[] blends = new FILL_BLEND[shapeCount];
+                        int index = 0;
                         for(int i = 0; i < totalLayers; i++)
                         {
-                            int totalShapes = layers[i].shapes.Length;
-                            for (int j = 0; j < totalShapes; j++)
-                            {                           
-                                shape = layers[i].shapes[j];
-                                int[] nodes = depthTree.TestDepthAdd(j, new SVGBounds(shape.bounds.center, shape.bounds.size));
-                                
-                                int nodesLength = 0;
-                                if(nodes == null || nodes.Length == 0)
+                            foreach(SVGShape shape in layers[i].shapes)
+                            {
+                                blends[index] = shape.fill.blend;
+                                int[] overlapping = depthTree.TestDepthAdd(index, new SVGBounds(shape.bounds.center, shape.bounds.size));
+                                float depth = 0;
+                                if(overlapping != null && overlapping.Length > 0)
                                 {
-                                    shape.depth = 0;
-                                } else {
-                                    nodesLength = nodes.Length;
-                                    int highestDepth = 0;
-                                    int highestLayer = -1;
-                                    
-                                    for(int k = 0; k < nodesLength; k++)
+                                    float highestDepth = 0;
+                                    int highest = -1;
+                                    foreach(int other in overlapping)
                                     {
-                                        if((int)layers[i].shapes[nodes[k]].depth > highestDepth)
+                                        if(depths[other] > highestDepth)
                                         {
-                                            highestDepth = (int)layers[i].shapes[nodes[k]].depth;
-                                            highestLayer = nodes[k];
+                                            highestDepth = depths[other];
+                                            highest = other;
                                         }
                                     }
-                                    
-                                    if(layers[i].shapes[j].fill.blend == FILL_BLEND.OPAQUE)
-                                    {
-                                        shape.depth = highestDepth + 1;
-                                    } else 
-                                    {
-                                        if(highestLayer != -1 && layers[i].shapes[highestLayer].fill.blend == FILL_BLEND.OPAQUE)
-                                        {
-                                            shape.depth = highestDepth + 1;
-                                        } else {
-                                            shape.depth = highestDepth;
-                                        }
-                                    }
+                                    bool opaque = shape.fill.blend == FILL_BLEND.OPAQUE || (highest != -1 && blends[highest] == FILL_BLEND.OPAQUE);
+                                    depth = opaque ? highestDepth + 1 : highestDepth;
                                 }
-                                layers[i].shapes[j] = shape;
+                                depths[index++] = depth;
                             }
                         }
                     }
                 } else {
-                    int highestDepth = 0;
+                    int highestDepth = 0, index = 0;
                     for(int i = 0; i < totalLayers; i++)
                     {
-                        int totalShapes = layers[i].shapes.Length;
-                        for (int j = 0; j < totalShapes; j++)
+                        foreach(SVGShape shape in layers[i].shapes)
                         {
-                            shape = layers[i].shapes[j];
                             fill = shape.fill;
-                            if (fill.blend == FILL_BLEND.OPAQUE || lastBlendType == FILL_BLEND.OPAQUE)
-                            {
-                                shape.depth = ++highestDepth;
-                            } else 
-                            {
-                                shape.depth = highestDepth;
-                            }
-                            
+                            depths[index++] = fill.blend == FILL_BLEND.OPAQUE || lastBlendType == FILL_BLEND.OPAQUE ? ++highestDepth : highestDepth;
                             lastBlendType = fill.blend;
-                            layers[i].shapes[j] = shape;
                         }
                     }
                 }
+            } else {
+                int index = 0;
+                for(int i = 0; i < totalLayers; i++)
+                    foreach(SVGShape shape in layers[i].shapes)
+                        depths[index++] = shape.depth;
             }
             
             int totalVertices = 0, vertexCount, vertexStart = 0, currentVertex;
@@ -195,12 +177,14 @@ namespace SVGImporter.Geometry
                 }
             }
             
+            int shapeIndex = 0;
             for(int i = 0; i < totalLayers; i++)
             {
                 int totalShapes = layers[i].shapes.Length;
                 for(int j = 0; j < totalShapes; j++)
                 {
                     vertexCount = layers[i].shapes[j].vertices.Length;
+                    float shapeDepth = depths[shapeIndex++];
                     
                     if(layers[i].shapes[j].colors != null && layers[i].shapes[j].colors.Length == vertexCount)
                     {
@@ -209,13 +193,7 @@ namespace SVGImporter.Geometry
                         {
                             currentVertex = vertexStart + k;
                             vertices[currentVertex] = layers[i].shapes[j].vertices[k];
-                            if (useOpaqueShader)
-                            {
-                                vertices[currentVertex].z = layers[i].shapes[j].depth * -SVGAssetImport.minDepthOffset;
-                            } else
-                            {
-                                vertices[currentVertex].z = layers[i].shapes[j].depth;
-                            }
+                            vertices[currentVertex].z = useOpaqueShader ? shapeDepth * -SVGAssetImport.minDepthOffset : shapeDepth;
                             colors32[currentVertex].r = (byte)(finalColor.r * layers[i].shapes[j].colors[k].r / 255);
                             colors32[currentVertex].g = (byte)(finalColor.g * layers[i].shapes[j].colors[k].g / 255);
                             colors32[currentVertex].b = (byte)(finalColor.b * layers[i].shapes[j].colors[k].b / 255);
@@ -227,13 +205,7 @@ namespace SVGImporter.Geometry
                         {
                             currentVertex = vertexStart + k;
                             vertices[currentVertex] = layers[i].shapes[j].vertices[k];
-                            if (useOpaqueShader)
-                            {
-                                vertices[currentVertex].z = layers[i].shapes[j].depth * -SVGAssetImport.minDepthOffset;
-                            } else
-                            {
-                                vertices[currentVertex].z = layers[i].shapes[j].depth;
-                            }
+                            vertices[currentVertex].z = useOpaqueShader ? shapeDepth * -SVGAssetImport.minDepthOffset : shapeDepth;
                             colors32[currentVertex] = finalColor;
                         }
                     }
@@ -248,7 +220,7 @@ namespace SVGImporter.Geometry
                             Vector2 uvPoint = Vector2.zero;
                             Vector2 uv2Value = new Vector2(layers[i].shapes[j].fill.gradientColors.index, (int)layers[i].shapes[j].fill.gradientType);
                             
-                            if(layers[i].shapes[j].angles != null && layers[i].shapes[j].angles.Length == vertexCount)
+                            if(normals != null && layers[i].shapes[j].angles != null && layers[i].shapes[j].angles.Length == vertexCount)
                             {
                                 for(int k = 0; k < vertexCount; k++)
                                 {
@@ -278,7 +250,7 @@ namespace SVGImporter.Geometry
                         {
                             SVGMatrix svgFillTransform = layers[i].shapes[j].fill.transform;
                             Vector2 uvPoint = Vector2.zero;
-                            if(layers[i].shapes[j].angles != null && layers[i].shapes[j].angles.Length == vertexCount)
+                            if(normals != null && layers[i].shapes[j].angles != null && layers[i].shapes[j].angles.Length == vertexCount)
                             {
                                 for(int k = 0; k < vertexCount; k++)
                                 {
@@ -299,7 +271,7 @@ namespace SVGImporter.Geometry
                                 }
                             }
                         } else {
-                            if(layers[i].shapes[j].angles != null && layers[i].shapes[j].angles.Length == vertexCount)
+                            if(normals != null && layers[i].shapes[j].angles != null && layers[i].shapes[j].angles.Length == vertexCount)
                             {
                                 for(int k = 0; k < vertexCount; k++)
                                 {
@@ -390,18 +362,8 @@ namespace SVGImporter.Geometry
             
             mesh.Clear();
             mesh.MarkDynamic();
-            
-            if(vertices != null)
-            {
-                if(vertices.Length > 65000)
-                {
-                    Debug.LogError("A mesh may not have more than 65000 vertices. Please try to reduce quality or split SVG file.");
-                    return false;
-                }
-            } else {
-                return false;
-            }
-            
+            // 16-bit indices address 65,535 vertices; larger meshes need 32-bit indices.
+            mesh.indexFormat = vertices.Length > 65535 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
             mesh.vertices = vertices;
             mesh.colors32 = colors32;
             
