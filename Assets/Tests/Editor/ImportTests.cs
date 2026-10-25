@@ -30,37 +30,39 @@ public static class ImportTests
             results.Add((condition ? "PASS " : "FAIL ") + name + ": " + detail);
         }
 
-        SVGImportEngine originalEngine = SVGImporterProjectSettings.instance.importEngine;
         const string path = "Assets/ImportTests.svg";
         try
         {
-            foreach (SVGImportEngine engine in new[] { SVGImportEngine.Legacy, SVGImportEngine.Native })
-            {
-                SVGImportOptions options = SVGImportOptions.Default;
-                options.engine = engine;
-                options.antialiasing = true;
-                options.generateCollider = true;
+            SVGImportOptions options = SVGImportOptions.Default;
+            options.antialiasing = true;
+            options.generateCollider = true;
 
-                // Deterministic: the same text and options give the same hash and mesh.
-                SVGImportResult a = SVGImport.Import(Svg, options), b = SVGImport.Import(Svg, options);
-                Check(engine + ": deterministic", a.succeeded && a.importHash == b.importHash && a.mesh.vertices.SequenceEqual(b.mesh.vertices)
-                    && a.mesh.triangles.SequenceEqual(b.mesh.triangles), "hash " + a.importHash.ToString("X16"));
-                Check(engine + ": result complete", a.shaders.Length > 0 && a.gradients != null && a.gradients.Length == 2 && a.colliderShape != null,
-                    a.shaders.Length + " shaders, " + (a.gradients == null ? 0 : a.gradients.Length) + " gradients, collider " + (a.colliderShape != null));
-                options.scale = 0.02f;
-                Check(engine + ": options change the hash", SVGImport.Import(Svg, options).importHash != a.importHash, "");
-                Check(engine + ": no import state left", SVGAssetImport.atlasData == null && SVGAssetImport.errors == null && SVGGraphics.layers == null, "");
-            }
+            // Deterministic: the same text and options give the same hash and mesh.
+            SVGImportResult a = SVGImport.Import(Svg, options), b = SVGImport.Import(Svg, options);
+            Check("deterministic", a.succeeded && a.importHash == b.importHash && a.mesh.vertices.SequenceEqual(b.mesh.vertices)
+                && a.mesh.triangles.SequenceEqual(b.mesh.triangles), "hash " + a.importHash.ToString("X16"));
+            Check("result complete", a.shaders.Length > 0 && a.gradients != null && a.gradients.Length == 2 && a.colliderShape != null,
+                a.shaders.Length + " shaders, " + (a.gradients == null ? 0 : a.gradients.Length) + " gradients, collider " + (a.colliderShape != null));
+            options.scale = 0.02f;
+            Check("options change the hash", SVGImport.Import(Svg, options).importHash != a.importHash, "");
+
+            // SVG Importer's conicalGradient extension.
+            SVGImportOptions layered = SVGImportOptions.Default;
+            layered.useLayers = true;
+            SVGImportResult conical = SVGImport.Import("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
+                + "<conicalGradient id=\"c\" cx=\"50\" cy=\"50\" r=\"50\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></conicalGradient>"
+                + "<circle cx=\"50\" cy=\"50\" r=\"50\" fill=\"url(#c)\"/></svg>", layered);
+            bool isConical = conical.succeeded && conical.layers.SelectMany(l => l.shapes).Any(shape => shape.fill != null && shape.fill.gradientType == GRADIENT_TYPE.CONICAL);
+            Check("conicalGradient imports as a conical gradient", isConical, string.Join(" | ", conical.messages));
 
             // A failed import reports errors and leaves nothing behind for the next one.
             SVGImportResult failed = SVGImport.Import("<svg><rect", SVGImportOptions.Default);
             SVGImportResult after = SVGImport.Import(Svg, SVGImportOptions.Default);
-            Check("failure is contained", !failed.succeeded && failed.hasCriticalErrors && failed.mesh == null && after.succeeded
-                && SVGAssetImport.atlasData == null, string.Join(", ", failed.errors) + "; " + string.Join(" | ", failed.messages));
+            Check("failure is contained", !failed.succeeded && failed.hasCriticalErrors && failed.mesh == null && after.succeeded,
+                string.Join(", ", failed.errors) + "; " + string.Join(" | ", failed.messages));
 
             // SVGAsset.Load works in edit mode and gives what the Editor importer gives.
             File.WriteAllText(path, Svg);
-            SVGImporterProjectSettings.instance.importEngine = SVGImportEngine.Legacy;
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
             SVGAsset imported = AssetDatabase.LoadAssetAtPath<SVGAsset>(path);
             SVGImportOptions importedOptions = imported.importOptions;
@@ -74,13 +76,6 @@ public static class ImportTests
             long hash = imported.importHash;
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
             Check("reimport is identical", AssetDatabase.LoadAssetAtPath<SVGAsset>(path).importHash == hash, hash.ToString("X16"));
-
-            // Load follows the project's engine.
-            SVGImporterProjectSettings.instance.importEngine = SVGImportEngine.Native;
-            SVGAsset native = SVGAsset.Load(Svg);
-            SVGImportEngine expected = SVGImport.EffectiveEngine(SVGImportEngine.Native, Svg);
-            Check("Load uses the project engine", native != null && native.importEngine == expected, native == null ? "null" : native.importEngine + ", expected " + expected);
-            UnityEngine.Object.DestroyImmediate(native);
         }
         catch (Exception e)
         {
@@ -89,7 +84,6 @@ public static class ImportTests
         }
         finally
         {
-            SVGImporterProjectSettings.instance.importEngine = originalEngine;
             AssetDatabase.DeleteAsset(path);
         }
 

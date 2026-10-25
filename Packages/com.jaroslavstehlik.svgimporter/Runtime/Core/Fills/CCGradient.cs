@@ -9,6 +9,15 @@ using System.Linq;
 
 namespace SVGImporter.Rendering
 {
+    /// <summary>How a gradient continues past its ends (SVG's spreadMethod). Unknown reads as Pad.</summary>
+    public enum SVGSpreadMethod : ushort
+    {
+        Unknown = 0,
+        Pad = 1,
+        Reflect = 2,
+        Repeat = 3
+    }
+
     [System.Serializable]
     public struct CCGradientColorKey {
         public float time;

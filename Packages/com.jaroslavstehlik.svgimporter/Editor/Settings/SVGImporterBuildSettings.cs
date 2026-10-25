@@ -25,7 +25,6 @@ namespace SVGImporter
             Remove();
             var settings = ScriptableObject.CreateInstance<SVGImporterSettings>();
             settings.defaultAntialiasingWidth = SVGImporterProjectSettings.instance.antialiasingWidth;
-            settings.importEngine = SVGImporterProjectSettings.instance.importEngine;
             settings._isPlayerSettings = true;
             AssetDatabase.CreateAsset(settings, assetPath);
             PlayerSettings.SetPreloadedAssets(PlayerSettings.GetPreloadedAssets().Where(a => a != null).Append(settings).ToArray());

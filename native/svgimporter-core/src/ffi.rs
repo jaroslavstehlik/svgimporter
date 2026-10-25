@@ -6,7 +6,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use crate::import::{self, ImportOptions, Output};
 
 /// Increment whenever the ABI changes. C# checks it before using the library.
-pub const SVGI_ABI_VERSION: u32 = 3;
+pub const SVGI_ABI_VERSION: u32 = 4;
 
 pub const SVGI_OK: i32 = 0;
 /// The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -24,6 +24,9 @@ pub const SVGI_LAYER_FRINGE: u8 = 2;
 pub const SVGI_PAINT_SOLID: u8 = 0;
 pub const SVGI_PAINT_LINEAR: u8 = 1;
 pub const SVGI_PAINT_RADIAL: u8 = 2;
+/// SVG Importer's `conicalGradient` extension: the colour goes round the centre, starting on the
+/// positive x axis. Geometry as radial.
+pub const SVGI_PAINT_CONICAL: u8 = 3;
 
 pub const SVGI_SPREAD_PAD: u8 = 0;
 pub const SVGI_SPREAD_REFLECT: u8 = 1;
@@ -93,14 +96,14 @@ pub struct SvgiContour {
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub struct SvgiPaint {
-    /// `SVGI_PAINT_SOLID`, `SVGI_PAINT_LINEAR` or `SVGI_PAINT_RADIAL`.
+    /// `SVGI_PAINT_SOLID`, `SVGI_PAINT_LINEAR`, `SVGI_PAINT_RADIAL` or `SVGI_PAINT_CONICAL`.
     pub kind: u8,
     /// Solid colour, RGBA in 0..1 (sRGB). Opacity is in the layer, not here.
     pub color: [f32; 4],
     /// Gradients: transform from gradient space to SVG user space, as a b c d e f
     /// (x' = a*x + c*y + e, y' = b*x + d*y + f).
     pub transform: [f32; 6],
-    /// Linear: x1 y1 x2 y2. Radial: cx cy r fx fy fr. In gradient space.
+    /// Linear: x1 y1 x2 y2. Radial and conical: cx cy r fx fy fr. In gradient space.
     pub geometry: [f32; 6],
     /// `SVGI_SPREAD_PAD`, `SVGI_SPREAD_REFLECT` or `SVGI_SPREAD_REPEAT`.
     pub spread: u8,

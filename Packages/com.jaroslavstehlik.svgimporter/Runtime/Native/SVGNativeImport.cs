@@ -11,21 +11,12 @@ namespace SVGImporter.Native
     using Utils;
 
     /// <summary>
-    /// Fills SVGGraphics with layers produced by the native core, in the same form the legacy C#
-    /// parser produces them. Everything after that (render formats, depth, gradient atlas, layers
-    /// for modifiers, colliders) runs unchanged. See DESIGN.md, section 5.
+    /// Turns the native core's result into SVG Importer's layers of shapes: fills, strokes and
+    /// their antialiasing fringes, with their paints and outlines. The import pipeline (SVGImport)
+    /// then places them and builds the mesh. See DESIGN.md, section 5.
     /// </summary>
     internal static class SVGNativeImport
     {
-        /// <summary>
-        /// False for documents that use SVG Importer extensions the native core doesn't support yet
-        /// (conicalGradient); those are imported by the legacy parser.
-        /// </summary>
-        public static bool CanImport(string svgText)
-        {
-            return !System.Text.RegularExpressions.Regex.IsMatch(svgText, @"<\s*conicalGradient\b");
-        }
-
         /// <summary>
         /// Imports svgText into the context's layers and outlines, registering gradients in its
         /// atlas data. Returns false if the document couldn't be imported.
@@ -52,7 +43,7 @@ namespace SVGImporter.Native
             SVGFill previousFill = null;
             foreach (SVGNativeCore.Layer layer in result.layers)
             {
-                // A path's fill and stroke (and their fringes) form one layer, as in the legacy importer.
+                // A path's fill and stroke (and their fringes) form one layer.
                 if (layer.element != element)
                 {
                     Flush(shapes, name, context.layers);
@@ -82,9 +73,9 @@ namespace SVGImporter.Native
         }
 
         /// <summary>
-        /// The flattening tolerance in SVG user units for the legacy Quality setting (vertices per
-        /// meter): the legacy importer flattens curves with a tolerance of 1000 / vertexPerMeter
-        /// user units, whatever the mesh scale.
+        /// The flattening tolerance in SVG user units for the Quality setting (vertices per meter):
+        /// curves are flattened to within 1000 / verticesPerMeter user units, whatever the mesh
+        /// scale, as in SVG Importer 1.x.
         /// </summary>
         static float Tolerance(float verticesPerMeter)
         {
@@ -95,8 +86,8 @@ namespace SVGImporter.Native
         static void Flush(List<SVGShape> shapes, string name, List<SVGLayer> layers)
         {
             if (shapes.Count == 0) return;
-            // The native core turns every shape into a path, so elements without an id get the
-            // legacy name for paths.
+            // The native core turns every shape into a path; elements without an id are named
+            // as paths were in 1.x.
             layers.Add(new SVGLayer { name = string.IsNullOrEmpty(name) ? "Path Element" : name, shapes = shapes.ToArray() });
             shapes.Clear();
         }
@@ -146,15 +137,16 @@ namespace SVGImporter.Native
                     translucent |= stop.color.a < 1f;
 
                 fill = new SVGFill(Color.white, FILL_BLEND.OPAQUE, FILL_TYPE.GRADIENT,
-                    paint.kind == SVGNativeCore.PaintKind.Radial ? GRADIENT_TYPE.RADIAL : GRADIENT_TYPE.LINEAR);
+                    paint.kind == SVGNativeCore.PaintKind.Radial ? GRADIENT_TYPE.RADIAL
+                    : paint.kind == SVGNativeCore.PaintKind.Conical ? GRADIENT_TYPE.CONICAL : GRADIENT_TYPE.LINEAR);
                 fill.opacity = opacity;
                 fill.gradientColors = atlasData.AddGradient(CreateGradient(paint));
-                fill.transform = LegacyGradientTransform(paint, viewport);
+                fill.transform = GradientTransform(paint, viewport);
                 if (translucent) fill.blend = FILL_BLEND.ALPHA_BLENDED;
             }
             if (opacity < 1f) fill.blend = FILL_BLEND.ALPHA_BLENDED;
 
-            // As SVGSimplePath.CreatePolygon: the gradient transform and viewport in mesh units.
+            // The gradient transform and viewport in mesh units.
             SVGMatrix scale = SVGMatrix.identity.Scale(meshScale);
             fill.transform = scale.Multiply(fill.transform).Multiply(scale.Inverse());
             fill.viewport = scaledViewport;
@@ -162,9 +154,9 @@ namespace SVGImporter.Native
         }
 
         /// <summary>
-        /// The paint's gradient: its stops, with the end colours extended to 0 and 1 as the legacy
-        /// brushes do, its spread method and, for radial gradients, the focal point in the space
-        /// LegacyGradientTransform maps to (centre at 0.5, radius 0.5).
+        /// The paint's gradient: its stops, with the end colours extended to 0 and 1, its spread
+        /// method and, for radial gradients, the focal point in the space GradientTransform maps
+        /// to (centre at 0.5, radius 0.5).
         /// </summary>
         static CCGradient CreateGradient(SVGNativeCore.Paint paint)
         {
@@ -213,18 +205,19 @@ namespace SVGImporter.Native
         }
 
         /// <summary>
-        /// The legacy gradient transform (SVGSimplePath.GetFillTransform): it maps document space
-        /// to a space where the gradient spans the viewport. The native paint already combines
+        /// The gradient transform: it maps document space to a space where the gradient spans the
+        /// viewport (linear gradients run from 0 to 1 along x, radial and conical ones are centred
+        /// at 0.5 with a radius of 0.5). The native paint already combines
         /// units, gradientTransform and the element transform into one gradient-to-document matrix.
         /// </summary>
-        static SVGMatrix LegacyGradientTransform(SVGNativeCore.Paint paint, Rect viewport)
+        static SVGMatrix GradientTransform(SVGNativeCore.Paint paint, Rect viewport)
         {
             Matrix4x4 t = paint.transform;
             var gradientToDocument = new SVGMatrix(t.m00, t.m10, t.m01, t.m11, t.m03, t.m13);
             SVGMatrix documentToGradient;
             try {
                 documentToGradient = gradientToDocument.Inverse();
-            } catch (Document.SVGException) {
+            } catch (System.InvalidOperationException) {
                 return SVGMatrix.identity;
             }
 

@@ -174,71 +174,6 @@ namespace SVGImporter.Rendering
             return tvalues;
         }
 
-        public static List<Vector2> AdaptiveCubicCurve(float distanceTolerance, Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
-        {
-            currentAdaptiveBezierIteration = 0;
-            if(start == handle0 && handle0 == handle1 && handle1 == end)
-                return new List<Vector2>();
-
-            if (distanceTolerance < 0.01f)
-                distanceTolerance = 0.01f;
-
-            List<Vector2> points = new List<Vector2>(){start};
-
-    //        adaptiveIteration = 0;
-            RecursiveBezier(points, distanceTolerance * distanceTolerance, 
-                            start.x, start.y,
-                            handle0.x, handle0.y,
-                            handle1.x, handle1.y,
-                            end.x, end.y);
-
-            points.Add(end);
-            return points;
-        }
-
-        static void RecursiveBezier(List<Vector2> points, float distanceTolerance, float x1, float y1, 
-                                    float x2, float y2, 
-                                    float x3, float y3, 
-                                    float x4, float y4)
-        {
-            if(currentAdaptiveBezierIteration++ >= maxAdaptiveBezierIteration)
-                return;
-
-            // Calculate all the mid-points of the line segments
-            //----------------------
-            float x12 = (x1 + x2) * 0.5f;
-            float y12 = (y1 + y2) * 0.5f;
-            float x23 = (x2 + x3) * 0.5f;
-            float y23 = (y2 + y3) * 0.5f;
-            float x34 = (x3 + x4) * 0.5f;
-            float y34 = (y3 + y4) * 0.5f;
-            float x123 = (x12 + x23) * 0.5f;
-            float y123 = (y12 + y23) * 0.5f;
-            float x234 = (x23 + x34) * 0.5f;
-            float y234 = (y23 + y34) * 0.5f;
-            float x1234 = (x123 + x234) * 0.5f;
-            float y1234 = (y123 + y234) * 0.5f;
-            
-            // Try to approximate the full cubic curve by a single straight line
-            //------------------
-            float dx = x4 - x1;
-            float dy = y4 - y1;
-            
-            float d2 = Mathf.Abs(((x2 - x4) * dy - (y2 - y4) * dx));
-            float d3 = Mathf.Abs(((x3 - x4) * dy - (y3 - y4) * dx));
-            
-            if ((d2 + d3) * (d2 + d3) < distanceTolerance * (dx * dx + dy * dy))
-            {
-                points.Add(new Vector2(x1234, y1234));
-                return;
-            }
-
-            // Continue subdivision
-            //----------------------
-            RecursiveBezier(points, distanceTolerance, x1, y1, x12, y12, x123, y123, x1234, y1234); 
-            RecursiveBezier(points, distanceTolerance, x1234, y1234, x234, y234, x34, y34, x4, y4); 
-        }
-
         public static SVGBounds GetBounds(Vector2 start, Vector2 handle0, Vector2 handle1, Vector2 end)
         {
             float minX = Mathf.Min(start.x, end.x);
@@ -274,44 +209,6 @@ namespace SVGImporter.Rendering
             }
 
             return new SVGBounds(minX, minY, maxX, maxY);
-        }
-
-        public static Vector3 Interpolate(Vector3[] points, float t)
-        {
-            float numSections = (float)(points.Length - 3);
-            int currPt = (int)Mathf.Min(Mathf.FloorToInt(t * numSections), numSections - 1);
-            float u = t * numSections - (float)currPt;
-            
-            Vector3 a = points [currPt];
-            Vector3 b = points [currPt + 1];
-            Vector3 c = points [currPt + 2];
-            Vector3 d = points [currPt + 3];
-            
-            return .5f * (
-                (-a + 3f * b - 3f * c + d) * (u * u * u)
-                + (2f * a - 5f * b + 4f * c - d) * (u * u)
-                + (-a + c) * u
-                + 2f * b
-                );
-        }
-
-        public static Vector2 Interpolate(Vector2[] points, float t)
-        {
-            float numSections = (float)(points.Length - 3);
-            int currPt = (int)Mathf.Min(Mathf.FloorToInt(t * numSections), numSections - 1);
-            float u = t * numSections - (float)currPt;
-            
-            Vector3 a = points [currPt];
-            Vector3 b = points [currPt + 1];
-            Vector3 c = points [currPt + 2];
-            Vector3 d = points [currPt + 3];
-            
-            return .5f * (
-                (-a + 3f * b - 3f * c + d) * (u * u * u)
-                + (2f * a - 5f * b + 4f * c - d) * (u * u)
-                + (-a + c) * u
-                + 2f * b
-                );
         }
     }
 }

@@ -514,6 +514,7 @@ dependencies = [
  "csbindgen",
  "i_overlay",
  "lyon_tessellation",
+ "roxmltree 0.21.2",
  "tiny-skia-path",
  "usvg",
 ]

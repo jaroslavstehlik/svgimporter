@@ -15,6 +15,8 @@ lyon_tessellation = "1.0.23"
 # The version usvg uses, so its path types match.
 tiny-skia-path = "0.12.0"
 i_overlay = "9.1.0"
+# Only to find conicalGradient elements, an SVG Importer extension usvg doesn't know.
+roxmltree = "0.21"
 
 [build-dependencies]
 csbindgen = "1.9.8"

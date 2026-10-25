@@ -47,7 +47,10 @@ namespace SVGImporter
         internal const string path = "ProjectSettings/SVGImporterSettings.asset";
 
         [SerializeField] bool _importNewSVGFiles = true;
-        [SerializeField] SVGImportEngine _importEngine = SVGImportEngine.Legacy;
+        // Settings files of 2.0 previews have an engine; there is one engine now.
+#pragma warning disable CS0414
+        [SerializeField, HideInInspector] SVGImportEngine _importEngine = SVGImportEngine.Native;
+#pragma warning restore CS0414
         [SerializeField] float _antialiasingWidth = 2f;
         [SerializeField] SVGImportDefaults _defaults = new SVGImportDefaults();
 
@@ -61,13 +64,6 @@ namespace SVGImporter
             set { _importNewSVGFiles = value; Save(); }
         }
 
-        /// <summary>The engine that imports SVG files. Changing it reimports every SVG file.</summary>
-        public SVGImportEngine importEngine
-        {
-            get { return _importEngine; }
-            set { _importEngine = value; Save(); }
-        }
-
         /// <summary>Width of the antialiasing fringe in pixels, in the Editor and in builds.</summary>
         public float antialiasingWidth
         {
@@ -79,15 +75,6 @@ namespace SVGImporter
         public SVGImportDefaults defaults
         {
             get { return _defaults; }
-        }
-
-        /// <summary>
-        /// The engine that actually imports on this Editor: Native falls back to Legacy where the
-        /// native core isn't available.
-        /// </summary>
-        public SVGImportEngine effectiveImportEngine
-        {
-            get { return _importEngine == SVGImportEngine.Native && Native.SVGNativeCore.isSupported ? SVGImportEngine.Native : SVGImportEngine.Legacy; }
         }
 
         static SVGImporterProjectSettings s_Instance;
@@ -158,7 +145,6 @@ namespace SVGImporter
             if (old == null) return false;
 
             s_Instance._importNewSVGFiles = old.importNewSVGFiles;
-            s_Instance._importEngine = old.importEngine;
             s_Instance._antialiasingWidth = old.defaultAntialiasingWidth;
             s_Instance._defaults = new SVGImportDefaults {
                 format = old.defaultSVGFormat, useGradients = old.defaultUseGradients, antialiasing = old.defaultAntialiasing,
@@ -180,7 +166,6 @@ namespace SVGImporter
         {
             SVGImportEngineDependency.Register();
             SVGImporterSettings.Get.defaultAntialiasingWidth = s_Instance._antialiasingWidth;
-            SVGImporterSettings.Get.importEngine = s_Instance._importEngine;
             if (changed != null) changed();
         }
 
@@ -191,18 +176,15 @@ namespace SVGImporter
         }
 
         /// <summary>
-        /// Reads the file again if it changed outside Unity, for example by a version control
-        /// update; reimports SVG files if the engine changed.
+        /// Reads the file again if it changed outside Unity, for example by a version control update.
         /// </summary>
         internal static void ReloadIfChanged()
         {
             if (s_Instance == null) return;
             DateTime fileTime = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : default(DateTime);
             if (fileTime == s_FileTime) return;
-            SVGImportEngine engine = s_Instance.effectiveImportEngine;
             if (File.Exists(path)) ReadFile();
             Apply();
-            if (s_Instance.effectiveImportEngine != engine) AssetDatabase.Refresh();
         }
 
         /// <summary>Forgets the loaded settings, so the next access loads them again (tests).</summary>

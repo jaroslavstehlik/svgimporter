@@ -12,7 +12,7 @@ namespace SVGImporter
     [System.Serializable]
     public struct SVGImportOptions
     {
-        /// <summary>The requested engine; Native falls back to Legacy where it isn't available.</summary>
+        /// <summary>Ignored: SVG Importer has one import engine, the native core.</summary>
         public SVGImportEngine engine;
         public SVGAssetFormat format;
         public SVGUseGradients useGradients;
@@ -45,7 +45,7 @@ namespace SVGImporter
         {
             get {
                 return new SVGImportOptions {
-                    engine = SVGImportEngine.Legacy,
+                    engine = SVGImportEngine.Native,
                     format = SVGAssetFormat.Transparent,
                     useGradients = SVGUseGradients.Always,
                     antialiasing = false,
@@ -64,7 +64,7 @@ namespace SVGImporter
         public static SVGImportOptions FromSettings(SVGImporterSettings settings)
         {
             return new SVGImportOptions {
-                engine = settings.importEngine,
+                engine = SVGImportEngine.Native,
                 format = settings.defaultSVGFormat,
                 useGradients = settings.defaultUseGradients,
                 antialiasing = settings.defaultAntialiasing,

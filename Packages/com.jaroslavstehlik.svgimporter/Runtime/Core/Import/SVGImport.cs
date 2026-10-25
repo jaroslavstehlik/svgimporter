@@ -9,7 +9,6 @@ using UnityEngine;
 
 namespace SVGImporter
 {
-    using Document;
     using Geometry;
     using Native;
     using Rendering;
@@ -19,15 +18,15 @@ namespace SVGImporter
     /// Imports SVG text: the one import pipeline, used by the Editor importer, by SVGAsset.Load at
     /// runtime and by 1.x SVG Assets.
     ///
-    /// Import depends only on its arguments. An engine turns the document into layers of shapes
-    /// and outlines (the native core, or the legacy C# parser); the shared steps then place them
-    /// on the canvas, build the mesh, choose the shaders and gather the gradients and collider.
+    /// Import depends only on its arguments. The native core turns the document into layers of
+    /// shapes, fringes and outlines; the steps here then place them on the canvas, build the mesh,
+    /// choose the shaders and gather the gradients and collider.
     /// Nothing is written to an asset: SVGAsset.Apply does that with the result.
     /// </summary>
     public static class SVGImport
     {
         // Changing what an import produces changes this, and so every import hash.
-        const string pipelineVersion = "6";
+        const string pipelineVersion = "7";
 
         public static SVGImportResult Import(string svgText, SVGImportOptions options)
         {
@@ -41,7 +40,7 @@ namespace SVGImporter
             }
 
             var context = new SVGImportContext(result.errors, result.messages);
-            result.engine = EffectiveEngine(options.engine, svgText);
+            result.engine = SVGImportEngine.Native;
             Mesh mesh = null;
             try
             {
@@ -52,7 +51,7 @@ namespace SVGImporter
                 // The canvas and the shapes in mesh units, around the pivot.
                 Rect canvas = new Rect(viewport.x * options.scale, viewport.y * options.scale, viewport.width * options.scale, viewport.height * options.scale);
                 Vector2 offset;
-                SVGGraphics.CorrectSVGLayers(context.layers, canvas, options.ignoreSVGCanvas, options.pivotPoint, out offset);
+                SVGLayerPlacement.Place(context.layers, canvas, options.ignoreSVGCanvas, options.pivotPoint, out offset);
                 SVGLayer[] layers = context.layers.ToArray();
 
                 mesh = new Mesh();
@@ -95,72 +94,26 @@ namespace SVGImporter
             return result;
         }
 
-        /// <summary>The engine that imports: Native only where it is available and supports the document.</summary>
+        /// <summary>There is one import engine, the native core; kept for compatibility.</summary>
+        [Obsolete("SVG Importer has one import engine, the native core.")]
         public static SVGImportEngine EffectiveEngine(SVGImportEngine engine, string svgText)
         {
-            bool native = engine == SVGImportEngine.Native && SVGNativeCore.isSupported && (svgText == null || SVGNativeImport.CanImport(svgText));
-            return native ? SVGImportEngine.Native : SVGImportEngine.Legacy;
+            return SVGImportEngine.Native;
         }
 
         static bool ParseDocument(string svgText, SVGImportOptions options, SVGImportContext context, SVGImportResult result, out Rect viewport)
         {
-            if (result.engine == SVGImportEngine.Native)
-            {
-                try
-                {
-                    return SVGNativeImport.Populate(svgText, options, context, out viewport);
-                }
-                catch (Exception exception) when (exception is DllNotFoundException || exception is EntryPointNotFoundException || exception is InvalidOperationException)
-                {
-                    // A missing or mismatched native library: the legacy engine still works.
-                    result.messages.Add("The native import engine isn't available (" + exception.Message + "); imported with the legacy engine.");
-                    result.engine = SVGImportEngine.Legacy;
-                    context.Reset();
-                }
-            }
-            return ParseLegacy(svgText, options, context, out viewport);
-        }
-
-        /// <summary>
-        /// The legacy C# parser keeps its settings and output in static fields (SVGAssetImport,
-        /// SVGGraphics, SVGParser). They are set here, copied into the context and cleared again,
-        /// so nothing outside this method sees them.
-        /// </summary>
-        static bool ParseLegacy(string svgText, SVGImportOptions options, SVGImportContext context, out Rect viewport)
-        {
-            viewport = new Rect();
-            SVGAssetImport.Begin(options, context.atlasData, context.errors);
-            SVGDocument document = null;
             try
             {
-                SVGElement root;
-                try
-                {
-                    document = new SVGDocument(svgText, new SVGGraphics(options.verticesPerMeter, options.antialiasing));
-                    root = document.rootElement;
-                }
-                catch (Exception exception)
-                {
-                    context.errors.Add(SVGError.Syntax);
-                    context.messages.Add("The SVG document couldn't be parsed: " + exception.Message);
-                    return false;
-                }
-                if (root == null)
-                {
-                    context.errors.Add(SVGError.Syntax);
-                    context.messages.Add("The SVG document has no root element.");
-                    return false;
-                }
-                root.Render();
-                viewport = root.paintable.viewport;
-                context.layers.AddRange(SVGGraphics.layers);
-                context.paths.AddRange(SVGGraphics.paths);
-                return true;
+                return SVGNativeImport.Populate(svgText, options, context, out viewport);
             }
-            finally
+            catch (Exception exception) when (exception is DllNotFoundException || exception is EntryPointNotFoundException || exception is InvalidOperationException)
             {
-                if (document != null) document.Clear();
-                SVGAssetImport.End();
+                // A missing or mismatched native library, for example on a platform it isn't built for.
+                viewport = new Rect();
+                context.errors.Add(SVGError.CorruptedFile);
+                context.messages.Add("The SVG import library isn't available on this platform: " + exception.Message);
+                return false;
             }
         }
 

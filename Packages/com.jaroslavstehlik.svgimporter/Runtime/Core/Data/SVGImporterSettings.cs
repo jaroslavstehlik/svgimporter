@@ -6,12 +6,14 @@ using System.Collections;
 
 namespace SVGImporter
 {
-    /// <summary>Which implementation parses and tessellates SVG files.</summary>
+    /// <summary>
+    /// Which implementation parses and tessellates SVG files. There is one, the native core (usvg
+    /// and lyon, see DESIGN.md); the C# parser of 1.x and early 2.0 previews was removed. Kept so
+    /// that assets and settings that recorded an engine still load.
+    /// </summary>
     public enum SVGImportEngine
     {
-        /// <summary>The C# parser and tessellator of SVG Importer 1.x and 2.x.</summary>
         Legacy,
-        /// <summary>The native core (usvg and lyon). See DESIGN.md.</summary>
         Native,
     }
 
@@ -69,12 +71,8 @@ namespace SVGImporter
         [System.Obsolete("Use SVGImporterProjectSettings.instance.importNewSVGFiles (Editor).")]
         [HideInInspector] public bool importNewSVGFiles = true;
 
-        [Tooltip("Native: parse and tessellate with the native core (usvg and lyon), which is faster and supports more of SVG. Currently available on macOS. Legacy: the C# implementation of SVG Importer 2.x.")]
-        /// <summary>
-        /// The engine SVGAsset.Load imports with: the project's Import Engine (kept in sync in the
-        /// Editor, included in builds).
-        /// </summary>
-        [HideInInspector] public SVGImportEngine importEngine = SVGImportEngine.Legacy;
+        [System.Obsolete("SVG Importer has one import engine, the native core.")]
+        [HideInInspector] public SVGImportEngine importEngine = SVGImportEngine.Native;
 
         public SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;
         public SVGUseGradients defaultUseGradients = SVGUseGradients.Auto;

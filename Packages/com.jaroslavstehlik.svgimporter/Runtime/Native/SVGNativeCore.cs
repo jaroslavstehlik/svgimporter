@@ -17,7 +17,7 @@ namespace SVGImporter.Native
         public static bool isSupported
         {
             get {
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_IOS || UNITY_ANDROID
                 return true;
 #else
                 return false;
@@ -57,7 +57,7 @@ namespace SVGImporter.Native
         }
 
         public enum LayerKind : byte { Fill = NativeMethods.SVGI_LAYER_FILL, Stroke = NativeMethods.SVGI_LAYER_STROKE, Fringe = NativeMethods.SVGI_LAYER_FRINGE }
-        public enum PaintKind : byte { Solid = NativeMethods.SVGI_PAINT_SOLID, Linear = NativeMethods.SVGI_PAINT_LINEAR, Radial = NativeMethods.SVGI_PAINT_RADIAL }
+        public enum PaintKind : byte { Solid = NativeMethods.SVGI_PAINT_SOLID, Linear = NativeMethods.SVGI_PAINT_LINEAR, Radial = NativeMethods.SVGI_PAINT_RADIAL, Conical = NativeMethods.SVGI_PAINT_CONICAL }
         public enum Spread : byte { Pad = NativeMethods.SVGI_SPREAD_PAD, Reflect = NativeMethods.SVGI_SPREAD_REFLECT, Repeat = NativeMethods.SVGI_SPREAD_REPEAT }
 
         public struct Layer

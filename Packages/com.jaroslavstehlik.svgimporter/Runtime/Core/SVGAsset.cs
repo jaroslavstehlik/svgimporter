@@ -13,7 +13,6 @@ namespace SVGImporter
     using Geometry;
     using Utils;
     using Data;
-    using Document;
 
     public enum SVGShapeType
     {
@@ -1102,13 +1101,11 @@ namespace SVGImporter
 
         /// <summary>
         /// Imports SVG text at runtime (also in the Editor), with the defaults of settings, or of
-        /// SVGImportOptions.Default without them. The engine is the project's (Project Settings >
-        /// SVG Importer). Returns null if the document couldn't be imported.
+        /// SVGImportOptions.Default without them. Returns null if the document couldn't be imported.
         /// </summary>
         public static SVGAsset Load(string svgText, SVGImporterSettings settings = null)
         {
             SVGImportOptions options = settings != null ? SVGImportOptions.FromSettings(settings) : SVGImportOptions.Default;
-            options.engine = SVGImporterSettings.Get.importEngine;
             return Load(svgText, options);
         }
 
@@ -1158,7 +1155,7 @@ namespace SVGImporter
         }
 
         [SerializeField]
-        protected SVGImportEngine _importEngine = SVGImportEngine.Legacy;
+        protected SVGImportEngine _importEngine = SVGImportEngine.Native;
         /// <summary>Identifies the import: equal for the same SVG text and settings.</summary>
         public long importHash
         {
@@ -1253,9 +1250,7 @@ namespace SVGImporter
                 }
             }
 
-            // 1.x SVG Assets are imported with the legacy engine.
             SVGImportOptions options = importOptions;
-            options.engine = SVGImportEngine.Legacy;
             SVGImportResult result = SVGImport.Import(svgFile, options);
             if(result.mesh != null)
             {

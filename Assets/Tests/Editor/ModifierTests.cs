@@ -38,7 +38,7 @@ public static class ModifierTests
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Shader.SetGlobalFloat("SVG_ANTIALIASING_WIDTH", 2f);
-            foreach (SVGImportEngine engine in new[] { SVGImportEngine.Legacy, SVGImportEngine.Native })
+            foreach (SVGImportEngine engine in new[] { SVGImportEngine.Native })
             {
                 string e = engine + ": ";
                 Color[] plain = Render(engine, null, output, e + "plain");

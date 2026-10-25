@@ -29,7 +29,6 @@ namespace SVGImporter.Geometry
             
             shaders = new string[0];
             
-            //if(SVGAssetImport.sliceMesh) Create9Slice();
             
             SVGFill fill;
             bool useOpaqueShader = false;

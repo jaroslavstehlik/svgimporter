@@ -8,7 +8,7 @@
 //! Clip paths are applied to the geometry: a clipped fill or stroke is intersected with the clip
 //! region in document space and tessellated again.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, OnceLock};
 
 use i_overlay::core::fill_rule::FillRule as OverlayFillRule;
@@ -86,7 +86,12 @@ pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
     if options.convert_text {
         usvg_options.fontdb = system_fonts();
     }
-    let tree = usvg::Tree::from_data(data, &usvg_options).map_err(|e| e.to_string())?;
+    let conical = conical_gradients(data);
+    let tree = match &conical {
+        Some((renamed, _)) => usvg::Tree::from_data(renamed, &usvg_options),
+        None => usvg::Tree::from_data(data, &usvg_options),
+    }
+    .map_err(|e| e.to_string())?;
 
     let mut importer = Importer {
         options,
@@ -101,6 +106,7 @@ pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
         stroke: StrokeTessellator::new(),
         clip: None,
         limit_exceeded: None,
+        conical_ids: conical.map(|(_, ids)| ids).unwrap_or_default(),
     };
     importer.group(tree.root(), 1.0);
     match importer.limit_exceeded {
@@ -122,6 +128,8 @@ struct Importer<'a> {
     clip: Option<Region>,
     /// Set when the output reaches a limit; the walk stops and the import fails with this message.
     limit_exceeded: Option<String>,
+    /// Ids of the `conicalGradient` elements, which usvg reads as radial gradients.
+    conical_ids: HashSet<String>,
 }
 
 /// An area in document space: closed contours, without overlaps, holes wound opposite to their
@@ -604,8 +612,9 @@ impl Importer<'_> {
                 (Some(key_of(Arc::as_ptr(g) as usize, transform)), paint)
             }
             usvg::Paint::RadialGradient(g) => {
+                let kind = if self.conical_ids.contains(g.id()) { SVGI_PAINT_CONICAL } else { SVGI_PAINT_RADIAL };
                 let paint = self.gradient(
-                    SVGI_PAINT_RADIAL,
+                    kind,
                     g,
                     [g.cx(), g.cy(), g.r().get(), g.fx(), g.fy(), g.fr().get()],
                     transform,
@@ -662,6 +671,25 @@ impl Importer<'_> {
             stop_count: gradient.stops().len() as u32,
         }
     }
+}
+
+/// `conicalGradient` is an SVG Importer extension that usvg doesn't know. Its elements are renamed
+/// to `radialGradient` for usvg, which then resolves their attributes, stops and references as for
+/// any gradient; the returned ids say which gradients were conical. None if the document has none.
+fn conical_gradients(data: &[u8]) -> Option<(Vec<u8>, HashSet<String>)> {
+    let text = std::str::from_utf8(data).ok()?;
+    if !text.contains("conicalGradient") {
+        return None;
+    }
+    let options = roxmltree::ParsingOptions { allow_dtd: true, ..roxmltree::ParsingOptions::default() };
+    let document = roxmltree::Document::parse_with_options(text, options).ok()?;
+    let ids: HashSet<String> = document
+        .descendants()
+        .filter(|node| node.tag_name().name() == "conicalGradient")
+        .filter_map(|node| node.attribute("id").map(str::to_string))
+        .collect();
+    let renamed = text.replace("<conicalGradient", "<radialGradient").replace("</conicalGradient", "</radialGradient");
+    Some((renamed.into_bytes(), ids))
 }
 
 /// The outline of a triangle mesh: the edges used by exactly one triangle, chained into closed
@@ -1131,5 +1159,18 @@ mod tests {
             assert!(toward_centre > 0.0, "hole vertex {:?} extrusion {:?}", p, e);
         }
     }
-}
 
+    #[test]
+    fn conical_gradient_extension() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <conicalGradient id="c" cx="50" cy="50" r="40" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></conicalGradient>
+            <radialGradient id="r"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></radialGradient>
+            <rect width="50" height="100" fill="url(#c)"/><rect x="50" width="50" height="100" fill="url(#r)"/></svg>"#);
+        let kinds: Vec<u8> = out.layers.iter().map(|l| out.paints[l.paint as usize].kind).collect();
+        assert_eq!(kinds, vec![SVGI_PAINT_CONICAL, SVGI_PAINT_RADIAL]);
+        let conical = out.paints[out.layers[0].paint as usize];
+        assert_eq!(&conical.geometry[..3], &[50.0, 50.0, 40.0]);
+        assert_eq!(conical.stop_count, 2);
+    }
+}

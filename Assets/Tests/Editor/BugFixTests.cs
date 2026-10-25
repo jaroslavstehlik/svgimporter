@@ -51,9 +51,10 @@ public static class BugFixTests
             Check("Opaque depth: the later shape is in front", opaque.sharedMesh != null && overlap.b > 200 && overlap.r < 60, "overlap pixel " + overlap);
 
             // More than 65,535 vertices: the mesh was cleared and the asset saved empty.
-            var circles = new StringBuilder("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"100\">");
-            for (int y = 0; y < 25; y++)
-                for (int x = 0; x < 75; x++)
+            var circles = new StringBuilder("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"364\" height=\"124\">");
+            // An odd number of circles each way, so the middle pixel the test reads is on one.
+            for (int y = 0; y < 31; y++)
+                for (int x = 0; x < 91; x++)
                     circles.AppendFormat("<circle cx=\"{0}\" cy=\"{1}\" r=\"1.9\" fill=\"#00ff00\"/>", 2 + x * 4, 2 + y * 4);
             circles.Append("</svg>");
             SVGAsset big = Import("big", circles.ToString(), i => { i.FindProperty("_vpm").floatValue = 200000f; i.FindProperty("_antialiasing").boolValue = false; });

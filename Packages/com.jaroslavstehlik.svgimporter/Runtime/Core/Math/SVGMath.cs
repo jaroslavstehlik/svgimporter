@@ -8,11 +8,6 @@ using System;
 namespace SVGImporter.Utils
 {
     public class SVGMath {
-     
-        public static Vector2 RotateVectorClockwise(Vector2 vector)
-        {
-            return new Vector2(vector.y, -vector.x);
-        }
 
     	//increase or decrease the length of vector by size
      
@@ -31,57 +26,6 @@ namespace SVGImporter.Utils
     	//Calculate the intersection point of two lines. Returns true if lines intersect, otherwise false.
     	//Note that in 3d, two lines do not intersect most of the time. So if the two lines are not in the 
     	//same plane, use ClosestPointsOnTwoLines() instead.
-    	public static bool LineLineIntersection(out Vector3 intersection, Vector3 line1Start, Vector3 line1End, Vector3 line2Start, Vector3 line2End){
-     
-    		intersection = Vector3.zero;
-     
-    		Vector3 lineVec3 = line2Start - line1Start;
-    		Vector3 crossVec1and2 = Vector3.Cross(line1End, line2End);
-    		Vector3 crossVec3and2 = Vector3.Cross(lineVec3, line2End);
-     
-    		float planarFactor = Vector3.Dot(lineVec3, crossVec1and2);
-     
-    		//Lines are not coplanar. Take into account rounding errors.
-    		if((planarFactor >= 0.00001f) || (planarFactor <= -0.00001f)){
-    			return false;
-    		}
-     
-    		//Note: sqrMagnitude does x*x+y*y+z*z on the input vector.
-    		float s = Vector3.Dot(crossVec3and2, crossVec1and2) / crossVec1and2.sqrMagnitude;
-     
-    		if((s >= 0.0f) && (s <= 1.0f)){
-     
-    			intersection = line1Start + (line1End * s);
-    			return true;
-    		}
-     
-    		else{
-    			return false;       
-    		}
-    	}
-
-        public static bool LineLineIntersection(out Vector2 intersection, Vector2 line1Start, Vector2 line1End, Vector2 line2Start, Vector2 line2End){
-            
-            intersection = Vector2.zero;
-            
-            float s1_x, s1_y, s2_x, s2_y;
-            s1_x = line1End.x - line1Start.x;     s1_y = line1End.y - line1Start.y;
-            s2_x = line2End.x - line2Start.x;     s2_y = line2End.y - line2Start.y;
-            
-            float s, t;
-            s = (-s1_y * (line1Start.x - line2Start.x) + s1_x * (line1Start.y - line2Start.y)) / (-s2_x * s1_y + s1_x * s2_y);
-            t = ( s2_x * (line1Start.y - line2Start.y) - s2_y * (line1Start.x - line2Start.x)) / (-s2_x * s1_y + s1_x * s2_y);
-            
-            intersection.x = line1Start.x + (t * s1_x);
-            intersection.y = line1Start.y + (t * s1_y);
-            
-            if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
-            {
-                return true;
-            }
-            
-            return false; // No collision
-        }
 
         public static float ClosestPointToLine(Vector2 lineStart, Vector2 lineEnd, Vector2 point, out Vector2 pointOnLine)
         {

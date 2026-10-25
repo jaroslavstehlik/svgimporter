@@ -102,11 +102,6 @@ public static class SVGRenderTests
         string output = Arg("-svgTestOutput") ?? "Temp/SVGRenderTests";
         Directory.CreateDirectory(output);
         // Optional: -svgTestColorSpace Linear|Gamma
-        // Optional: -svgTestEngine Native|Legacy
-        string engine = Arg("-svgTestEngine");
-        SVGImportEngine originalEngine = SVGImporterProjectSettings.instance.importEngine;
-        if (engine != null)
-            SVGImporterProjectSettings.instance.importEngine = (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engine);
         string colorSpace = Arg("-svgTestColorSpace");
         if (colorSpace != null)
             PlayerSettings.colorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), colorSpace);
@@ -130,8 +125,7 @@ public static class SVGRenderTests
             SetPipeline(null);
         }
 
-        string engineName = SVGImporterProjectSettings.instance.effectiveImportEngine.ToString();
-        SVGImporterProjectSettings.instance.importEngine = originalEngine;
+        string engineName = "Native";
         results.Insert(0, "Engine: " + engineName + ", color space: " + PlayerSettings.colorSpace + ", result: " + (passed ? "PASS" : "FAIL"));
         File.WriteAllLines(Path.Combine(output, "results-" + engineName + "-" + PlayerSettings.colorSpace + ".txt"), results);
         foreach (string line in results) Debug.Log("[SVGRenderTests] " + line);

@@ -19,7 +19,7 @@ namespace SVGImporter
             {
                 label = "SVG Importer",
                 guiHandler = _ => Draw(),
-                keywords = new HashSet<string>(new[] { "SVG", "Import", "Engine", "Native", "Antialiasing", "Soft Edges", "MSAA", "Vector" }),
+                keywords = new HashSet<string>(new[] { "SVG", "Import", "Native", "Antialiasing", "Soft Edges", "MSAA", "Vector" }),
             };
         }
 
@@ -31,17 +31,12 @@ namespace SVGImporter
             if (s_Settings == null || s_Settings.targetObject != settings)
                 s_Settings = new SerializedObject(settings);
             s_Settings.Update();
-            SVGImportEngine engineBefore = settings.effectiveImportEngine;
 
             EditorGUIUtility.labelWidth = 220f;
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField("Import", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(s_Settings.FindProperty("_importNewSVGFiles"), new GUIContent("Import New SVG Files",
                 "Import SVG files added to the project with SVG Importer. Turn this off when the project uses Unity's own SVG import, for example for UI Toolkit. Individual files can still be switched in the Inspector."));
-            EditorGUILayout.PropertyField(s_Settings.FindProperty("_importEngine"), new GUIContent("Import Engine",
-                "Native: the native core (usvg and lyon), faster and supporting more of SVG. Legacy: the C# implementation of SVG Importer 2.x. Changing it reimports every SVG file."));
-            if (settings.importEngine == SVGImportEngine.Native && settings.effectiveImportEngine != SVGImportEngine.Native)
-                EditorGUILayout.HelpBox("The native engine isn't available on this platform yet; SVG files are imported with the legacy engine.", MessageType.Info);
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
@@ -97,9 +92,6 @@ namespace SVGImporter
             {
                 s_Settings.ApplyModifiedPropertiesWithoutUndo();
                 settings.Save();
-                // A different engine reimports every SVG file.
-                if (settings.effectiveImportEngine != engineBefore)
-                    AssetDatabase.Refresh();
             }
         }
     }

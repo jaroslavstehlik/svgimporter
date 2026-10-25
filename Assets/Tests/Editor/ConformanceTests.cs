@@ -2,7 +2,7 @@
 // importer and its shaders, and compares it with the suite's reference PNG.
 //
 //   Unity -batchmode -projectPath . -executeMethod ConformanceTests.Run
-//         -corpus <resvg>/crates/resvg/tests/tests -out <dir> [-svgTestEngine Native|Legacy]
+//         -corpus <resvg>/crates/resvg/tests/tests -out <dir>
 //         [-filter <path substring>] [-saveRenders] [-skip <file listing paths to skip>]
 //
 // An import that crashes Unity (the legacy parser overflows the stack on some files) can't be
@@ -38,8 +38,7 @@ public static class ConformanceTests
         string output = Arg("-out") ?? "Temp/ConformanceTests";
         string filter = Arg("-filter");
         bool saveRenders = Environment.GetCommandLineArgs().Contains("-saveRenders");
-        string engineArg = Arg("-svgTestEngine");
-        engine = engineArg != null ? (SVGImportEngine)Enum.Parse(typeof(SVGImportEngine), engineArg) : SVGImporterProjectSettings.instance.effectiveImportEngine;
+        engine = SVGImportEngine.Native;
         string engineName = engine.ToString();
         Directory.CreateDirectory(output);
         string renders = Path.Combine(output, "renders-" + engineName);

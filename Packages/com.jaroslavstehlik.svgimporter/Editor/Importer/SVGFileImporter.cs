@@ -52,7 +52,6 @@ namespace SVGImporter
             ctx.DependsOnCustomDependency(SVGImportEngineDependency.name);
 
             SVGImportOptions options = importOptions;
-            options.engine = SVGImporterProjectSettings.instance.effectiveImportEngine;
             string svgText = File.ReadAllText(ctx.assetPath);
             SVGImportResult result = SVGImport.Import(svgText, options);
             string name = Path.GetFileNameWithoutExtension(ctx.assetPath);

@@ -22,7 +22,7 @@ namespace SVGImporter.Native
         /// <summary>
         ///  Increment whenever the ABI changes. C# checks it before using the library.
         /// </summary>
-        internal const uint SVGI_ABI_VERSION = 3;
+        internal const uint SVGI_ABI_VERSION = 4;
         internal const int SVGI_OK = 0;
         /// <summary>
         ///  The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -45,6 +45,11 @@ namespace SVGImporter.Native
         internal const byte SVGI_PAINT_SOLID = 0;
         internal const byte SVGI_PAINT_LINEAR = 1;
         internal const byte SVGI_PAINT_RADIAL = 2;
+        /// <summary>
+        ///  SVG Importer's `conicalGradient` extension: the colour goes round the centre, starting on the
+        ///  positive x axis. Geometry as radial.
+        /// </summary>
+        internal const byte SVGI_PAINT_CONICAL = 3;
         internal const byte SVGI_SPREAD_PAD = 0;
         internal const byte SVGI_SPREAD_REFLECT = 1;
         internal const byte SVGI_SPREAD_REPEAT = 2;
@@ -172,7 +177,7 @@ namespace SVGImporter.Native
     internal unsafe partial struct SvgiPaint
     {
         /// <summary>
-        ///  `SVGI_PAINT_SOLID`, `SVGI_PAINT_LINEAR` or `SVGI_PAINT_RADIAL`.
+        ///  `SVGI_PAINT_SOLID`, `SVGI_PAINT_LINEAR`, `SVGI_PAINT_RADIAL` or `SVGI_PAINT_CONICAL`.
         /// </summary>
         public byte kind;
         /// <summary>
@@ -185,7 +190,7 @@ namespace SVGImporter.Native
         /// </summary>
         public fixed float transform[6];
         /// <summary>
-        ///  Linear: x1 y1 x2 y2. Radial: cx cy r fx fy fr. In gradient space.
+        ///  Linear: x1 y1 x2 y2. Radial and conical: cx cy r fx fy fr. In gradient space.
         /// </summary>
         public fixed float geometry[6];
         /// <summary>

@@ -1,6 +1,6 @@
 // Antialiasing (DESIGN.md, 7.2): renders white shapes on black, where a pixel's value is its
 // coverage, at a scale of one SVG unit per pixel, and checks that edges are one pixel soft, centred
-// on the outline, without spikes, under any transform, for both import engines.
+// on the outline, without spikes, under any transform.
 //
 //   Unity -batchmode -projectPath . -executeMethod AntialiasingTests.Run -out <dir>
 
@@ -45,7 +45,7 @@ public static class AntialiasingTests
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Shader.SetGlobalFloat("SVG_ANTIALIASING_WIDTH", 2f);
-            foreach (SVGImportEngine engine in new[] { SVGImportEngine.Legacy, SVGImportEngine.Native })
+            foreach (SVGImportEngine engine in new[] { SVGImportEngine.Native })
             {
                 string e = engine + ": ";
 

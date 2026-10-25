@@ -53,17 +53,6 @@ public static class SettingsTests
             Check("outside change reloaded", Mathf.Approximately(SVGImporterProjectSettings.instance.antialiasingWidth, 1.25f),
                 "antialiasingWidth = " + SVGImporterProjectSettings.instance.antialiasingWidth);
 
-            // The importer uses the project's engine (the effective one on this Editor).
-            settings = SVGImporterProjectSettings.instance;
-            settings.importEngine = SVGImportEngine.Native;
-            const string svgPath = "Assets/SettingsTests.svg";
-            File.WriteAllText(svgPath, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\"/></svg>");
-            AssetDatabase.ImportAsset(svgPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-            SVGImportEngine used = AssetDatabase.LoadAssetAtPath<SVGAsset>(svgPath).importEngine;
-            Check("importer uses the project engine", used == settings.effectiveImportEngine,
-                "imported with " + used + ", effective engine " + settings.effectiveImportEngine);
-            AssetDatabase.DeleteAsset(svgPath);
-
             // 2.0 projects: settings in an asset in a Resources folder are migrated once.
             Directory.CreateDirectory(OldAssetFolder);
             var old = ScriptableObject.CreateInstance<SVGImporterSettings>();
@@ -77,9 +66,9 @@ public static class SettingsTests
             File.Delete(FilePath);
             unload();
             settings = SVGImporterProjectSettings.instance;
-            Check("migrated from the 2.0 asset", settings.importEngine == SVGImportEngine.Native && !settings.importNewSVGFiles
+            Check("migrated from the 2.0 asset", !settings.importNewSVGFiles
                 && Mathf.Approximately(settings.defaults.scale, 0.5f) && Mathf.Approximately(settings.antialiasingWidth, 4f) && File.Exists(FilePath),
-                "engine " + settings.importEngine + ", import new files " + settings.importNewSVGFiles + ", scale " + settings.defaults.scale + ", width " + settings.antialiasingWidth);
+                "import new files " + settings.importNewSVGFiles + ", scale " + settings.defaults.scale + ", width " + settings.antialiasingWidth);
             AssetDatabase.DeleteAsset("Assets/SettingsTestsOld");
 
             // Builds preload a copy of the runtime settings, removed after the build.

@@ -12,7 +12,6 @@ namespace SVGImporter
         //
         // Static Fields
         //
-        private static GUIContent s_SGILogo;
         
         private static GUIContent s_Header;
         
@@ -47,7 +46,6 @@ namespace SVGImporter
                 return;
             }
             AboutWindow.s_ClipperLogo = new GUIContent(LoadImage("SVGImporterGPCLogo"));
-            AboutWindow.s_SGILogo = new GUIContent(LoadImage("SVGImporterSGILogo"));
             AboutWindow.s_Header = new GUIContent(LoadImage("SVGImporterLogo"));
         }
 
@@ -180,13 +178,11 @@ namespace SVGImporter
             });
 			OnLastRectClick(delegate() { Application.OpenURL("http://www.angusj.com/delphi/clipper.php"); });		
 
-            GUILayout.Label(AboutWindow.s_SGILogo, new GUILayoutOption[0]);
-			OnLastRectClick(delegate() { Application.OpenURL("https://github.com/speps/LibTessDotNet"); });
-            GUILayout.Label("Tesselation powered by LibTessDotNet.\n\n(c) 2011 Silicon Graphics, Inc.", "MiniLabel", new GUILayoutOption[]
+            GUILayout.Label("Parsing by usvg and tessellation by lyon,\nwith i_overlay for clip paths.\n\nMIT or Apache-2.0", "MiniLabel", new GUILayoutOption[]
             {
                 GUILayout.Width(200f)
             });
-			OnLastRectClick(delegate() { Application.OpenURL("https://github.com/speps/LibTessDotNet"); });
+			OnLastRectClick(delegate() { Application.OpenURL("https://github.com/linebender/resvg"); });
 
             GUILayout.EndHorizontal();
             GUILayout.FlexibleSpace();
