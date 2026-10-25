@@ -870,12 +870,15 @@ namespace SVGImporter
 			if(targetObject == null)
 				return;
 
-			// The mesh scene renderers draw: its gradients are registered in the shared atlas, which
-			// binds itself for every camera, the preview's included.
+			// The mesh scene renderers draw, whose gradients are registered in the shared atlas.
 			Mesh mesh = targetObject.sharedMesh;
 			Material[] materials = targetObject.sharedMaterials;
 			if(mesh == null || materials == null || materials.Length == 0)
 				return;
+			// Build and bind the atlas now: thumbnails are rendered in an import worker process
+			// (Unity's PreviewImporter), where nothing else does before this render.
+			if(targetObject.hasGradients)
+				SVGAtlas.Instance.OnAtlasPreRender();
 
 			RenderMeshPreviewSkipCameraAndLighting(mesh, previewUtility, materials);
 		}
