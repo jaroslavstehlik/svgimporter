@@ -369,6 +369,9 @@ namespace SVGImporter
             {
                 _vectorGraphics.RemoveReference(this);
             }
+            // The renderer's own mesh, for tinted, sliced or layered assets.
+            DestroyObjectInternal(_mesh);
+            _mesh = null;
             base.OnDestroy();
         }
 
@@ -421,6 +424,8 @@ namespace SVGImporter
                 {
                     _lastVectorGraphics.RemoveReference(this);
                     _lastVectorGraphics = null;
+                    if(onVectorGraphicsChanged != null)
+                        onVectorGraphicsChanged(null);
                 }
                 Clear();
             } else {
@@ -443,6 +448,7 @@ namespace SVGImporter
                 }
 #endif
 
+                bool assetChanged = force || _lastVectorGraphics != _vectorGraphics;
                 if(_lastVectorGraphics != _vectorGraphics)
                 {
                     meshChanged = true;
@@ -516,9 +522,6 @@ namespace SVGImporter
                             {
                                 UpdateSlicedMesh();
                             }
-                            
-                            if(onVectorGraphicsChanged != null)
-                                onVectorGraphicsChanged(_vectorGraphics);
                         }
 
                         if(meshChanged || colorChanged)
@@ -537,6 +540,11 @@ namespace SVGImporter
                 {
                     UpdateMaterials();
                 }
+
+                _lastVectorGraphics = _vectorGraphics;
+                // Colliders and other listeners follow asset changes and reimports.
+                if(assetChanged && onVectorGraphicsChanged != null)
+                    onVectorGraphicsChanged(_vectorGraphics);
 
                 _lastOpaqueMaterial = _opaqueMaterial;
                 _lastTransparentMaterial = _transparentMaterial;

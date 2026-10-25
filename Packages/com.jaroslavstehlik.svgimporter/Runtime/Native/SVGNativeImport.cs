@@ -61,7 +61,6 @@ namespace SVGImporter.Native
 
                 SVGShape shape = CreateShape(result, layer, meshScale);
                 shape.fill = CreateFill(result.paints[layer.paint], layer.opacity, viewport, scaledViewport, meshScale, context.atlasData);
-                shapes.Add(shape);
 
                 var contours = new List<List<Vector2>>(layer.contours.Length);
                 foreach (Vector2[] contour in layer.contours)
@@ -70,20 +69,11 @@ namespace SVGImporter.Native
                     context.paths.Add(new SVGPath(contour));
                 }
 
-                if (options.antialiasing)
-                {
-                    SVGShape fringe;
-                    if (SVGSimplePath.CreateAntialiasing(contours, out fringe, Color.white, -1f, ClosePathRule.ALWAYS))
-                    {
-                        for (int i = 0; i < fringe.vertices.Length; i++)
-                            fringe.vertices[i] *= meshScale;
-                        fringe.type = SVGShapeType.ANTIALIASING;
-                        fringe.RecalculateBounds();
-                        fringe.fill = shape.fill.Clone();
-                        fringe.fill.blend = FILL_BLEND.ALPHA_BLENDED;
-                        shapes.Add(fringe);
-                    }
-                }
+                // The fringe also moves the shape's outline vertices, so the shape is added after it.
+                SVGShape fringe = new SVGShape();
+                bool hasFringe = options.antialiasing && SVGSimplePath.CreateAntialiasing(contours, meshScale, ref shape, out fringe);
+                shapes.Add(shape);
+                if (hasFringe) shapes.Add(fringe);
             }
             Flush(shapes, name, context.layers);
             return true;

@@ -379,7 +379,9 @@ namespace SVGImporter
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             if (canvas == null) return;
-            if (sharedMesh == null) { base.OnPopulateMesh(vh); return; }
+            // Without an asset, a white rectangle as uGUI's Image draws; an asset with nothing to draw draws nothing.
+            if (_vectorGraphics == null) { base.OnPopulateMesh(vh); return; }
+            if (sharedMesh == null) { vh.Clear(); return; }
             vh.Clear();
             Mesh mesh = sharedMesh;
             tempVBOLength = mesh.vertexCount;

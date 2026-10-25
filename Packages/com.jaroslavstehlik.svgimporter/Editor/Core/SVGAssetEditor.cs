@@ -431,7 +431,7 @@ namespace SVGImporter
         public static GUIContent FORMAT_LABEL = new GUIContent("Format", "The rendering format of the SVG Asset.");
         public static GUIContent USE_GRADIENTS_LABEL = new GUIContent("Gradients", "Simplify shaders and mesh for specific use case");
         public static GUIContent ANTIALIASING_LABEL = new GUIContent("Antialiasing", "Use mesh antialiasing for smooth edges, does increase mesh complexity");
-		public static GUIContent ANTIALIASING_WIDTH_LABEL = new GUIContent("Antialiasing Width", "Increase or decrease the antialiasing width per pixel");
+		public static GUIContent ANTIALIASING_WIDTH_LABEL = new GUIContent("Antialiasing Width", "Width of the soft edge of antialiased shapes, in half pixels: 2 is a one-pixel edge.");
         public static GUIContent MESH_COMPRESSION_LABEL = new GUIContent("Mesh Compression", "Reduce file size of the mesh, but might introduce irregularities and visual artefacts.");
         public static string MESH_COMPRESSION_HELPBOX_LABEL = "Mesh compression can introduce unwanted visual artefacts.\nThe higher the compression, the higher the risk.";
         public static GUIContent OPTIMIZE_MESH_LABEL = new GUIContent("Optimize Mesh", "The vertices and indices will be reorderer for better GPU performance.");

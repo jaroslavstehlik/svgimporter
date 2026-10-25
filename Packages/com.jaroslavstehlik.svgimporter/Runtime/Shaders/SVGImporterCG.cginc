@@ -25,23 +25,29 @@ half4 SVGVertexColor(half4 color)
     return color;
 }
 
+// The antialiasing width from the project settings: the fringe is half this many pixels wide.
 float SVG_ANTIALIASING_WIDTH;
 
-float4 Antialiasing(float4 vertex, float3 normal)
+// Moves a vertex on a shape's outline along its antialiasing extrusion vector (DESIGN.md, 7.2):
+// fringe vertices outward or inward, and the fill's outline vertices inward, so that the fringe is
+// centred on the outline and as wide on screen as the antialiasing width, whatever the transform,
+// camera or canvas. The vector's length is the corner's miter factor; vertices without one stay put.
+float4 Antialiasing(float4 vertex, float3 extrusion)
 {
-	float4 output = vertex;
-	if (unity_OrthoParams.w == 0)
-	{
-		output.xy += normal.xy * length(ObjSpaceViewDir(vertex)) * SVG_ANTIALIASING_WIDTH * (min(_ScreenParams.z, _ScreenParams.w) - 1);
-	}
-	else
-	{
-		float3 origin = mul(unity_ObjectToWorld, float4(0, 0, 0, 1));
-		float3 offset = mul(unity_ObjectToWorld, float4(1, 0, 0, 1));
-		float size = 1/length(origin - offset);
-		output.xy += normal.xy * size * unity_OrthoParams.x * SVG_ANTIALIASING_WIDTH * (min(_ScreenParams.z, _ScreenParams.w) - 1);
-	}
-	return output;
+	float length2 = dot(extrusion.xy, extrusion.xy);
+	if (length2 == 0.0) return vertex;
+	float3 direction = float3(extrusion.xy * rsqrt(length2), 0.0);
+
+	// Pixels per object unit along the direction: the derivative of the screen position.
+	float4 clip = UnityObjectToClipPos(vertex);
+	float4 clipDirection = mul(UNITY_MATRIX_VP, float4(mul((float3x3)unity_ObjectToWorld, direction), 0.0));
+	float2 ndc = (clipDirection.xy * clip.w - clip.xy * clipDirection.w) / (clip.w * clip.w);
+	float pixels = length(ndc * 0.5 * _ScreenParams.xy);
+	if (pixels <= 0.0) return vertex;
+
+	// Each edge of the fringe moves half the fringe's width, a quarter of the setting.
+	vertex.xy += extrusion.xy * (0.25 * SVG_ANTIALIASING_WIDTH / pixels);
+	return vertex;
 }
 
 // Adds up to half an 8-bit step of noise to a colour before it is written to an 8-bit target, as

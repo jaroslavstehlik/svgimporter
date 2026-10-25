@@ -180,6 +180,15 @@ namespace SVGImporter.Rendering
                     shapes[i].vertices[j].y *= -1f;
                 }
 
+                // The antialiasing extrusion vectors are directions in the same space.
+                if(shapes[i].angles != null)
+                {
+                    for(int j = 0; j < shapes[i].angles.Length; j++)
+                    {
+                        shapes[i].angles[j].y *= -1f;
+                    }
+                }
+
                 shapes[i].bounds.center = new Vector2(shapes[i].bounds.center.x, shapes[i].bounds.center.y * -1f);
             }
         }

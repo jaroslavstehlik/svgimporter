@@ -94,33 +94,26 @@ namespace SVGImporter.Rendering
             return SVGLineUtils.StrokeShape(segments, paintable.strokeWidth, Color.black, GetStrokeLineJoin(paintable.strokeLineJoin), GetStrokeLineCap(paintable.strokeLineCap), paintable.miterLimit, paintable.dashArray, paintable.dashOffset, closePath, SVGGraphics.roundQuality);
         }
 
-        public static bool CreateAntialiasing(List<List<Vector2>> inputShapes, out SVGShape svgShape, Color colorA, float width, ClosePathRule closePath = ClosePathRule.NEVER)
+        /// <summary>
+        /// The antialiasing fringe of a shape (SVGFringe), in mesh units, and the fill's vertices on
+        /// its outline moved inward to meet it. contours are in SVG units; the fill is in mesh units.
+        /// </summary>
+        public static bool CreateAntialiasing(List<List<Vector2>> contours, float meshScale, ref SVGShape fill, out SVGShape fringe)
         {
-            svgShape = new SVGShape();
-            if(inputShapes == null || inputShapes.Count == 0) return false;
+            Dictionary<Vector2, Vector2> boundary;
+            if(!SVGFringe.Build(contours, Color.white, out fringe, out boundary)) return false;
+            for(int i = 0; i < fringe.vertices.Length; i++)
+                fringe.vertices[i] *= meshScale;
+            var scaledBoundary = new Dictionary<Vector2, Vector2>(boundary.Count);
+            foreach(KeyValuePair<Vector2, Vector2> point in boundary)
+                scaledBoundary[point.Key * meshScale] = point.Value;
+            SVGFringe.ExtrudeFill(ref fill, scaledBoundary);
 
-            Color colorB = new Color(colorA.r, colorA.g, colorA.b, 0f);
-            if(inputShapes.Count > 1)
-            {
-                List<SVGShape> shapes = new List<SVGShape>();
-                SVGShape currentLayer;
-                for(int i = 0; i < inputShapes.Count; i++)
-                {
-                    if(SVGMeshUtils.VectorLine(inputShapes[i].ToArray(), out currentLayer, colorA, colorB, width, width * 0.5f, closePath))
-                    {
-                        shapes.Add(currentLayer);
-                    }
-                }
-                if(shapes.Count > 0)
-                {
-                    svgShape = SVGShape.MergeShapes(shapes);
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return SVGMeshUtils.VectorLine(inputShapes[0].ToArray(), out svgShape, colorA, colorB, width, width * 0.5f, closePath);                
-            }
+            fringe.type = SVGShapeType.ANTIALIASING;
+            fringe.RecalculateBounds();
+            fringe.fill = fill.fill.Clone();
+            fringe.fill.blend = FILL_BLEND.ALPHA_BLENDED;
+            return true;
         }
 
         struct VertexData
@@ -319,18 +312,7 @@ namespace SVGImporter.Rendering
 
             if(antialiasing)
             {
-                if(CreateAntialiasing(simplifiedShapes, out antialiasingLayer, Color.white, -1f, ClosePathRule.ALWAYS))
-                {
-                    int verticesLength = antialiasingLayer.vertices.Length;
-                    for(int i = 0; i < verticesLength; i++)
-                    {
-                        antialiasingLayer.vertices[i] *= SVGAssetImport.meshScale;
-                    }
-                    antialiasingLayer.type = SVGShapeType.ANTIALIASING;
-                    antialiasingLayer.RecalculateBounds();
-                    antialiasingLayer.fill = layer.fill.Clone();
-                    antialiasingLayer.fill.blend = FILL_BLEND.ALPHA_BLENDED;
-                }
+                CreateAntialiasing(simplifiedShapes, SVGAssetImport.meshScale, ref layer, out antialiasingLayer);
             }
 
             return true;

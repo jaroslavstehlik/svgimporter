@@ -348,18 +348,20 @@ namespace SVGImporter
         protected Mesh runtimeMesh
         {
             get {
-                if(!hasGradients || _sharedMesh == null)
-                    return _sharedMesh;
+                Mesh source = sourceMesh;
+                if(!hasGradients || source == null)
+                    return source;
 
                 Dictionary<int, int> slots = atlasSlots;
-                if (_runtimeMesh != null && _runtimeMeshGeneration == SVGAtlas.generation && _runtimeMeshSource == _sharedMesh && _runtimeMeshImport == _lastTimeModified)
+                if (_runtimeMesh != null && _runtimeMeshGeneration == SVGAtlas.generation && _runtimeMeshSource == source && _runtimeMeshImport == _lastTimeModified)
                     return _runtimeMesh;
 
-                _runtimeMesh = SVGMeshUtils.Clone(_sharedMesh);
+                DestroyDerived(_runtimeMesh);
+                _runtimeMesh = SVGMeshUtils.Clone(source);
                 _runtimeMesh.hideFlags = HideFlags.DontSave;
                 SVGAtlas.Own(_runtimeMesh);
                 _runtimeMeshGeneration = SVGAtlas.generation;
-                _runtimeMeshSource = _sharedMesh;
+                _runtimeMeshSource = source;
                 _runtimeMeshImport = _lastTimeModified;
                 Vector2[] uv2 = _runtimeMesh.uv2;
                 if(uv2 != null && uv2.Length > 0)
@@ -376,6 +378,39 @@ namespace SVGImporter
             }
         }
 
+        [System.NonSerialized] Mesh _layersMesh;
+        [System.NonSerialized] long _layersMeshImport;
+
+        /// <summary>
+        /// The imported mesh or, for assets imported with Use Layers, which keep layers instead,
+        /// the layers combined into one mesh: what SVG Image, bounds and sliced renderers draw from.
+        /// </summary>
+        protected Mesh sourceMesh
+        {
+            get {
+                if(_sharedMesh != null || _layers == null || _layers.Length == 0)
+                    return _sharedMesh;
+                if(_layersMesh != null && _layersMeshImport == _lastTimeModified)
+                    return _layersMesh;
+
+                DestroyDerived(_layersMesh);
+                _layersMesh = new Mesh();
+                _layersMesh.name = name;
+                _layersMesh.hideFlags = HideFlags.DontSave;
+                Shader[] shaders;
+                SVGMesh.CombineMeshes(layersClone, _layersMesh, out shaders, useGradients, format, compressDepth, antialiasing, depthOffset);
+                _layersMeshImport = _lastTimeModified;
+                return _layersMesh;
+            }
+        }
+
+        // Meshes derived from the imported data, rebuilt on demand.
+        static void DestroyDerived(Mesh mesh)
+        {
+            if(mesh == null) return;
+            if(Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh);
+        }
+
         protected Mesh _runtimeLegacyUIMesh;
         [System.NonSerialized] Mesh _runtimeLegacyUIMeshSource;
         [System.NonSerialized] long _runtimeLegacyUIMeshImport;
@@ -385,6 +420,7 @@ namespace SVGImporter
                 Mesh source = sharedMesh;
                 if(_runtimeLegacyUIMesh == null || _runtimeLegacyUIMeshSource != source || _runtimeLegacyUIMeshImport != _lastTimeModified)
                 {
+                    DestroyDerived(_runtimeLegacyUIMesh);
                     _runtimeLegacyUIMesh = CreateLegacyUIMesh(source);
                     _runtimeLegacyUIMeshSource = source;
                     _runtimeLegacyUIMeshImport = _lastTimeModified;
@@ -818,10 +854,11 @@ namespace SVGImporter
         public Bounds bounds
         {
             get {
-                if(_sharedMesh == null)
+                Mesh source = sourceMesh;
+                if(source == null)
                     return new Bounds();
 
-                return _sharedMesh.bounds;
+                return source.bounds;
             }
         }
 
@@ -1098,10 +1135,10 @@ namespace SVGImporter
 
         protected void OnDestroy()
         {
-            if(_ownsMesh && _sharedMesh != null)
-            {
-                if(Application.isPlaying) Destroy(_sharedMesh); else DestroyImmediate(_sharedMesh);
-            }
+            if(_ownsMesh) DestroyDerived(_sharedMesh);
+            DestroyDerived(_layersMesh);
+            DestroyDerived(_runtimeMesh);
+            DestroyDerived(_runtimeLegacyUIMesh);
         }
 
         /// <summary>The settings the asset was imported with.</summary>
