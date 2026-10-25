@@ -1,6 +1,7 @@
 //! Parses an SVG with usvg and tessellates every fill and stroke with lyon.
 //!
-//! Each fill or stroke becomes one layer, in painting order. Vertices are in SVG user units with
+//! Each fill or stroke becomes one layer, in painting order, followed by its antialiasing fringe
+//! when antialiasing is on (see `fringe`). Vertices are in SVG user units with
 //! all transforms applied (y pointing down). Unity-specific processing (scaling, pivot, render
 //! formats, gradients in the mesh) happens in C#.
 //!
@@ -25,11 +26,13 @@ use lyon_tessellation::{
 use tiny_skia_path::{PathSegment, Transform};
 
 use crate::ffi::*;
+use crate::fringe;
 
 pub struct ImportOptions {
     pub tolerance: f32,
     pub dpi: f32,
     pub convert_text: bool,
+    pub antialiasing: bool,
 }
 
 #[derive(Default)]
@@ -44,6 +47,9 @@ pub struct Output {
     pub strings: Vec<u8>,
     pub contours: Vec<SvgiContour>,
     pub contour_points: Vec<f32>,
+    /// With antialiasing, per vertex: the extrusion vector (two floats) and the coverage.
+    pub extrusions: Vec<f32>,
+    pub coverage: Vec<f32>,
     pub diagnostics: u32,
 }
 
@@ -543,6 +549,36 @@ impl Importer<'_> {
         }
         out.strings.extend_from_slice(id.as_bytes());
         out.layers.push(layer);
+
+        if self.options.antialiasing {
+            let fringe = fringe::build(&loops);
+            for p in &positions {
+                let e = fringe.extrusion_of(*p);
+                out.extrusions.extend_from_slice(&e);
+                out.coverage.push(1.0);
+            }
+            if !fringe.indices.is_empty() {
+                out.layers.push(SvgiLayer {
+                    vertex_offset: (out.vertices.len() / 2) as u32,
+                    vertex_count: fringe.positions.len() as u32,
+                    index_offset: out.indices.len() as u32,
+                    index_count: fringe.indices.len() as u32,
+                    kind: SVGI_LAYER_FRINGE,
+                    contour_offset: out.contours.len() as u32,
+                    contour_count: 0,
+                    ..layer
+                });
+                for (p, e) in fringe.positions.iter().zip(&fringe.extrusions) {
+                    out.vertices.extend_from_slice(p);
+                    out.extrusions.extend_from_slice(e);
+                }
+                out.coverage.extend_from_slice(&fringe.coverage);
+                out.indices.extend_from_slice(&fringe.indices);
+            }
+            if out.vertices.len() / 2 > MAX_VERTICES || out.indices.len() > MAX_INDICES {
+                self.limit_exceeded = Some(format!("the document produces more than {} vertices or {} indices", MAX_VERTICES, MAX_INDICES));
+            }
+        }
     }
 
     /// Returns the paint's index, or None for paints that can't be rendered (patterns).
@@ -846,7 +882,7 @@ mod tests {
     }
 
     fn run(svg: &str) -> Output {
-        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false }).unwrap()
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false }).unwrap()
     }
 
     fn layer_contours(out: &Output, layer: &SvgiLayer) -> Vec<Vec<[f32; 2]>> {
@@ -998,7 +1034,7 @@ mod tests {
     #[test]
     fn oversized_input_is_refused() {
         let svg = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><!--{}--></svg>", " ".repeat(MAX_INPUT_BYTES));
-        let error = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false }).err().expect("an error");
+        let error = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false }).err().expect("an error");
         assert!(error.contains("larger than"), "{error}");
     }
 
@@ -1006,7 +1042,7 @@ mod tests {
     fn dash_flood_is_refused() {
         let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
             <path d="M0 0 H1000000000" stroke="black" stroke-dasharray="0.001 0.001"/></svg>"#,
-            &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false });
+            &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false });
         assert!(out.err().expect("an error").contains("dash"));
     }
 
@@ -1016,7 +1052,7 @@ mod tests {
         // of the circle, so the output stays small.
         let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
             <circle cx="0" cy="0" r="10000000"/></svg>"#,
-            &ImportOptions { tolerance: 1e-9, dpi: 96.0, convert_text: false }).unwrap();
+            &ImportOptions { tolerance: 1e-9, dpi: 96.0, convert_text: false, antialiasing: false }).unwrap();
         assert!(out.vertices.len() / 2 < 100_000, "{} vertices", out.vertices.len() / 2);
     }
 
@@ -1032,4 +1068,68 @@ mod tests {
         // A stroked rectangle is a ring: one outer and one inner outline.
         assert_eq!(out.layers[1].contour_count, 2);
     }
+    fn run_antialiased(svg: &str) -> Output {
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: true }).unwrap()
+    }
+
+    fn extrusion(out: &Output, vertex: usize) -> [f32; 2] {
+        [out.extrusions[vertex * 2], out.extrusions[vertex * 2 + 1]]
+    }
+
+    #[test]
+    fn fringe_follows_each_layer() {
+        let out = run_antialiased(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect x="10" y="10" width="50" height="50"/></svg>"#);
+        assert_eq!(out.layers.len(), 2);
+        let (fill, fringe) = (out.layers[0], out.layers[1]);
+        assert_eq!(fringe.kind, SVGI_LAYER_FRINGE);
+        assert_eq!((fringe.paint, fringe.element, fringe.contour_count), (fill.paint, fill.element, 0));
+        assert_eq!(out.extrusions.len(), out.vertices.len());
+        assert_eq!(out.coverage.len(), out.vertices.len() / 2);
+        // Four square corners: a miter pair each, inner opaque, outer transparent.
+        assert_eq!(fringe.vertex_count, 8);
+        for v in fringe.vertex_offset..fringe.vertex_offset + fringe.vertex_count {
+            let v = v as usize;
+            let (p, e) = ([out.vertices[v * 2], out.vertices[v * 2 + 1]], extrusion(&out, v));
+            let outward = [(p[0] - 35.0).signum(), (p[1] - 35.0).signum()];
+            let along = e[0] * outward[0] + e[1] * outward[1];
+            if out.coverage[v] == 0.0 {
+                assert!((along - 2.0).abs() < 1e-5, "outer vertex {:?} extrusion {:?}", p, e);
+            } else {
+                assert!((along + 2.0).abs() < 1e-5, "inner vertex {:?} extrusion {:?}", p, e);
+            }
+        }
+        // The fill's corners move inward with the fringe's inner edge.
+        for v in fill.vertex_offset..fill.vertex_offset + fill.vertex_count {
+            let v = v as usize;
+            let (p, e) = ([out.vertices[v * 2], out.vertices[v * 2 + 1]], extrusion(&out, v));
+            assert_eq!(e, [(35.0 - p[0]).signum(), (35.0 - p[1]).signum()]);
+        }
+    }
+
+    #[test]
+    fn fringe_bevels_sharp_corners_and_keeps_holes_outward() {
+        let out = run_antialiased(r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><path d="M85 180 L115 180 L100 8.5 Z"/></svg>"#);
+        let fringe = out.layers[1];
+        let max = (fringe.vertex_offset..fringe.vertex_offset + fringe.vertex_count)
+            .map(|v| { let e = extrusion(&out, v as usize); (e[0] * e[0] + e[1] * e[1]).sqrt() })
+            .fold(0.0f32, f32::max);
+        assert!(max <= fringe::MITER_LIMIT + 1e-5, "extrusion {}", max);
+        // The tip is bevelled: more than the six vertices of three mitered corners.
+        assert!(fringe.vertex_count > 6);
+
+        // A square with a square hole: the hole's fringe points into the hole.
+        let out = run_antialiased(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M10 10 h80 v80 h-80 Z M40 40 v20 h20 v-20 Z"/></svg>"#);
+        let fringe = out.layers[1];
+        for v in fringe.vertex_offset..fringe.vertex_offset + fringe.vertex_count {
+            let v = v as usize;
+            let p = [out.vertices[v * 2], out.vertices[v * 2 + 1]];
+            if p[0] < 30.0 || p[0] > 70.0 || out.coverage[v] != 0.0 {
+                continue;
+            }
+            let e = extrusion(&out, v);
+            let toward_centre = (50.0 - p[0]) * e[0] + (50.0 - p[1]) * e[1];
+            assert!(toward_centre > 0.0, "hole vertex {:?} extrusion {:?}", p, e);
+        }
+    }
 }
+

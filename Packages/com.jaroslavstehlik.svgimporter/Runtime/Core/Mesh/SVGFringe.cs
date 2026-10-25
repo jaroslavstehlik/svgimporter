@@ -20,6 +20,9 @@ namespace SVGImporter.Utils
     /// are miters up to a miter limit of 2 (corners down to about 60 degrees) and bevels beyond it.
     /// The fill's vertices on the outline move inward by the same vector, so the fill and the
     /// fringe meet without a gap or an overlap.
+    ///
+    /// Used by the Legacy engine. The native core builds the same fringe itself
+    /// (native/svgimporter-core/src/fringe.rs), so the Native engine uses no C# mesh code.
     /// </summary>
     public static class SVGFringe
     {

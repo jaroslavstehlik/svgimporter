@@ -56,7 +56,7 @@ namespace SVGImporter.Native
             GroupOpacity = NativeMethods.SVGI_DIAG_GROUP_OPACITY,
         }
 
-        public enum LayerKind : byte { Fill = NativeMethods.SVGI_LAYER_FILL, Stroke = NativeMethods.SVGI_LAYER_STROKE }
+        public enum LayerKind : byte { Fill = NativeMethods.SVGI_LAYER_FILL, Stroke = NativeMethods.SVGI_LAYER_STROKE, Fringe = NativeMethods.SVGI_LAYER_FRINGE }
         public enum PaintKind : byte { Solid = NativeMethods.SVGI_PAINT_SOLID, Linear = NativeMethods.SVGI_PAINT_LINEAR, Radial = NativeMethods.SVGI_PAINT_RADIAL }
         public enum Spread : byte { Pad = NativeMethods.SVGI_SPREAD_PAD, Reflect = NativeMethods.SVGI_SPREAD_REFLECT, Repeat = NativeMethods.SVGI_SPREAD_REPEAT }
 
@@ -104,6 +104,9 @@ namespace SVGImporter.Native
             public Layer[] layers;
             /// <summary>Positions in SVG user units, y pointing down.</summary>
             public Vector2[] vertices;
+            /// <summary>With antialiasing, per vertex: the antialiasing extrusion vector and the coverage. Empty otherwise.</summary>
+            public Vector2[] extrusions;
+            public float[] coverage;
             public int[] indices;
             public Paint[] paints;
         }
@@ -111,13 +114,14 @@ namespace SVGImporter.Native
         /// <summary>Imports an SVG document.</summary>
         /// <param name="tolerance">Maximum distance in SVG user units between a curve and its line segments.</param>
         /// <param name="convertText">Convert text to paths with the system fonts.</param>
-        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f)
+        /// <param name="antialiasing">Add an antialiasing fringe after every fill and stroke layer.</param>
+        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false)
         {
             if (svg == null) throw new ArgumentNullException("svg");
             if (abiVersion != expectedAbiVersion)
                 throw new InvalidOperationException("svgimporter_core ABI version " + abiVersion + " doesn't match the expected " + expectedAbiVersion + ". Reinstall the package.");
 
-            var options = new SvgiOptions { tolerance = tolerance, dpi = dpi, convert_text = (byte)(convertText ? 1 : 0) };
+            var options = new SvgiOptions { tolerance = tolerance, dpi = dpi, convert_text = (byte)(convertText ? 1 : 0), antialiasing = (byte)(antialiasing ? 1 : 0) };
             SvgiResult* native = null;
             int code;
             fixed (byte* data = svg)
@@ -149,6 +153,13 @@ namespace SVGImporter.Native
             for (int i = 0; i < vertexCount; i++)
                 result.vertices[i] = new Vector2(r->vertices[i * 2], r->vertices[i * 2 + 1]);
 
+            int extrusionCount = (int)r->extrusion_float_count / 2;
+            result.extrusions = new Vector2[extrusionCount];
+            for (int i = 0; i < extrusionCount; i++)
+                result.extrusions[i] = new Vector2(r->extrusions[i * 2], r->extrusions[i * 2 + 1]);
+            result.coverage = new float[r->coverage_count];
+            for (int i = 0; i < result.coverage.Length; i++)
+                result.coverage[i] = r->coverage[i];
             result.indices = new int[r->index_count];
             for (int i = 0; i < result.indices.Length; i++)
                 result.indices[i] = (int)r->indices[i];

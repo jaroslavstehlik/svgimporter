@@ -26,7 +26,7 @@ struct Imported {
 }
 
 fn import(data: &[u8], tolerance: f32) -> Imported {
-    let options = SvgiOptions { tolerance, dpi: 96.0, convert_text: 1 };
+    let options = SvgiOptions { tolerance, dpi: 96.0, convert_text: 1, antialiasing: 0 };
     let mut result: *mut SvgiResult = std::ptr::null_mut();
     let code = unsafe { svgi_import(data.as_ptr(), data.len(), &options, &mut result) };
     let mut imported = Imported { code, layers_without_outline: 0, layers: 0, triangles: 0, vertices: 0, diagnostics: 0, error: String::new() };
@@ -60,7 +60,7 @@ fn render(data: &[u8], tolerance: f32, width: u32, height: u32) -> Option<tiny_s
     let mut size = (1.0f32, 1.0f32);
     for pass in 0..2 {
         let scale = (width as f32 / size.0).min(height as f32 / size.1).max(1e-6);
-        let options = SvgiOptions { tolerance: tolerance / if pass == 0 { 1.0 } else { scale }, dpi: 96.0, convert_text: 1 };
+        let options = SvgiOptions { tolerance: tolerance / if pass == 0 { 1.0 } else { scale }, dpi: 96.0, convert_text: 1, antialiasing: 0 };
         let mut result: *mut SvgiResult = std::ptr::null_mut();
         let code = unsafe { svgi_import(data.as_ptr(), data.len(), &options, &mut result) };
         if result.is_null() {

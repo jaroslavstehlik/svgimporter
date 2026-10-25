@@ -22,7 +22,7 @@ namespace SVGImporter.Native
         /// <summary>
         ///  Increment whenever the ABI changes. C# checks it before using the library.
         /// </summary>
-        internal const uint SVGI_ABI_VERSION = 2;
+        internal const uint SVGI_ABI_VERSION = 3;
         internal const int SVGI_OK = 0;
         /// <summary>
         ///  The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -38,6 +38,10 @@ namespace SVGImporter.Native
         internal const int SVGI_ERROR_INTERNAL = 3;
         internal const byte SVGI_LAYER_FILL = 0;
         internal const byte SVGI_LAYER_STROKE = 1;
+        /// <summary>
+        ///  The antialiasing fringe of the layer before it (see `SvgiOptions::antialiasing`).
+        /// </summary>
+        internal const byte SVGI_LAYER_FRINGE = 2;
         internal const byte SVGI_PAINT_SOLID = 0;
         internal const byte SVGI_PAINT_LINEAR = 1;
         internal const byte SVGI_PAINT_RADIAL = 2;
@@ -103,6 +107,11 @@ namespace SVGImporter.Native
         ///  1 to convert text to paths with the system fonts, 0 to skip text.
         /// </summary>
         public byte convert_text;
+        /// <summary>
+        ///  1 to add an antialiasing fringe after every fill and stroke layer (DESIGN.md, 7.2) and
+        ///  fill `SvgiResult::extrusions` and `coverage`.
+        /// </summary>
+        public byte antialiasing;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -123,7 +132,7 @@ namespace SVGImporter.Native
         /// </summary>
         public uint paint;
         /// <summary>
-        ///  `SVGI_LAYER_FILL` or `SVGI_LAYER_STROKE`.
+        ///  `SVGI_LAYER_FILL`, `SVGI_LAYER_STROKE` or `SVGI_LAYER_FRINGE`.
         /// </summary>
         public byte kind;
         /// <summary>
@@ -140,7 +149,7 @@ namespace SVGImporter.Native
         /// </summary>
         public uint element;
         /// <summary>
-        ///  The layer's outline (outer boundaries and holes), as a range in `contours`.
+        ///  The layer's outline (outer boundaries and holes), as a range in `contours`. Fringes have none.
         /// </summary>
         public uint contour_offset;
         public uint contour_count;
@@ -233,6 +242,15 @@ namespace SVGImporter.Native
         ///  Number of floats in `contour_points` (two per point).
         /// </summary>
         public uint contour_point_float_count;
+        /// <summary>
+        ///  With antialiasing: per vertex, the vector the vertex shader moves it along (pairs of floats,
+        ///  in the coordinates of `vertices`; zero for vertices inside a layer), and its coverage (0 on
+        ///  the outer edge of a fringe, 1 elsewhere). Empty without antialiasing.
+        /// </summary>
+        public float* extrusions;
+        public uint extrusion_float_count;
+        public float* coverage;
+        public uint coverage_count;
         /// <summary>
         ///  `SVGI_DIAG_*` flags.
         /// </summary>

@@ -6,7 +6,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use crate::import::{self, ImportOptions, Output};
 
 /// Increment whenever the ABI changes. C# checks it before using the library.
-pub const SVGI_ABI_VERSION: u32 = 2;
+pub const SVGI_ABI_VERSION: u32 = 3;
 
 pub const SVGI_OK: i32 = 0;
 /// The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -18,6 +18,8 @@ pub const SVGI_ERROR_INTERNAL: i32 = 3;
 
 pub const SVGI_LAYER_FILL: u8 = 0;
 pub const SVGI_LAYER_STROKE: u8 = 1;
+/// The antialiasing fringe of the layer before it (see `SvgiOptions::antialiasing`).
+pub const SVGI_LAYER_FRINGE: u8 = 2;
 
 pub const SVGI_PAINT_SOLID: u8 = 0;
 pub const SVGI_PAINT_LINEAR: u8 = 1;
@@ -47,6 +49,9 @@ pub struct SvgiOptions {
     pub dpi: f32,
     /// 1 to convert text to paths with the system fonts, 0 to skip text.
     pub convert_text: u8,
+    /// 1 to add an antialiasing fringe after every fill and stroke layer (DESIGN.md, 7.2) and
+    /// fill `SvgiResult::extrusions` and `coverage`.
+    pub antialiasing: u8,
 }
 
 #[repr(C)]
@@ -60,7 +65,7 @@ pub struct SvgiLayer {
     pub index_count: u32,
     /// Index into `paints`.
     pub paint: u32,
-    /// `SVGI_LAYER_FILL` or `SVGI_LAYER_STROKE`.
+    /// `SVGI_LAYER_FILL`, `SVGI_LAYER_STROKE` or `SVGI_LAYER_FRINGE`.
     pub kind: u8,
     /// Product of the fill or stroke opacity and the opacities of all enclosing groups.
     pub opacity: f32,
@@ -69,7 +74,7 @@ pub struct SvgiLayer {
     pub name_length: u32,
     /// Index of the source element, counted in painting order. A path's fill and stroke share it.
     pub element: u32,
-    /// The layer's outline (outer boundaries and holes), as a range in `contours`.
+    /// The layer's outline (outer boundaries and holes), as a range in `contours`. Fringes have none.
     pub contour_offset: u32,
     pub contour_count: u32,
 }
@@ -136,6 +141,13 @@ pub struct SvgiResult {
     pub contour_points: *const f32,
     /// Number of floats in `contour_points` (two per point).
     pub contour_point_float_count: u32,
+    /// With antialiasing: per vertex, the vector the vertex shader moves it along (pairs of floats,
+    /// in the coordinates of `vertices`; zero for vertices inside a layer), and its coverage (0 on
+    /// the outer edge of a fringe, 1 elsewhere). Empty without antialiasing.
+    pub extrusions: *const f32,
+    pub extrusion_float_count: u32,
+    pub coverage: *const f32,
+    pub coverage_count: u32,
     /// `SVGI_DIAG_*` flags.
     pub diagnostics: u32,
     /// UTF-8 message for `SVGI_ERROR_PARSE` and `SVGI_ERROR_INTERNAL`; empty otherwise.
@@ -173,6 +185,10 @@ fn into_raw(output: Output, error_message: String) -> *mut SvgiResult {
             contour_count: 0,
             contour_points: std::ptr::null(),
             contour_point_float_count: 0,
+            extrusions: std::ptr::null(),
+            extrusion_float_count: 0,
+            coverage: std::ptr::null(),
+            coverage_count: 0,
             diagnostics: output.diagnostics,
             error_message: std::ptr::null(),
             error_message_length: 0,
@@ -201,6 +217,10 @@ fn into_raw(output: Output, error_message: String) -> *mut SvgiResult {
         contour_count: o.contours.len() as u32,
         contour_points: o.contour_points.as_ptr(),
         contour_point_float_count: o.contour_points.len() as u32,
+        extrusions: o.extrusions.as_ptr(),
+        extrusion_float_count: o.extrusions.len() as u32,
+        coverage: o.coverage.as_ptr(),
+        coverage_count: o.coverage.len() as u32,
         diagnostics: o.diagnostics,
         error_message: owned.error_message.as_ptr(),
         error_message_length: owned.error_message.len() as u32,
@@ -245,6 +265,7 @@ pub unsafe extern "C" fn svgi_import(
         tolerance: options.tolerance,
         dpi: options.dpi,
         convert_text: options.convert_text != 0,
+        antialiasing: options.antialiasing != 0,
     };
     match catch_unwind(AssertUnwindSafe(|| import::import(data, &import_options))) {
         Ok(Ok(output)) => {
