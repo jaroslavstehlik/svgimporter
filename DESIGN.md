@@ -360,22 +360,22 @@ The existing samples are kept as the Showcase until the focused ones exist.
 
 ## 13. Phases
 
-| Phase | Work | Done when |
-|---|---|---|
-| 0. Baseline | Add the resvg corpus and the Unity comparison test; benchmark the legacy engine | Legacy support percentage and import times are recorded |
-| 1. Prototype | `svgimporter-core` with usvg + lyon fills and strokes, the C ABI and the CLI; build on all five targets | Corpus imports without crashes; native vs legacy speed is measured; a test app runs runtime import on an iPhone and an Android phone |
-| 2. Integration | C# wrapper and converter to `SVGLayer[]`, gradients, AA fringe, *Import Engine* setting (default Legacy) | Render tests, samples and layer parity pass with the native engine |
-| 3. Parity and beyond | Clip paths, dashes, text, masks-as-clips, diagnostics in the Inspector | Native support percentage ≥ legacy on every category; native becomes the default |
-| 4. Release 3.0 | Signing, CI release pipeline, legacy C# engine removed | Clean install from git on Windows, Linux and macOS Editors; runtime import works in iOS and Android builds |
-| A. Antialiasing | New fringe and shaders (7.2), with lyon-generated fringes from the native core; *Hardware* (MSAA) option | Antialiasing tests pass in Built-in, URP and UI, on desktop and devices |
-| I. Unity integration | Sprite import target; UI Toolkit element (section 16, item 1) | SVGs work with SpriteRenderer and Sprite Atlas, and render in UI Toolkit |
-| L. 2D lighting | *SVG Lit (2D)* shaders (section 16, item 2) | 2D lights and normal maps affect SVG shapes in the URP 2D Renderer |
-| O. Group opacity | Overlap test at import; opt-in cached offscreen layer in `SVGImage`; opt-in depth path in `SVGRenderer` (section 16, item 3) | Group opacity in uGUI and world space matches a browser rendering, including overlapping children and fades |
-| F. Feathering | Blur and drop shadows as feathered fringes (section 16, item 4) | Blurred shapes and drop shadows match a browser rendering within a tolerance, in the same draw call |
-| R. Raster fallback | Opt-in resvg rasterization of unsupported groups (section 16, item 5) | Files with filters, masks and images import with those parts rasterized and reported |
-| G. Gradients | New gradient rendering (7.1) | Gradient tests pass on desktop, with emulated mobile precision, and on Android and iOS devices |
-| 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in |
-| 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site |
+| Phase | Work | Done when | Status |
+|---|---|---|---|
+| 0. Baseline | Add the resvg corpus and the Unity comparison test; benchmark the legacy engine | Legacy support percentage and import times are recorded | Done (resvg conformance test) |
+| 1. Prototype | `svgimporter-core` with usvg + lyon fills and strokes, the C ABI and the CLI; build on all five targets | Corpus imports without crashes; native vs legacy speed is measured; a test app runs runtime import on an iPhone and an Android phone | macOS done; other targets and device test app not started |
+| 2. Integration | C# wrapper and converter to `SVGLayer[]`, gradients, AA fringe, *Import Engine* setting (default Legacy) | Render tests, samples and layer parity pass with the native engine | macOS done |
+| 3. Parity and beyond | Clip paths, dashes, text, masks-as-clips, diagnostics in the Inspector | Native support percentage ≥ legacy on every category; native becomes the default | macOS done except text fonts; native not yet the default |
+| 4. Release 3.0 | Signing, CI release pipeline, legacy C# engine removed | Clean install from git on Windows, Linux and macOS Editors; runtime import works in iOS and Android builds | Not started |
+| A. Antialiasing | New fringe and shaders (7.2), with lyon-generated fringes from the native core; *Hardware* (MSAA) option | Antialiasing tests pass in Built-in, URP and UI, on desktop and devices | Not started |
+| I. Unity integration | Sprite import target; UI Toolkit element (section 16, item 1) | SVGs work with SpriteRenderer and Sprite Atlas, and render in UI Toolkit | Not started |
+| L. 2D lighting | *SVG Lit (2D)* shaders (section 16, item 2) | 2D lights and normal maps affect SVG shapes in the URP 2D Renderer | Not started |
+| O. Group opacity | Overlap test at import; opt-in cached offscreen layer in `SVGImage`; opt-in depth path in `SVGRenderer` (section 16, item 3) | Group opacity in uGUI and world space matches a browser rendering, including overlapping children and fades | Not started |
+| F. Feathering | Blur and drop shadows as feathered fringes (section 16, item 4) | Blurred shapes and drop shadows match a browser rendering within a tolerance, in the same draw call | Prototype only (`Assets/Prototypes/FeatheredShapes`) |
+| R. Raster fallback | Opt-in resvg rasterization of unsupported groups (section 16, item 5) | Files with filters, masks and images import with those parts rasterized and reported | Not started |
+| G. Gradients | New gradient rendering (7.1) | Gradient tests pass on desktop, with emulated mobile precision, and on Android and iOS devices | In progress: gradient positions computed in the shader |
+| 5. Samples | Focused samples from section 11 | All samples render in URP and Built-in | Not started |
+| 6. Documentation | `Documentation~`, DocFX site, website link | Package Manager's *Documentation* link opens the site | Not started |
 
 **Progress.** Phase 1 is done for macOS (2026-10-24): `native/` contains `svgimporter-core` (usvg + lyon fills, strokes and dashes, gradients as paint data, diagnostics) and the internal `svgimporter-cli`; `native/build-macos.sh` builds the universal library into the package; csbindgen generates `Runtime/Native/NativeMethods.g.cs`, wrapped by `SVGNativeCore`. Results:
 - resvg test suite: 1,748 files, no crashes; 1,745 imported and 3 rejected as invalid (negative size, zero size, not UTF-8), 0.24 ms per file on average including text.
@@ -399,6 +399,8 @@ Phase 3, macOS (2026-10-24): clip paths (any units, nested, clipped children, `c
 | total | 468 | 858 of 1,748 |
 
 The legacy parser crashes the Editor on 8 files (recursive `use` and `clipPath` references, a stack overflow); they're counted as failures. Native passes at least as many files as legacy in every folder except a few text folders, where legacy, which draws no text, passes files whose text covers less than 1% of the image; the native core draws text with system fonts instead of the suite's. Gradient failures (spread methods, focal radius) are shared by both engines: they're limits of the current gradient shader, which phase G replaces. Native becomes the default once Windows and Linux libraries exist, so that a project imports the same on every Editor.
+
+Phase G, step 1 (2026-10-25): the gradient shaders compute the position along the gradient (linear, radial and conical) from the interpolated gradient coordinates instead of reading the 8-bit 512×512 gradient shape texture, which is removed. This fixes the blocky, stepped radial gradients visible when zoomed in and the seam of conical gradients, and saves one dependent texture read per pixel; the mesh data is unchanged, so nothing needs reimporting. The colour atlas, stop data, spread methods, focal points and dithering are the next steps.
 
 Phases G, 5 and 6 don't depend on the native core and can start right away. G is C# and shader work, and can ship as 2.1. Phase A needs lyon's fringe data and follows phase 2; its *Hardware* option can ship earlier. Phase L is shader work and can also start now. Phase O is C# and shader work and can ship in 2.x. Phase F needs the fringe from phase A. Phase R needs resvg and follows phase 3; phase I can start with solid fills and grow with them.
 

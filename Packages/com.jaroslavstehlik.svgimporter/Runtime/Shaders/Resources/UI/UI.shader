@@ -4,7 +4,6 @@ Shader "SVG Importer/UI/UI" {
 	
 	Properties {
 		_GradientColor ("Gradient Color (RGBA)", 2D) = "white" { }
-		_GradientShape ("Gradient Shape (RGBA)", 2D) = "white" { }
 		_Params ("Params", Vector) = (1.0, 1.0, 1.0, 1.0)
 		
 		_Color ("Tint", Color) = (1,1,1,1)

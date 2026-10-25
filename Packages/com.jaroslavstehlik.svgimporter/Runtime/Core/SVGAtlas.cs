@@ -198,35 +198,18 @@ namespace SVGImporter
 			}
 		}
 
-        protected static Texture2D _gradientShapeTexture;
+        /// <summary>No longer used: shaders compute gradient positions themselves.</summary>
+        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
         public static Texture2D gradientShapeTexture
         {
-            get {
-                if(_gradientShapeTexture == null) _gradientShapeTexture = GenerateGradientShapeTexture(_gradientShapeTextureSize);                
-                return _gradientShapeTexture;
-            }
+            get { return null; }
         }
 
-        protected  static int _gradientShapeTextureSize = 512;
-        public static int gradientShapeTextureSize {
-            get {
-                return _gradientShapeTextureSize;
-            }
-            set {
-                if(_gradientShapeTextureSize == value) return;
-                if(_gradientShapeTexture != null) DestroyImmediate(_gradientShapeTexture);
-                _gradientShapeTexture = GenerateGradientShapeTexture(_gradientShapeTextureSize);
-            }
-        }
+        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
+        public static int gradientShapeTextureSize { get { return 0; } set { } }
 
-        public static void ClearGradientShapeTexture ()
-        {
-            if (gradientShapeTexture == null)
-                return;
-            
-            DestroyImmediate(_gradientShapeTexture);
-            _gradientShapeTexture = null;
-        }
+        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
+        public static void ClearGradientShapeTexture () { }
 
         //todo Atlas data gets deleted!!!
         protected SVGAtlasData _atlasData;
@@ -354,8 +337,6 @@ namespace SVGImporter
                 if(material.HasProperty(_GradientColorKey))
                     material.SetTexture (_GradientColorKey, atlasTextures[0]);
             }
-            if(material.HasProperty(_GradientShapeKey))
-                material.SetTexture (_GradientShapeKey, gradientShapeTexture);
             if(material.HasProperty(_ParamsKey))
                 material.SetVector (_ParamsKey, new Vector4 (atlasTextureWidth, atlasTextureHeight, gradientWidth, gradientHeight));
         }
@@ -615,11 +596,11 @@ namespace SVGImporter
             texture.hideFlags = HideFlags.DontSave;
             texture.name = "Atlas "+index.ToString();
 
-            AssignMaterialGradients(_opaqueGradient, texture, gradientShapeTexture, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_transparentGradient, texture, gradientShapeTexture, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_transparentGradientAntialiased, texture, gradientShapeTexture, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_ui, texture, gradientShapeTexture, gradientWidth, gradientHeight);
-            AssignMaterialGradients(_uiAntialiased, texture, gradientShapeTexture, gradientWidth, gradientHeight);
+            AssignMaterialGradients(_opaqueGradient, texture, null, gradientWidth, gradientHeight);
+            AssignMaterialGradients(_transparentGradient, texture, null, gradientWidth, gradientHeight);
+            AssignMaterialGradients(_transparentGradientAntialiased, texture, null, gradientWidth, gradientHeight);
+            AssignMaterialGradients(_ui, texture, null, gradientWidth, gradientHeight);
+            AssignMaterialGradients(_uiAntialiased, texture, null, gradientWidth, gradientHeight);
 
 
             if (index >= atlasTextures.Count - 1) {               
@@ -750,6 +731,7 @@ namespace SVGImporter
 		}
 
         const float PI2 = Mathf.PI * 2f;
+        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
         public static Texture2D GenerateGradientShapeTexture (int textureSize)
         {
             // Holds gradient positions, not colors, so it must not be sRGB-decoded in Linear color space.
@@ -760,14 +742,14 @@ namespace SVGImporter
             texture.filterMode = FilterMode.Trilinear;
             texture.wrapMode = TextureWrapMode.Clamp;
             
-            int totalPixels = gradientShapeTextureSize * gradientShapeTextureSize;
+            int totalPixels = textureSize * textureSize;
             Color32[] texturePixels = new Color32[totalPixels];
             float angle;
             
-            float x = 0, y = 0, halfSize = gradientShapeTextureSize * 0.5f, sizeMinusOne = gradientShapeTextureSize - 1;
+            float x = 0, y = 0, halfSize = textureSize * 0.5f, sizeMinusOne = textureSize - 1;
             for (int i = 0; i < totalPixels; i++) {
-                x = i % gradientShapeTextureSize;
-                y = Mathf.Floor ((float)i / (float)gradientShapeTextureSize);
+                x = i % textureSize;
+                y = Mathf.Floor ((float)i / (float)textureSize);
                 
                 // linear
                 texturePixels [i].r = (byte)Mathf.RoundToInt (x / sizeMinusOne * 255);
@@ -863,7 +845,6 @@ namespace SVGImporter
                     continue;
                 
                 output = materials [i];
-                output.SetTexture (_GradientShapeKey, gradientShapeTexture);
                 output.SetVector (_ParamsKey, new Vector4 (atlasTextureWidth, atlasTextureHeight, gradientWidth, gradientHeight));
             }
             
@@ -871,7 +852,6 @@ namespace SVGImporter
                 output = new Material (shader);
                 Texture2D texture = atlasTextures [fill.gradientColors.atlasIndex];
                 output.SetTexture (_GradientColorKey, texture);
-                output.SetTexture (_GradientShapeKey, gradientShapeTexture);
                 output.SetVector (_ParamsKey, new Vector4 (atlasTextureWidth, atlasTextureHeight, gradientWidth, gradientHeight));
                 materials.Add (output);           
             }

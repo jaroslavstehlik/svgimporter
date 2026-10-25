@@ -928,10 +928,6 @@ namespace SVGImporter
 					{
 						outputMaterials[i].SetTexture("_GradientColor", gradientAtlas);
 					}
-					if(outputMaterials[i].HasProperty("_GradientShape"))
-					{
-						outputMaterials[i].SetTexture("_GradientShape", SVGAtlas.gradientShapeTexture);
-					}
 				}
 			}
 

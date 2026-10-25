@@ -3,7 +3,6 @@
 #include "SVGImporterCG.cginc"
 
 sampler2D _GradientColor;
-sampler2D _GradientShape;
 CBUFFER_START(UnityPerMaterial)
 float4 _Params;
 CBUFFER_END
@@ -75,16 +74,27 @@ vertex_output vertexGradientsAntialiased(vertex_input_normal v)
     return o;
 }
 
+// The position along the gradient for each gradient type (x linear, y radial, z conical, w solid),
+// computed rather than read from a lookup texture, so it is exact at any zoom (DESIGN.md, 7.1).
+// uv is the point in the gradient's unit square: linear gradients run along x from 0 to 1, radial
+// and conical gradients are centred at (0.5, 0.5) and radial ones end at a radius of 0.5. Outside
+// that range the position is clamped, which pads with the end colours.
+float4 SVGGradientShape(float2 uv)
+{
+	float2 d = uv - 0.5;
+	return saturate(float4(uv.x, length(d) * 2.0, frac(atan2(d.y, d.x) * 0.15915494 + 1.0), 1.0));
+}
+
 float4 fragmentGradientsOpaque(vertex_output i) : SV_Target
 {
-	float gradient = dot(tex2D(_GradientShape, i.uv0), i.uv1) ;
+	float gradient = dot(SVGGradientShape(i.uv0.xy), i.uv1) ;
 	float2 gradientColorUV = float2(i.uv0.z + gradient, i.uv0.w);
 	return float4(tex2D(_GradientColor, gradientColorUV).rgb * i.color.rgb, 1.0);
 }
 
 float4 fragmentGradientsAlphaBlended(vertex_output i) : SV_Target
 {	
-	float gradient = dot(tex2D(_GradientShape, i.uv0), i.uv1) ;
+	float gradient = dot(SVGGradientShape(i.uv0.xy), i.uv1) ;
 	float2 gradientColorUV = float2(i.uv0.z + gradient, i.uv0.w);
 	return tex2D(_GradientColor, gradientColorUV) * i.color;
 }
