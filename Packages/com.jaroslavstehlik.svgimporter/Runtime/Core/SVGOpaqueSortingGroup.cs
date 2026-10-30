@@ -13,10 +13,11 @@ namespace SVGImporter
     /// Layer and Order in Layer (and Sorting Group) don't order them, their position along z does.
     /// Renderers with an SVG Opaque Sort Override are left where they are.
     ///
-    /// In play mode the group sorts again when its children change, and when SVG Renderers and
-    /// overrides below it are moved, change their own children or change asset. Reordering the
-    /// children of other objects below it isn't noticed: call Sort() after doing that. In edit mode
-    /// it checks every frame.
+    /// The group sorts again only when something changes: its children, SVG Renderers and overrides
+    /// below it being moved or having their children changed, an asset changing. In play mode,
+    /// reordering the children of other objects below it isn't noticed: call Sort() after doing
+    /// that. In the Editor every hierarchy change, undo and redo, and moving an object below the
+    /// group by hand are noticed too, so renderers moved along z are put back.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
@@ -41,6 +42,10 @@ namespace SVGImporter
         internal void SetDirty()
         {
             _dirty = true;
+#if UNITY_EDITOR
+            // In edit mode, updates run only when something asks for one.
+            if (!Application.isPlaying) UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+#endif
         }
 
         internal bool isDirty
@@ -50,25 +55,66 @@ namespace SVGImporter
 
         void OnEnable()
         {
-            _dirty = true;
+#if UNITY_EDITOR
+            s_Groups.Add(this);
+#endif
+            SetDirty();
+        }
+
+        void OnDisable()
+        {
+#if UNITY_EDITOR
+            s_Groups.Remove(this);
+#endif
         }
 
         void OnValidate()
         {
-            _dirty = true;
+            SetDirty();
         }
 
         void OnTransformChildrenChanged()
         {
-            _dirty = true;
+            SetDirty();
         }
 
         void LateUpdate()
         {
-            // In edit mode objects can be reordered anywhere below the group: check every frame.
-            // Positions are written only when they change.
-            if (_dirty || !Application.isPlaying) Sort();
+            if (_dirty) Sort();
         }
+
+#if UNITY_EDITOR
+        // The enabled groups, for the Editor events below.
+        static readonly System.Collections.Generic.HashSet<SVGOpaqueSortingGroup> s_Groups = new System.Collections.Generic.HashSet<SVGOpaqueSortingGroup>();
+
+        // What the Editor can change that the components don't hear about: any hierarchy change
+        // (also below objects that aren't renderers), undo and redo, and objects moved by hand.
+        [UnityEditor.InitializeOnLoadMethod]
+        static void WatchEditor()
+        {
+            UnityEditor.EditorApplication.hierarchyChanged += SetAllDirty;
+            UnityEditor.Undo.undoRedoPerformed += SetAllDirty;
+            UnityEditor.Undo.postprocessModifications += OnModifications;
+        }
+
+        static void SetAllDirty()
+        {
+            foreach (SVGOpaqueSortingGroup group in s_Groups)
+                if (group != null) group.SetDirty();
+        }
+
+        static UnityEditor.UndoPropertyModification[] OnModifications(UnityEditor.UndoPropertyModification[] modifications)
+        {
+            foreach (UnityEditor.UndoPropertyModification modification in modifications)
+            {
+                var moved = modification.currentValue != null ? modification.currentValue.target as Transform : null;
+                if (moved == null) continue;
+                SVGOpaqueSortingGroup group = moved.GetComponentInParent<SVGOpaqueSortingGroup>(true);
+                if (group != null && group.transform != moved) group.SetDirty();
+            }
+            return modifications;
+        }
+#endif
 
         void Sort(Transform parent, ref float z)
         {

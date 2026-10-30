@@ -197,6 +197,10 @@ public static class BugFixTests
             Expect("renderer's children reordered", group.isDirty);
             nested.transform.SetParent(other.transform);
             Expect("renderer moved to another group", group.isDirty && other.isDirty);
+            // In the Editor, moving a renderer by hand (an undoable edit of its Transform) puts it back.
+            var drag = new UndoPropertyModification { currentValue = new PropertyModification { target = childA.transform, propertyPath = "m_LocalPosition.z", value = "3" } };
+            if (Undo.postprocessModifications != null) Undo.postprocessModifications(new[] { drag });
+            Expect("renderer moved by hand in the Editor", other.isDirty);
             Check("opaque sorting group follows hierarchy changes", notices.Count == 0, notices.Count == 0 ? "" : "missed: " + string.Join(", ", notices));
 
             // SVG Renderer hides the MeshFilter and MeshRenderer it draws with and keeps their settings.
