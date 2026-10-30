@@ -30,6 +30,12 @@ namespace SVGImporter
         public bool sliceMesh;
         /// <summary>Centre the mesh on its content instead of the SVG canvas.</summary>
         public bool ignoreSVGCanvas;
+        /// <summary>
+        /// Draw group opacity as browsers do where a group's children are opaque, by removing the
+        /// parts of children that later children cover. Off: opacity is applied to each child, so
+        /// overlapping children show through each other.
+        /// </summary>
+        public bool exactGroupOpacity;
         public bool generateCollider;
         /// <summary>Keep layers for modifiers instead of building one mesh.</summary>
         public bool useLayers;
@@ -55,6 +61,7 @@ namespace SVGImporter
                     compressDepth = true,
                     pivotPoint = new Vector2(0.5f, 0.5f),
                     ignoreSVGCanvas = true,
+                    exactGroupOpacity = true,
                     optimizeMesh = true,
                 };
             }
@@ -75,6 +82,7 @@ namespace SVGImporter
                 customPivotPoint = settings.defaultCustomPivotPoint,
                 pivotPoint = settings.defaultPivotPoint,
                 ignoreSVGCanvas = settings.defaultIgnoreSVGCanvas,
+                exactGroupOpacity = settings.defaultExactGroupOpacity,
                 generateCollider = settings.defaultGenerateCollider,
                 useLayers = settings.defaultUseLayers,
                 generateNormals = settings.defaultGenerateNormals,

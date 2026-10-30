@@ -55,6 +55,17 @@ public static class ImportTests
             bool isConical = conical.succeeded && conical.layers.SelectMany(l => l.shapes).Any(shape => shape.fill != null && shape.fill.gradientType == GRADIENT_TYPE.CONICAL);
             Check("conicalGradient imports as a conical gradient", isConical, string.Join(" | ", conical.messages));
 
+            // Exact Group Opacity: what a later opaque child covers is removed from the lower one.
+            const string group = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><g opacity=\"0.5\">"
+                + "<rect width=\"60\" height=\"60\" fill=\"red\"/><rect x=\"40\" y=\"40\" width=\"60\" height=\"60\" fill=\"blue\"/></g></svg>";
+            SVGImportOptions exact = SVGImportOptions.Default, perShape = SVGImportOptions.Default;
+            perShape.exactGroupOpacity = false;
+            SVGImportResult exactResult = SVGImport.Import(group, exact), perShapeResult = SVGImport.Import(group, perShape);
+            Check("Exact Group Opacity", exactResult.succeeded && perShapeResult.succeeded
+                && !exactResult.errors.Contains(SVGError.GroupOpacity) && perShapeResult.errors.Contains(SVGError.GroupOpacity)
+                && exactResult.mesh.vertexCount != perShapeResult.mesh.vertexCount,
+                exactResult.mesh.vertexCount + " vertices exact, " + perShapeResult.mesh.vertexCount + " per shape");
+
             // A failed import reports errors and leaves nothing behind for the next one.
             SVGImportResult failed = SVGImport.Import("<svg><rect", SVGImportOptions.Default);
             SVGImportResult after = SVGImport.Import(Svg, SVGImportOptions.Default);

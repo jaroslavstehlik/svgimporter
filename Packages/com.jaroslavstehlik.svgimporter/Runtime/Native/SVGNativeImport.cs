@@ -25,7 +25,7 @@ namespace SVGImporter.Native
         {
             viewport = new Rect();
             float meshScale = options.scale;
-            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance(options.verticesPerMeter), antialiasing: options.antialiasing);
+            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance(options.verticesPerMeter), antialiasing: options.antialiasing, groupOpacity: options.exactGroupOpacity);
             if (result.status != SVGNativeCore.Status.Ok)
             {
                 context.errors.Add(result.status == SVGNativeCore.Status.ParseError ? SVGError.Syntax : SVGError.CorruptedFile);

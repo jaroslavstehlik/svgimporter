@@ -31,6 +31,7 @@ namespace SVGImporter
         public bool keepSVGFile = false;
         public bool useLayers = false;
         public bool ignoreSVGCanvas = true;
+        public bool exactGroupOpacity = true;
     }
 
     /// <summary>

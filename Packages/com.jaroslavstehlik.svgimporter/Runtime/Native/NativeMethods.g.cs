@@ -22,7 +22,7 @@ namespace SVGImporter.Native
         /// <summary>
         ///  Increment whenever the ABI changes. C# checks it before using the library.
         /// </summary>
-        internal const uint SVGI_ABI_VERSION = 4;
+        internal const uint SVGI_ABI_VERSION = 5;
         internal const int SVGI_OK = 0;
         /// <summary>
         ///  The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -117,6 +117,12 @@ namespace SVGImporter.Native
         ///  fill `SvgiResult::extrusions` and `coverage`.
         /// </summary>
         public byte antialiasing;
+        /// <summary>
+        ///  1 to draw group opacity as browsers do where the group's children are opaque: the parts of
+        ///  children that later opaque children of the same group cover are removed, so the children
+        ///  no longer overlap and the group's opacity can be applied to each.
+        /// </summary>
+        public byte group_opacity;
     }
 
     [StructLayout(LayoutKind.Sequential)]

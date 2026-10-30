@@ -6,7 +6,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use crate::import::{self, ImportOptions, Output};
 
 /// Increment whenever the ABI changes. C# checks it before using the library.
-pub const SVGI_ABI_VERSION: u32 = 4;
+pub const SVGI_ABI_VERSION: u32 = 5;
 
 pub const SVGI_OK: i32 = 0;
 /// The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -55,6 +55,10 @@ pub struct SvgiOptions {
     /// 1 to add an antialiasing fringe after every fill and stroke layer (DESIGN.md, 7.2) and
     /// fill `SvgiResult::extrusions` and `coverage`.
     pub antialiasing: u8,
+    /// 1 to draw group opacity as browsers do where the group's children are opaque: the parts of
+    /// children that later opaque children of the same group cover are removed, so the children
+    /// no longer overlap and the group's opacity can be applied to each.
+    pub group_opacity: u8,
 }
 
 #[repr(C)]
@@ -269,6 +273,7 @@ pub unsafe extern "C" fn svgi_import(
         dpi: options.dpi,
         convert_text: options.convert_text != 0,
         antialiasing: options.antialiasing != 0,
+        group_opacity: options.group_opacity != 0,
     };
     match catch_unwind(AssertUnwindSafe(|| import::import(data, &import_options))) {
         Ok(Ok(output)) => {

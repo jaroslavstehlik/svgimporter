@@ -33,6 +33,7 @@ pub struct ImportOptions {
     pub dpi: f32,
     pub convert_text: bool,
     pub antialiasing: bool,
+    pub group_opacity: bool,
 }
 
 #[derive(Default)]
@@ -107,6 +108,7 @@ pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
         clip: None,
         limit_exceeded: None,
         conical_ids: conical.map(|(_, ids)| ids).unwrap_or_default(),
+        occluder: None,
     };
     importer.group(tree.root(), 1.0);
     match importer.limit_exceeded {
@@ -130,6 +132,9 @@ struct Importer<'a> {
     limit_exceeded: Option<String>,
     /// Ids of the `conicalGradient` elements, which usvg reads as radial gradients.
     conical_ids: HashSet<String>,
+    /// Inside groups with opacity: the area that later, opaque content of those groups covers, in
+    /// document space. It is removed from what is drawn now (see `group`).
+    occluder: Option<Region>,
 }
 
 /// An area in document space: closed contours, without overlaps, holes wound opposite to their
@@ -175,16 +180,40 @@ impl Importer<'_> {
             self.output.diagnostics |= SVGI_DIAG_BLEND_MODE;
         }
         let group_opacity = group.opacity().get();
-        if group_opacity < 1.0 && group.children().len() > 1 {
-            // Applied per child, which differs where children overlap (DESIGN.md, section 16).
-            self.output.diagnostics |= SVGI_DIAG_GROUP_OPACITY;
+        let children = group.children();
+        // Group opacity applies to the group's combined result. It is applied to each child,
+        // which is exact where children don't overlap: with group_opacity on, the part of each
+        // child that later opaque children cover is removed (DESIGN.md, section 16). What
+        // translucent children cover can't be removed, and still overlaps.
+        let mut occluders: Vec<Option<Region>> = vec![None; children.len()];
+        if group_opacity < 1.0 && children.len() > 1 {
+            if self.options.group_opacity {
+                let mut covered: Region = Vec::new();
+                for i in (0..children.len()).rev() {
+                    if !covered.is_empty() {
+                        occluders[i] = Some(covered.clone());
+                    }
+                    let region = self.opaque_region(&children[i]);
+                    covered = union(&covered, &region);
+                }
+            }
+            if !self.options.group_opacity || !children.iter().all(|child| self.is_opaque(child)) {
+                self.output.diagnostics |= SVGI_DIAG_GROUP_OPACITY;
+            }
         }
         let opacity = opacity * group_opacity;
 
-        for node in group.children() {
+        for (node, occluder) in children.iter().zip(occluders) {
             if self.limit_exceeded.is_some() {
                 break;
             }
+            let outer_occluder = occluder.map(|occluder| {
+                let combined = match &self.occluder {
+                    Some(outer) => union(outer, &occluder),
+                    None => occluder,
+                };
+                std::mem::replace(&mut self.occluder, Some(combined))
+            });
             match node {
                 usvg::Node::Group(child) => self.group(child, opacity),
                 usvg::Node::Path(path) => self.path(path, opacity),
@@ -196,6 +225,9 @@ impl Importer<'_> {
                         self.output.diagnostics |= SVGI_DIAG_TEXT_SKIPPED;
                     }
                 }
+            }
+            if let Some(outer) = outer_occluder {
+                self.occluder = outer;
             }
         }
 
@@ -349,16 +381,7 @@ impl Importer<'_> {
             return;
         }
         let transform = path.abs_transform();
-        let scale = transform_scale(&transform);
-        if !(scale > 0.0) {
-            return;
-        }
-        // Tessellate in the path's own coordinates, so strokes follow SVG semantics under
-        // non-uniform transforms; the tolerance is converted into those coordinates. A tolerance
-        // far below the path's size would only produce a flood of vertices.
-        let bounds = path.data().bounds();
-        let size = bounds.width().max(bounds.height());
-        let tolerance = (self.options.tolerance / scale).max(size * MIN_RELATIVE_TOLERANCE);
+        let Some(tolerance) = self.path_tolerance(path) else { return };
 
         self.element += 1;
         let fill_first = path.paint_order() == usvg::PaintOrder::FillAndStroke;
@@ -371,13 +394,111 @@ impl Importer<'_> {
         }
     }
 
+    /// The flattening tolerance in the path's own coordinates: paths are tessellated there, so
+    /// strokes follow SVG semantics under non-uniform transforms. A tolerance far below the path's
+    /// size would only produce a flood of vertices. None for paths scaled to nothing.
+    fn path_tolerance(&self, path: &usvg::Path) -> Option<f32> {
+        let scale = transform_scale(&path.abs_transform());
+        if !(scale > 0.0) {
+            return None;
+        }
+        let bounds = path.data().bounds();
+        let size = bounds.width().max(bounds.height());
+        Some((self.options.tolerance / scale).max(size * MIN_RELATIVE_TOLERANCE))
+    }
+
+    /// A region of content limited to what is drawn here: inside the clip region and outside the
+    /// area later opaque content covers.
+    fn restrict(&self, region: Region) -> Region {
+        let region = match &self.clip {
+            Some(clip) => intersect(&region, clip),
+            None => region,
+        };
+        match &self.occluder {
+            Some(occluder) => difference(&region, occluder),
+            None => region,
+        }
+    }
+
+    /// Whether a node draws only opaque colours, so that it hides what is below it.
+    fn is_opaque(&self, node: &usvg::Node) -> bool {
+        match node {
+            usvg::Node::Group(group) => {
+                group.opacity().get() == 1.0
+                    && group.filters().is_empty()
+                    && group.blend_mode() == usvg::BlendMode::Normal
+                    && group.mask().is_none()
+                    && group.children().iter().all(|child| self.is_opaque(child))
+            }
+            usvg::Node::Path(path) => {
+                !path.is_visible()
+                    || (path.fill().map_or(true, |f| opaque_paint(f.paint(), f.opacity().get()))
+                        && path.stroke().map_or(true, |s| opaque_paint(s.paint(), s.opacity().get())))
+            }
+            usvg::Node::Text(text) => !self.options.convert_text || self.is_opaque(&usvg::Node::Group(Box::new(text.flattened().clone()))),
+            // Images aren't drawn.
+            usvg::Node::Image(_) => true,
+        }
+    }
+
+    /// The area a node covers with opaque colour, in document space: what it hides from content
+    /// below it in the same group. Translucent parts don't count.
+    fn opaque_region(&mut self, node: &usvg::Node) -> Region {
+        match node {
+            usvg::Node::Group(group) => {
+                if group.opacity().get() != 1.0
+                    || !group.filters().is_empty()
+                    || group.blend_mode() != usvg::BlendMode::Normal
+                    || group.mask().is_some()
+                {
+                    return Vec::new();
+                }
+                let mut region: Region = Vec::new();
+                for child in group.children() {
+                    let child_region = self.opaque_region(child);
+                    region = union(&region, &child_region);
+                }
+                match group.clip_path() {
+                    Some(clip_path) => {
+                        let clip = self.clip_region(clip_path, &group.abs_transform());
+                        intersect(&region, &clip)
+                    }
+                    None => region,
+                }
+            }
+            usvg::Node::Path(path) => {
+                if !path.is_visible() {
+                    return Vec::new();
+                }
+                let transform = path.abs_transform();
+                let mut region: Region = Vec::new();
+                if let Some(fill) = path.fill() {
+                    if opaque_paint(fill.paint(), fill.opacity().get()) {
+                        let shape = flatten(path.data(), &transform, self.options.tolerance).simplify_shape(overlay_rule(fill.rule()));
+                        region = flatten_shapes(shape);
+                    }
+                }
+                if let Some(stroke) = path.stroke() {
+                    if opaque_paint(stroke.paint(), stroke.opacity().get()) {
+                        if let Some(buffers) = self.path_tolerance(path).and_then(|tolerance| self.stroke_buffers(path, stroke, tolerance)) {
+                            region = union(&region, &triangles_region(&buffers, &transform));
+                        }
+                    }
+                }
+                region
+            }
+            usvg::Node::Text(text) if self.options.convert_text => self.opaque_region(&usvg::Node::Group(Box::new(text.flattened().clone()))),
+            _ => Vec::new(),
+        }
+    }
+
     fn fill_layer(&mut self, path: &usvg::Path, transform: &Transform, tolerance: f32, opacity: f32) {
         let Some(fill) = path.fill() else { return };
         let Some(paint) = self.paint(fill.paint(), transform) else { return };
 
-        if let Some(clip) = &self.clip {
+        if self.clip.is_some() || self.occluder.is_some() {
             let shape = flatten(path.data(), transform, self.options.tolerance).simplify_shape(overlay_rule(fill.rule()));
-            let region = intersect(&flatten_shapes(shape), clip);
+            let region = self.restrict(flatten_shapes(shape));
             if let Some(buffers) = self.tessellate_region(&region) {
                 self.push_layer(path.id(), SVGI_LAYER_FILL, paint, opacity * fill.opacity().get(), &buffers, &Transform::identity());
             }
@@ -403,13 +524,26 @@ impl Importer<'_> {
     fn stroke_layer(&mut self, path: &usvg::Path, transform: &Transform, tolerance: f32, opacity: f32) {
         let Some(stroke) = path.stroke() else { return };
         let Some(paint) = self.paint(stroke.paint(), transform) else { return };
+        let Some(buffers) = self.stroke_buffers(path, stroke, tolerance) else { return };
+        if self.clip.is_some() || self.occluder.is_some() {
+            let region = self.restrict(triangles_region(&buffers, transform));
+            if let Some(buffers) = self.tessellate_region(&region) {
+                self.push_layer(path.id(), SVGI_LAYER_STROKE, paint, opacity * stroke.opacity().get(), &buffers, &Transform::identity());
+            }
+            return;
+        }
+        self.push_layer(path.id(), SVGI_LAYER_STROKE, paint, opacity * stroke.opacity().get(), &buffers, transform);
+    }
 
+    /// The stroke's triangles in the path's coordinates, dashed if it has dashes. None if nothing
+    /// of it is visible or it can't be tessellated.
+    fn stroke_buffers(&mut self, path: &usvg::Path, stroke: &usvg::Stroke, tolerance: f32) -> Option<VertexBuffers<[f32; 2], u32>> {
         // Dashes are applied to the path before stroking.
         if let Some(array) = stroke.dasharray() {
             let period: f32 = array.iter().sum();
             if period > 0.0 && outline_length(path.data()) / period > MAX_DASHES {
                 self.limit_exceeded = Some(format!("a dash pattern produces more than {} dashes", MAX_DASHES));
-                return;
+                return None;
             }
         }
         let dashed;
@@ -422,7 +556,7 @@ impl Importer<'_> {
                 dashed = d;
                 &dashed
             }
-            None if stroke.dasharray().is_some() => return, // Dashes with no visible part.
+            None if stroke.dasharray().is_some() => return None, // Dashes with no visible part.
             None => path.data(),
         };
 
@@ -441,42 +575,10 @@ impl Importer<'_> {
             })
             .with_line_cap(line_cap(stroke.linecap()));
         let mut buffers: VertexBuffers<[f32; 2], u32> = VertexBuffers::new();
-        let tessellated = self.stroke.tessellate_path(
-            &lyon_path,
-            &options,
-            &mut BuffersBuilder::new(&mut buffers, |v: StrokeVertex| v.position().to_array()),
-        );
-        if tessellated.is_err() {
-            return;
-        }
-        if let Some(clip) = &self.clip {
-            // The stroke's triangles, consistently wound so that their union is the stroke's
-            // area, intersected with the clip region.
-            let triangles: Region = buffers
-                .indices
-                .chunks_exact(3)
-                .map(|t| {
-                    let mut triangle: Vec<[f64; 2]> = t
-                        .iter()
-                        .map(|&i| {
-                            let v = buffers.vertices[i as usize];
-                            let (x, y) = apply(transform, v[0], v[1]);
-                            [x as f64, y as f64]
-                        })
-                        .collect();
-                    if signed_area(&triangle) < 0.0 {
-                        triangle.swap(1, 2);
-                    }
-                    triangle
-                })
-                .collect();
-            let region = flatten_shapes(triangles.overlay(clip, OverlayRule::Intersect, OverlayFillRule::NonZero));
-            if let Some(buffers) = self.tessellate_region(&region) {
-                self.push_layer(path.id(), SVGI_LAYER_STROKE, paint, opacity * stroke.opacity().get(), &buffers, &Transform::identity());
-            }
-            return;
-        }
-        self.push_layer(path.id(), SVGI_LAYER_STROKE, paint, opacity * stroke.opacity().get(), &buffers, transform);
+        self.stroke
+            .tessellate_path(&lyon_path, &options, &mut BuffersBuilder::new(&mut buffers, |v: StrokeVertex| v.position().to_array()))
+            .ok()?;
+        Some(buffers)
     }
 
     fn push_layer(
@@ -811,6 +913,58 @@ fn flatten_shapes(shapes: Vec<Vec<Vec<[f64; 2]>>>) -> Region {
     shapes.into_iter().flatten().collect()
 }
 
+fn union(a: &Region, b: &Region) -> Region {
+    if a.is_empty() {
+        return b.clone();
+    }
+    if b.is_empty() {
+        return a.clone();
+    }
+    flatten_shapes(a.overlay(b, OverlayRule::Union, OverlayFillRule::NonZero))
+}
+
+fn difference(a: &Region, b: &Region) -> Region {
+    if a.is_empty() || b.is_empty() {
+        return a.clone();
+    }
+    flatten_shapes(a.overlay(b, OverlayRule::Difference, OverlayFillRule::NonZero))
+}
+
+/// The area a set of triangles covers, in document space: they are wound consistently so that
+/// their union is the area, as a stroke's are.
+fn triangles_region(buffers: &VertexBuffers<[f32; 2], u32>, transform: &Transform) -> Region {
+    let triangles: Region = buffers
+        .indices
+        .chunks_exact(3)
+        .map(|t| {
+            let mut triangle: Vec<[f64; 2]> = t
+                .iter()
+                .map(|&i| {
+                    let v = buffers.vertices[i as usize];
+                    let (x, y) = apply(transform, v[0], v[1]);
+                    [x as f64, y as f64]
+                })
+                .collect();
+            if signed_area(&triangle) < 0.0 {
+                triangle.swap(1, 2);
+            }
+            triangle
+        })
+        .collect();
+    flatten_shapes(triangles.simplify_shape(OverlayFillRule::NonZero))
+}
+
+/// Whether a paint is opaque everywhere: an opaque colour, or a gradient whose stops are opaque.
+fn opaque_paint(paint: &usvg::Paint, opacity: f32) -> bool {
+    opacity == 1.0
+        && match paint {
+            usvg::Paint::Color(_) => true,
+            usvg::Paint::LinearGradient(g) => g.stops().iter().all(|stop| stop.opacity().get() == 1.0),
+            usvg::Paint::RadialGradient(g) => g.stops().iter().all(|stop| stop.opacity().get() == 1.0),
+            usvg::Paint::Pattern(_) => false,
+        }
+}
+
 fn intersect(a: &Region, b: &Region) -> Region {
     if a.is_empty() || b.is_empty() {
         return Vec::new();
@@ -910,7 +1064,7 @@ mod tests {
     }
 
     fn run(svg: &str) -> Output {
-        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false }).unwrap()
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false }).unwrap()
     }
 
     fn layer_contours(out: &Output, layer: &SvgiLayer) -> Vec<Vec<[f32; 2]>> {
@@ -1062,7 +1216,7 @@ mod tests {
     #[test]
     fn oversized_input_is_refused() {
         let svg = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><!--{}--></svg>", " ".repeat(MAX_INPUT_BYTES));
-        let error = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false }).err().expect("an error");
+        let error = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false }).err().expect("an error");
         assert!(error.contains("larger than"), "{error}");
     }
 
@@ -1070,7 +1224,7 @@ mod tests {
     fn dash_flood_is_refused() {
         let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
             <path d="M0 0 H1000000000" stroke="black" stroke-dasharray="0.001 0.001"/></svg>"#,
-            &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false });
+            &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false });
         assert!(out.err().expect("an error").contains("dash"));
     }
 
@@ -1080,7 +1234,7 @@ mod tests {
         // of the circle, so the output stays small.
         let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
             <circle cx="0" cy="0" r="10000000"/></svg>"#,
-            &ImportOptions { tolerance: 1e-9, dpi: 96.0, convert_text: false, antialiasing: false }).unwrap();
+            &ImportOptions { tolerance: 1e-9, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false }).unwrap();
         assert!(out.vertices.len() / 2 < 100_000, "{} vertices", out.vertices.len() / 2);
     }
 
@@ -1097,7 +1251,7 @@ mod tests {
         assert_eq!(out.layers[1].contour_count, 2);
     }
     fn run_antialiased(svg: &str) -> Output {
-        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: true }).unwrap()
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: true, group_opacity: false }).unwrap()
     }
 
     fn extrusion(out: &Output, vertex: usize) -> [f32; 2] {
@@ -1172,5 +1326,36 @@ mod tests {
         let conical = out.paints[out.layers[0].paint as usize];
         assert_eq!(&conical.geometry[..3], &[50.0, 50.0, 40.0]);
         assert_eq!(conical.stop_count, 2);
+    }
+
+    fn run_group_opacity(svg: &str, group_opacity: bool) -> Output {
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity }).unwrap()
+    }
+
+    #[test]
+    fn group_opacity_removes_what_opaque_children_cover() {
+        let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><g opacity="0.5">
+            <rect width="60" height="60" fill="red"/><rect x="40" y="40" width="60" height="60" fill="blue"/></g></svg>"#;
+        let out = run_group_opacity(svg, true);
+        assert_eq!(out.layers.len(), 2);
+        assert!((layer_area(&out, &out.layers[0]) - 3200.0).abs() < 1.0, "lower {}", layer_area(&out, &out.layers[0]));
+        assert!((layer_area(&out, &out.layers[1]) - 3600.0).abs() < 1.0);
+        assert_eq!(out.diagnostics & SVGI_DIAG_GROUP_OPACITY, 0);
+
+        // Off: applied per child, and reported.
+        let out = run_group_opacity(svg, false);
+        assert!((layer_area(&out, &out.layers[0]) - 3600.0).abs() < 1.0);
+        assert_ne!(out.diagnostics & SVGI_DIAG_GROUP_OPACITY, 0);
+    }
+
+    #[test]
+    fn group_opacity_keeps_what_translucent_children_cover() {
+        let out = run_group_opacity(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><g opacity="0.5">
+            <rect width="60" height="60" fill="red"/><rect x="40" y="40" width="60" height="60" fill="blue" fill-opacity="0.5"/>
+            <circle cx="10" cy="10" r="5" stroke="black" stroke-width="4" fill="none"/></g></svg>"#, true);
+        // The translucent square hides nothing; the opaque ring's area is removed from the red square.
+        let red = layer_area(&out, &out.layers[0]);
+        assert!(red < 3600.0 - 100.0 && red > 3600.0 - 160.0, "red {}", red);
+        assert_ne!(out.diagnostics & SVGI_DIAG_GROUP_OPACITY, 0);
     }
 }

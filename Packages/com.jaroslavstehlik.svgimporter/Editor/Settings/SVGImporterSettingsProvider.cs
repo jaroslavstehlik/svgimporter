@@ -53,6 +53,7 @@ namespace SVGImporter
             EditorGUILayout.PropertyField(d.FindPropertyRelative("format"), SVGAssetEditor.FORMAT_LABEL);
             EditorGUILayout.PropertyField(d.FindPropertyRelative("useGradients"), SVGAssetEditor.USE_GRADIENTS_LABEL);
             EditorGUILayout.PropertyField(d.FindPropertyRelative("antialiasing"), SVGAssetEditor.ANTIALIASING_LABEL);
+            EditorGUILayout.PropertyField(d.FindPropertyRelative("exactGroupOpacity"), SVGAssetEditor.EXACT_GROUP_OPACITY_LABEL);
             EditorGUILayout.PropertyField(d.FindPropertyRelative("meshCompression"), SVGAssetEditor.MESH_COMPRESSION_LABEL);
             EditorGUILayout.PropertyField(d.FindPropertyRelative("optimizeMesh"), SVGAssetEditor.OPTIMIZE_MESH_LABEL);
             EditorGUILayout.PropertyField(d.FindPropertyRelative("scale"), SVGAssetEditor.SCALE_LABEL);

@@ -18,7 +18,7 @@ namespace SVGImporter
     /// Registered as an override importer for .svg, because Unity's own Vector Graphics
     /// importer also claims the extension. SVGPostprocessor assigns it to new files.
     /// </summary>
-    [ScriptedImporter(9, null, new[] { "svg" })]
+    [ScriptedImporter(10, null, new[] { "svg" })]
     public class SVGFileImporter : ScriptedImporter
     {
         // The field names match SVGAsset's serialized fields, so that the same GUI draws both and
@@ -42,6 +42,7 @@ namespace SVGImporter
         [SerializeField] internal bool _keepSVGFile = false;
         [SerializeField] internal bool _useLayers = false;
         [SerializeField] internal bool _ignoreSVGCanvas = true;
+        [SerializeField] internal bool _exactGroupOpacity = true;
 
         static readonly FieldInfo[] s_SettingFields = typeof(SVGFileImporter).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
         const BindingFlags k_AssetFieldFlags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -85,7 +86,7 @@ namespace SVGImporter
                     format = _format, useGradients = _useGradients, antialiasing = _antialiasing,
                     verticesPerMeter = _vpm, scale = _scale, depthOffset = _depthOffset, compressDepth = _compressDepth,
                     customPivotPoint = _customPivotPoint, pivotPoint = _pivotPoint, border = _border, sliceMesh = _sliceMesh,
-                    ignoreSVGCanvas = _ignoreSVGCanvas, generateCollider = _generateCollider, useLayers = _useLayers,
+                    ignoreSVGCanvas = _ignoreSVGCanvas, exactGroupOpacity = _exactGroupOpacity, generateCollider = _generateCollider, useLayers = _useLayers,
                     generateNormals = _generateNormals, generateTangents = _generateTangents,
                     meshCompression = _meshCompression, optimizeMesh = _optimizeMesh, keepSVGFile = _keepSVGFile,
                 };
@@ -158,6 +159,7 @@ namespace SVGImporter
             _keepSVGFile = defaults.keepSVGFile;
             _useLayers = defaults.useLayers;
             _ignoreSVGCanvas = defaults.ignoreSVGCanvas;
+            _exactGroupOpacity = defaults.exactGroupOpacity;
         }
     }
 }

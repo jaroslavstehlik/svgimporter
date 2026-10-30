@@ -89,6 +89,7 @@ namespace SVGImporter
         public bool defaultKeepSVGFile = false;
         public bool defaultUseLayers = false;
         public bool defaultIgnoreSVGCanvas = true;
+        public bool defaultExactGroupOpacity = true;
         public bool defaultOptimizeMesh = true;
         public bool defaultGenerateNormals = false;
         public bool defaultGenerateTangents = false;

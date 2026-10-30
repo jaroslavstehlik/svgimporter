@@ -43,6 +43,7 @@ namespace SVGImporter
             SerializedProperty keepSVGFile = serializedObject.FindProperty("_keepSVGFile");
             SerializedProperty useLayers = serializedObject.FindProperty("_useLayers");
             SerializedProperty ignoreSVGCanvas = serializedObject.FindProperty("_ignoreSVGCanvas");
+            SerializedProperty exactGroupOpacity = serializedObject.FindProperty("_exactGroupOpacity");
 
             bool openSVGEditor = false;
 
@@ -52,6 +53,8 @@ namespace SVGImporter
             EditorGUILayout.PropertyField(antialiasing, SVGAssetEditor.ANTIALIASING_LABEL);
             if (!antialiasing.hasMultipleDifferentValues && !antialiasing.boolValue)
                 EditorGUILayout.LabelField(" ", SVGAssetEditor.SHARP_EDGES_HINT, EditorStyles.miniLabel);
+            if (exactGroupOpacity != null)
+                EditorGUILayout.PropertyField(exactGroupOpacity, SVGAssetEditor.EXACT_GROUP_OPACITY_LABEL);
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Meshes", EditorStyles.boldLabel);
@@ -113,7 +116,7 @@ namespace SVGImporter
             return openSVGEditor;
         }
 
-        public static void DrawErrors(SVGError[] errors)
+        public static void DrawErrors(SVGError[] errors, bool exactGroupOpacity = true)
         {
             if(errors == null)
                 return;
@@ -150,7 +153,9 @@ namespace SVGImporter
                         EditorGUILayout.HelpBox("Blend modes are not supported; shapes are blended normally", MessageType.Warning);
                         break;
                     case SVGError.GroupOpacity:
-                        EditorGUILayout.HelpBox("Group opacity is applied to each shape in the group, so overlapping shapes show through each other", MessageType.Info);
+                        EditorGUILayout.HelpBox(exactGroupOpacity
+                            ? "Some semi-transparent groups have semi-transparent shapes: where those overlap, they show through each other"
+                            : "Group opacity is applied to each shape in the group, so overlapping shapes show through each other. Exact Group Opacity draws it as browsers do", MessageType.Info);
                         break;
                     case SVGError.TextSkipped:
                         EditorGUILayout.HelpBox("Text was left out", MessageType.Warning);

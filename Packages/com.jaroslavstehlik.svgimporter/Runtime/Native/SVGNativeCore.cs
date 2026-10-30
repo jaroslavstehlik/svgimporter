@@ -115,7 +115,8 @@ namespace SVGImporter.Native
         /// <param name="tolerance">Maximum distance in SVG user units between a curve and its line segments.</param>
         /// <param name="convertText">Convert text to paths with the system fonts.</param>
         /// <param name="antialiasing">Add an antialiasing fringe after every fill and stroke layer.</param>
-        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false)
+        /// <param name="groupOpacity">Remove what later opaque children of a group with opacity cover.</param>
+        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false, bool groupOpacity = true)
         {
             if (svg == null) throw new ArgumentNullException("svg");
             if (!isSupported)
@@ -123,7 +124,7 @@ namespace SVGImporter.Native
             if (abiVersion != expectedAbiVersion)
                 throw new InvalidOperationException("svgimporter_core ABI version " + abiVersion + " doesn't match the expected " + expectedAbiVersion + ". Reinstall the package.");
 
-            var options = new SvgiOptions { tolerance = tolerance, dpi = dpi, convert_text = (byte)(convertText ? 1 : 0), antialiasing = (byte)(antialiasing ? 1 : 0) };
+            var options = new SvgiOptions { tolerance = tolerance, dpi = dpi, convert_text = (byte)(convertText ? 1 : 0), antialiasing = (byte)(antialiasing ? 1 : 0), group_opacity = (byte)(groupOpacity ? 1 : 0) };
             SvgiResult* native = null;
             int code;
             fixed (byte* data = svg)

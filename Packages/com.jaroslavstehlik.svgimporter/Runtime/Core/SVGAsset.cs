@@ -607,6 +607,16 @@ namespace SVGImporter
             }
         }
 
+        [SerializeField]
+        protected bool _exactGroupOpacity = true;
+        /// <summary>Whether group opacity was drawn as browsers do where children are opaque (Read Only).</summary>
+        public bool exactGroupOpacity
+        {
+            get {
+                return _exactGroupOpacity;
+            }
+        }
+
         [FormerlySerializedAs("colliderShape")]
         [SerializeField]
         protected SVGPath[] _colliderShape;
@@ -1147,7 +1157,7 @@ namespace SVGImporter
                     format = _format, useGradients = _useGradients, antialiasing = _antialiasing,
                     verticesPerMeter = _vpm, scale = _scale, depthOffset = _depthOffset, compressDepth = _compressDepth,
                     customPivotPoint = _customPivotPoint, pivotPoint = _pivotPoint, border = _border, sliceMesh = _sliceMesh,
-                    ignoreSVGCanvas = _ignoreSVGCanvas, generateCollider = _generateCollider, useLayers = _useLayers,
+                    ignoreSVGCanvas = _ignoreSVGCanvas, exactGroupOpacity = _exactGroupOpacity, generateCollider = _generateCollider, useLayers = _useLayers,
                     generateNormals = _generateNormals, generateTangents = _generateTangents,
                     meshCompression = _meshCompression, optimizeMesh = _optimizeMesh, keepSVGFile = _keepSVGFile,
                 };
@@ -1191,6 +1201,7 @@ namespace SVGImporter
             _keepSVGFile = options.keepSVGFile;
             _useLayers = options.useLayers;
             _ignoreSVGCanvas = options.ignoreSVGCanvas;
+            _exactGroupOpacity = options.exactGroupOpacity;
 
             _sharedMesh = result.mesh;
             _sharedShaders = result.shaders;
