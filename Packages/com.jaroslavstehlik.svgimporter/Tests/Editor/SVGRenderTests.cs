@@ -75,11 +75,11 @@ public static class SVGRenderTests
     {
         public string name, svg;
         public SVGAssetFormat format;
-        public bool antialiasing, normals;
-        public Variant(string name, string svg, SVGAssetFormat format, bool antialiasing = false, bool normals = false)
+        public bool softEdges, normals;
+        public Variant(string name, string svg, SVGAssetFormat format, bool softEdges = false, bool normals = false)
         {
             this.name = name; this.svg = svg; this.format = format;
-            this.softEdges = antialiasing; this.normals = normals;
+            this.softEdges = softEdges; this.normals = normals;
         }
     }
 
@@ -87,10 +87,10 @@ public static class SVGRenderTests
     {
         new Variant("gray_opaque", GraySvg, SVGAssetFormat.OpaqueAndTransparent),
         new Variant("gray_transparent", GraySvg, SVGAssetFormat.Transparent),
-        new Variant("gray_antialiased", GraySvg, SVGAssetFormat.Transparent, antialiasing: true),
+        new Variant("gray_antialiased", GraySvg, SVGAssetFormat.Transparent, softEdges: true),
         new Variant("gray_lit", GraySvg, SVGAssetFormat.OpaqueAndTransparent, normals: true),
         new Variant("gradient_transparent", GradientSvg, SVGAssetFormat.Transparent),
-        new Variant("shapes_transparent", ShapesSvg, SVGAssetFormat.Transparent, antialiasing: true),
+        new Variant("shapes_transparent", ShapesSvg, SVGAssetFormat.Transparent, softEdges: true),
         new Variant("gradient_bounding_box", GradientBoundingBoxSvg, SVGAssetFormat.Transparent),
         new Variant("gradient_user_space", GradientUserSpaceSvg, SVGAssetFormat.Transparent),
         new Variant("radial_offset", RadialOffsetSvg, SVGAssetFormat.Transparent),
