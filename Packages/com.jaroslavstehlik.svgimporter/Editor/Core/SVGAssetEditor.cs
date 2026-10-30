@@ -445,7 +445,7 @@ namespace SVGImporter
         public static GUIContent GENERATE_COLLIDER_LABEL = new GUIContent("Generate Collider", "Automatically generates polygon colliders.");
         public static GUIContent KEEP_SVG_FILE_LABEL = new GUIContent("Keep SVG File", "Keep the SVG file in the final build. This increases the file size.");
 		public static GUIContent USE_LAYERS_LABEL = new GUIContent("Use Layers", "Store individual SVG Layers for further modification. This discards stored Mesh.");
-        public static GUIContent EXACT_GROUP_OPACITY_LABEL = new GUIContent("Exact Group Opacity", "Draw semi-transparent groups as browsers and design tools do: where a group's children overlap, the hidden parts of lower children are removed at import, so they don't show through. Off: the group's opacity is applied to each shape. No cost at runtime; slower imports for complex art.");
+        public static GUIContent EXACT_GROUP_OPACITY_LABEL = new GUIContent("Exact Group Opacity", "Draw semi-transparent groups as browsers and design tools do: where a group's children overlap, the hidden parts of lower children are removed at import, so they don't show through. Off: the group's opacity is applied to each shape. Off by default: it adds vertices along the cuts and can show hairline seams where cut shapes meet. No other cost at runtime.");
         public static GUIContent IGNORE_SVG_CANVAS_LABEL = new GUIContent("Ignore SVG Canvas", "Trim the document canvas to object bounding box.");
         public static GUIContent GENERATE_NORMALS_LABEL = new GUIContent("Normals", "Generate normals for lighting effects.");
         public static GUIContent GENERATE_TANGENTS_LABEL = new GUIContent("Tangents", "Generate Tangents for advanced lighting effects.");

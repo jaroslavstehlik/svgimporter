@@ -2,7 +2,7 @@
 // importer and its shaders, and compares it with the suite's reference PNG.
 //
 //   Unity -batchmode -projectPath . -executeMethod ConformanceTests.Run
-//         -corpus <resvg>/crates/resvg/tests/tests -out <dir> [-perShapeGroupOpacity]
+//         -corpus <resvg>/crates/resvg/tests/tests -out <dir> [-exactGroupOpacity]
 //         [-filter <path substring>] [-saveRenders] [-skip <file listing paths to skip>]
 //
 // An import that crashes Unity (the legacy parser overflows the stack on some files) can't be
@@ -142,7 +142,7 @@ public static class ConformanceTests
         options.ignoreSVGCanvas = false;
         options.antialiasing = false;
         options.format = SVGAssetFormat.Transparent;
-        options.exactGroupOpacity = !Environment.GetCommandLineArgs().Contains("-perShapeGroupOpacity");
+        options.exactGroupOpacity = Environment.GetCommandLineArgs().Contains("-exactGroupOpacity");
         // Quality 10,000 vertices per meter: curves within 0.1 user units, so the test measures
         // features rather than the default tessellation density.
         options.verticesPerMeter = 10000f;

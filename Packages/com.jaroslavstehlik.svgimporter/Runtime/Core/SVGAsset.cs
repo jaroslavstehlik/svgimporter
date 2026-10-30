@@ -608,7 +608,7 @@ namespace SVGImporter
         }
 
         [SerializeField]
-        protected bool _exactGroupOpacity = true;
+        protected bool _exactGroupOpacity = false;
         /// <summary>Whether group opacity was drawn as browsers do where children are opaque (Read Only).</summary>
         public bool exactGroupOpacity
         {

@@ -116,7 +116,7 @@ namespace SVGImporter.Native
         /// <param name="convertText">Convert text to paths with the system fonts.</param>
         /// <param name="antialiasing">Add an antialiasing fringe after every fill and stroke layer.</param>
         /// <param name="groupOpacity">Remove what later opaque children of a group with opacity cover.</param>
-        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false, bool groupOpacity = true)
+        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false, bool groupOpacity = false)
         {
             if (svg == null) throw new ArgumentNullException("svg");
             if (!isSupported)

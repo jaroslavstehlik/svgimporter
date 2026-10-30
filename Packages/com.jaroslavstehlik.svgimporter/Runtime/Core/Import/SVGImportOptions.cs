@@ -61,7 +61,7 @@ namespace SVGImporter
                     compressDepth = true,
                     pivotPoint = new Vector2(0.5f, 0.5f),
                     ignoreSVGCanvas = true,
-                    exactGroupOpacity = true,
+                    exactGroupOpacity = false,
                     optimizeMesh = true,
                 };
             }

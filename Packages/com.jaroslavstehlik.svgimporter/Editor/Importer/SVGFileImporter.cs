@@ -18,7 +18,7 @@ namespace SVGImporter
     /// Registered as an override importer for .svg, because Unity's own Vector Graphics
     /// importer also claims the extension. SVGPostprocessor assigns it to new files.
     /// </summary>
-    [ScriptedImporter(10, null, new[] { "svg" })]
+    [ScriptedImporter(11, null, new[] { "svg" })]
     public class SVGFileImporter : ScriptedImporter
     {
         // The field names match SVGAsset's serialized fields, so that the same GUI draws both and
@@ -42,7 +42,7 @@ namespace SVGImporter
         [SerializeField] internal bool _keepSVGFile = false;
         [SerializeField] internal bool _useLayers = false;
         [SerializeField] internal bool _ignoreSVGCanvas = true;
-        [SerializeField] internal bool _exactGroupOpacity = true;
+        [SerializeField] internal bool _exactGroupOpacity = false;
 
         static readonly FieldInfo[] s_SettingFields = typeof(SVGFileImporter).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
         const BindingFlags k_AssetFieldFlags = BindingFlags.Instance | BindingFlags.NonPublic;
