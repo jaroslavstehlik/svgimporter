@@ -158,17 +158,49 @@ public static class BugFixTests
             eventRenderer.UpdateRenderer();
             Check("change event only on asset changes", afterAssign >= 1 && changes == afterAssign, afterAssign + " after assigning, " + changes + " after rebuilding twice");
 
-            // The sorter kept counting up from the previous sort.
-            var sorter = new GameObject("sorter").AddComponent<SVGSorter>();
-            sorter.layerIndex = 5;
+            // An opaque sorting group places renderers along z in hierarchy order, the same every
+            // time, and leaves renderers with an override where they are.
+            var group = new GameObject("group").AddComponent<SVGOpaqueSortingGroup>();
+            group.depthOffset = 0.5f;
             var first = new GameObject("first").AddComponent<SVGRenderer>();
+            var kept = new GameObject("kept").AddComponent<SVGRenderer>();
             var second = new GameObject("second").AddComponent<SVGRenderer>();
-            first.transform.SetParent(sorter.transform);
-            second.transform.SetParent(sorter.transform);
-            first.vectorGraphics = second.vectorGraphics = Load("white");
-            sorter.Sort();
-            sorter.Sort();
-            Check("sorting twice gives the same order", first.sortingOrder == 5 && second.sortingOrder == 6, first.sortingOrder + ", " + second.sortingOrder);
+            foreach (SVGRenderer r in new[] { first, kept, second }) { r.transform.SetParent(group.transform); r.vectorGraphics = Load("white"); }
+            kept.gameObject.AddComponent<SVGOpaqueSortOverride>();
+            kept.transform.position = new Vector3(0f, 0f, -7f);
+            group.Sort();
+            group.Sort();
+            float a = first.transform.position.z, b = second.transform.position.z;
+            // The test asset is transparent, so flat: the first renderer stays at the group's z.
+            Check("opaque sorting group stacks along z", Mathf.Abs(a) < 1e-4f && Mathf.Abs(b - a - 0.5f) < 1e-4f && kept.transform.position.z == -7f,
+                "first " + a + ", second " + b + ", overridden " + kept.transform.position.z);
+
+            // SVG Renderer hides the MeshFilter and MeshRenderer it draws with and keeps their settings.
+            var hidden = new GameObject("hidden").AddComponent<SVGRenderer>();
+            hidden.sortingOrder = 3;
+            hidden.shadowCastingMode = ShadowCastingMode.On;
+            MeshRenderer hiddenRenderer = hidden.GetComponent<MeshRenderer>();
+            Check("mesh components hidden and driven by SVG Renderer",
+                (hiddenRenderer.hideFlags & HideFlags.HideInInspector) != 0 && (hidden.GetComponent<MeshFilter>().hideFlags & HideFlags.HideInInspector) != 0
+                && hiddenRenderer.sortingOrder == 3 && hiddenRenderer.shadowCastingMode == ShadowCastingMode.On,
+                hiddenRenderer.hideFlags + ", order " + hiddenRenderer.sortingOrder + ", shadows " + hiddenRenderer.shadowCastingMode);
+
+            // Removing SVG Renderer removes the hidden components it added (after the removal, in
+            // a delayed call, which batch mode doesn't reach on its own).
+            GameObject removed = hidden.gameObject;
+            UnityEngine.Object.DestroyImmediate(hidden);
+            EditorApplication.CallbackFunction pending = EditorApplication.delayCall;
+            EditorApplication.delayCall = null;
+            if (pending != null) pending();
+            Check("removing SVG Renderer removes its hidden components", removed.GetComponent<MeshRenderer>() == null && removed.GetComponent<MeshFilter>() == null,
+                string.Join(", ", removed.GetComponents<Component>().Select(c => c.GetType().Name)));
+
+            // Renderers saved before 2.0 had their lighting settings on the MeshRenderer: kept.
+            var older = new GameObject("older", typeof(MeshFilter), typeof(MeshRenderer));
+            older.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.TwoSided;
+            var olderRenderer = older.AddComponent<SVGRenderer>();
+            Check("existing MeshRenderer settings kept", olderRenderer.shadowCastingMode == ShadowCastingMode.TwoSided
+                && older.GetComponent<MeshRenderer>().shadowCastingMode == ShadowCastingMode.TwoSided, olderRenderer.shadowCastingMode.ToString());
         }
         catch (Exception e)
         {

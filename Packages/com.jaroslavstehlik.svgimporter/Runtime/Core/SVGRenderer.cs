@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
 using System.Collections;
@@ -177,105 +178,85 @@ namespace SVGImporter
         private Mesh _mesh;
         [System.NonSerialized] long _lastImportHash;
 
-        // Unity default transparent sorting ID
+        // Sorting and lighting: stored here and applied to the MeshRenderer, which this component
+        // owns, keeps hidden and recreates when it's missing.
         [FormerlySerializedAs("sortingLayerID")]
-        [SerializeField]
-        private int _sortingLayerID = 0;
-        private int _lastSortingLayerID = 0;
-        /// <summary>
-        /// Unique ID of the Renderer's sorting layer.
-        /// </summary>
+        [SerializeField] private int _sortingLayerID = 0;
+        [FormerlySerializedAs("sortingOrder")]
+        [SerializeField] private int _sortingOrder = 0;
+        [SerializeField] private ShadowCastingMode _shadowCastingMode = ShadowCastingMode.Off;
+        [SerializeField] private bool _receiveShadows = false;
+        [SerializeField] private LightProbeUsage _lightProbeUsage = LightProbeUsage.Off;
+        [SerializeField] private RenderingLayerMask _renderingLayerMask = RenderingLayerMask.defaultRenderingLayerMask;
+        // 0 in renderers saved before these settings moved here, which were set on the visible
+        // MeshRenderer: they're copied from it once.
+        [SerializeField] private int _rendererSettingsVersion = 0;
+
+        /// <summary>The renderer's sorting layer, by ID.</summary>
         public int sortingLayerID
         {
-            get {
-                return meshRenderer.sortingLayerID;
-            }
+            get { return _sortingLayerID; }
             set {
-#if UNITY_EDITOR
-                _lastSortingLayerID = value;
-#endif
-                if(!SortingLayer.IsValid(value))
-                {
-                    Debug.LogWarning(this.name + ": This renderer has an invalid layer-id, resetting to default.");
-                    _sortingLayerID = SortingLayer.NameToID("Default");
-                } else
-                {
-                    _sortingLayerID = value;
-                }
+                _sortingLayerID = SortingLayer.IsValid(value) ? value : 0;
                 meshRenderer.sortingLayerID = _sortingLayerID;
-                _sortingLayerName = meshRenderer.sortingLayerName;
             }
         }
 
-        // Unity default transparent sorting layer name
-        [FormerlySerializedAs("sortingLayerName")]
-        [SerializeField]
-        private string _sortingLayerName;
-        /// <summary>
-        /// Name of the Renderer's sorting layer.
-        /// </summary>
+        /// <summary>The renderer's sorting layer, by name.</summary>
         public string sortingLayerName
         {
-            get {
-                return meshRenderer.sortingLayerName;
-            }
-            set {
-                meshRenderer.sortingLayerName = _sortingLayerName = value;
-                _lastSortingLayerID = _sortingLayerID = meshRenderer.sortingLayerID;
-            }
+            get { return SortingLayer.IDToName(_sortingLayerID); }
+            set { sortingLayerID = SortingLayer.NameToID(value); }
         }
 
-        // Unity default transparent sorting order
-        [FormerlySerializedAs("sortingOrder")]
-        [SerializeField]
-        private int _sortingOrder = 0;
-        private int _lastSortingOrder = 0;
-        /// <summary>
-        /// Renderer's order within a sorting layer.
-        /// </summary>
+        /// <summary>The renderer's order within its sorting layer.</summary>
         public int sortingOrder
         {
-            get {
-                return meshRenderer.sortingOrder;
-            }
+            get { return _sortingOrder; }
             set {
-#if UNITY_EDITOR
-                _lastSortingOrder = value;
-#endif
-                meshRenderer.sortingOrder = _sortingOrder = value;
+                _sortingOrder = value;
+                meshRenderer.sortingOrder = value;
             }
         }
 
-        [FormerlySerializedAs("overrideSorter")]
-        [SerializeField]
-        private bool _overrideSorter = false;
-        /// <summary>
-        /// Override SVG Sorter Default Behaviour
-        /// </summary>
-        public bool overrideSorter
+        /// <summary>Whether the renderer casts shadows. Off by default, as for sprites.</summary>
+        public ShadowCastingMode shadowCastingMode
         {
-            get {
-                return _overrideSorter;
-            }
-            set {
-                _overrideSorter = value;
-            }
+            get { return _shadowCastingMode; }
+            set { _shadowCastingMode = value; meshRenderer.shadowCastingMode = value; }
         }
 
-        [FormerlySerializedAs("overrideSorterChildren")]
-        [SerializeField]
-        private bool _overrideSorterChildren = false;
-        /// <summary>
-        /// Override SVG Sorter Default Behaviour
-        /// </summary>
-        public bool overrideSorterChildren
+        /// <summary>Whether the renderer receives shadows.</summary>
+        public bool receiveShadows
         {
-            get {
-                return _overrideSorterChildren;
-            }
-            set {
-                _overrideSorterChildren = value;
-            }
+            get { return _receiveShadows; }
+            set { _receiveShadows = value; meshRenderer.receiveShadows = value; }
+        }
+
+        /// <summary>How the renderer uses light probes.</summary>
+        public LightProbeUsage lightProbeUsage
+        {
+            get { return _lightProbeUsage; }
+            set { _lightProbeUsage = value; meshRenderer.lightProbeUsage = value; }
+        }
+
+        /// <summary>The rendering layers the renderer is on, for lights and effects that filter by them.</summary>
+        public RenderingLayerMask renderingLayerMask
+        {
+            get { return _renderingLayerMask; }
+            set { _renderingLayerMask = value; meshRenderer.renderingLayerMask = value; }
+        }
+
+        void ApplyRendererSettings()
+        {
+            MeshRenderer target = _meshRenderer;
+            if (target == null) return;
+            if (target.sortingLayerID != _sortingLayerID) target.sortingLayerID = _sortingLayerID;
+            if (target.sortingOrder != _sortingOrder) target.sortingOrder = _sortingOrder;
+            if (target.shadowCastingMode != _shadowCastingMode) target.shadowCastingMode = _shadowCastingMode;
+            if (target.receiveShadows != _receiveShadows) target.receiveShadows = _receiveShadows;
+            if (target.lightProbeUsage != _lightProbeUsage) target.lightProbeUsage = _lightProbeUsage;
+            if (target.renderingLayerMask != (uint)_renderingLayerMask) target.renderingLayerMask = _renderingLayerMask;
         }
 
         /// <summary>
@@ -348,28 +329,78 @@ namespace SVGImporter
             // The renderer's own mesh, for tinted, sliced or layered assets.
             DestroyObjectInternal(_mesh);
             _mesh = null;
+#if UNITY_EDITOR
+            // Removing the component in the Editor removes the hidden components it added. Later,
+            // because Unity doesn't allow destroying them while it destroys this one; not when the
+            // whole object goes, as in closing a scene.
+            if (!Application.isPlaying)
+            {
+                GameObject owner = gameObject;
+                MeshFilter filter = _meshFilter;
+                MeshRenderer renderer = _meshRenderer;
+                UnityEditor.EditorApplication.delayCall += () =>
+                {
+                    if (owner == null || owner.GetComponent<SVGRenderer>() != null) return;
+                    if (renderer != null && (renderer.hideFlags & HideFlags.HideInInspector) != 0) DestroyImmediate(renderer);
+                    if (filter != null && (filter.hideFlags & HideFlags.HideInInspector) != 0) DestroyImmediate(filter);
+                };
+            }
+#endif
             base.OnDestroy();
         }
 
+#if UNITY_EDITOR
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            ApplyRendererSettings();
+        }
+#endif
+
+        // The MeshFilter and MeshRenderer this component draws with, hidden as a sprite's are; they're
+        // added when missing and removed with the component (see OnDestroy).
         void CacheComponents()
         {
             if (_meshFilter == null)
             {
                 _meshFilter = GetComponent<MeshFilter>();
                 if (_meshFilter == null)
-                {
                     _meshFilter = gameObject.AddComponent<MeshFilter>();
-                }
             }
 
+            bool existed = true;
             if (_meshRenderer == null)
             {
                 _meshRenderer = GetComponent<MeshRenderer>();
                 if (_meshRenderer == null)
                 {
                     _meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                    existed = false;
                 }
             }
+
+            if (_rendererSettingsVersion == 0)
+            {
+                // Renderers saved before 2.0 set these on the MeshRenderer; new ones use the defaults.
+                if (existed)
+                {
+                    _shadowCastingMode = _meshRenderer.shadowCastingMode;
+                    _receiveShadows = _meshRenderer.receiveShadows;
+                    _lightProbeUsage = _meshRenderer.lightProbeUsage;
+                    _renderingLayerMask = _meshRenderer.renderingLayerMask;
+                }
+                _rendererSettingsVersion = 1;
+            }
+
+            Hide(_meshFilter);
+            Hide(_meshRenderer);
+            ApplyRendererSettings();
+        }
+
+        static void Hide(Component component)
+        {
+            if ((component.hideFlags & HideFlags.HideInInspector) == 0)
+                component.hideFlags |= HideFlags.HideInInspector;
         }
         
         internal void UpdateRenderer()
@@ -393,14 +424,6 @@ namespace SVGImporter
 
         void Rebuild(bool force)
         {
-#if UNITY_EDITOR
-            if(_lastSortingOrder != _sortingOrder){ 
-                sortingOrder = _sortingOrder;
-            }
-            if(_lastSortingLayerID != _sortingLayerID){ 
-                sortingLayerID = _sortingLayerID;
-            }
-#endif
             if(_vectorGraphics == null)
             {
                 if(_lastVectorGraphics != null)
@@ -435,6 +458,12 @@ namespace SVGImporter
                 // A different asset, or the same one reimported; not every forced rebuild.
                 bool assetChanged = _lastVectorGraphics != _vectorGraphics || _vectorGraphics.importHash != _lastImportHash;
                 _lastImportHash = _vectorGraphics.importHash;
+                if(assetChanged)
+                {
+                    // The asset's thickness decides how far apart opaque sorting places renderers.
+                    SVGOpaqueSortingGroup group = GetComponentInParent<SVGOpaqueSortingGroup>();
+                    if(group != null) group.SetDirty();
+                }
                 if(_lastVectorGraphics != _vectorGraphics)
                 {
                     meshChanged = true;

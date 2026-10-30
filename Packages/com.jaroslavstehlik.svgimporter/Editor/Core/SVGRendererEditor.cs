@@ -27,18 +27,19 @@ namespace SVGImporter
             }
         }
 
-        const string SVG_IMPORTER_SVGRENDERER_SORTINGLAYERFOLDOUTKEY = "SVG_IMPORTER_SVGRENDERER_SORTINGLAYERFOLDOUTKEY"; 
-        static bool sortingLayerFoldout
+        static class Styles
         {
-            get {
-                if(EditorPrefs.HasKey(SVG_IMPORTER_SVGRENDERER_SORTINGLAYERFOLDOUTKEY)) 
-                    return EditorPrefs.GetBool(SVG_IMPORTER_SVGRENDERER_SORTINGLAYERFOLDOUTKEY);
-                return false;
-            }
-            set {
-                EditorPrefs.SetBool(SVG_IMPORTER_SVGRENDERER_SORTINGLAYERFOLDOUTKEY, value);
-            }
+            public static readonly GUIContent sortingLayer = EditorGUIUtility.TrTextContent("Sorting Layer", "The renderer's sorting layer.");
+            public static readonly GUIContent orderInLayer = EditorGUIUtility.TrTextContent("Order in Layer", "The renderer's order within its sorting layer.");
+            public static readonly string opaqueSorting = L10n.Tr("Opaque + Transparent assets draw with the depth test, so their position along z orders them, not Order in Layer. An SVG Opaque Sorting Group on a parent orders them by hierarchy.");
+            public static readonly GUIContent additionalSettings = EditorGUIUtility.TrTextContent("Additional Settings");
+            public static readonly GUIContent castShadows = EditorGUIUtility.TrTextContent("Cast Shadows");
+            public static readonly GUIContent receiveShadows = EditorGUIUtility.TrTextContent("Receive Shadows");
+            public static readonly GUIContent lightProbes = EditorGUIUtility.TrTextContent("Light Probes");
+            public static readonly GUIContent renderingLayerMask = EditorGUIUtility.TrTextContent("Rendering Layer Mask", "The rendering layers the renderer is on, for lights and effects that filter by them.");
         }
+
+        static bool s_AdditionalSettings;
 
         SerializedProperty vectorGraphics;
         SerializedProperty color;
@@ -47,10 +48,11 @@ namespace SVGImporter
         SerializedProperty opaqueMaterial;
         SerializedProperty type;
         SerializedProperty sortingLayerID;
-//        SerializedProperty sortingLayerName;
         SerializedProperty sortingOrder;
-        SerializedProperty overrideSorter;
-        SerializedProperty overrideSorterChildren;
+        SerializedProperty shadowCastingMode;
+        SerializedProperty receiveShadows;
+        SerializedProperty lightProbeUsage;
+        SerializedProperty renderingLayerMask;
 
         void OnEnable()
         {
@@ -60,10 +62,11 @@ namespace SVGImporter
             opaqueMaterial = serializedObject.FindProperty("_opaqueMaterial");
             type = serializedObject.FindProperty("_type");
             sortingLayerID = serializedObject.FindProperty("_sortingLayerID");
-//            sortingLayerName = serializedObject.FindProperty("_sortingLayerName");
             sortingOrder = serializedObject.FindProperty("_sortingOrder");
-            overrideSorter = serializedObject.FindProperty("_overrideSorter");
-            overrideSorterChildren = serializedObject.FindProperty("_overrideSorterChildren");
+            shadowCastingMode = serializedObject.FindProperty("_shadowCastingMode");
+            receiveShadows = serializedObject.FindProperty("_receiveShadows");
+            lightProbeUsage = serializedObject.FindProperty("_lightProbeUsage");
+            renderingLayerMask = serializedObject.FindProperty("_renderingLayerMask");
 
             if (serializedObject.isEditingMultipleObjects)
             {
@@ -119,9 +122,15 @@ namespace SVGImporter
             EditorGUILayout.HelpBox("The Opaque material is used only when the SVG Asset's Rendering is Opaque + Transparent.", MessageType.Warning);
         }
 
-        void SortingMaterialHelpBox()
+        bool HasSelectedOpaqueAsset()
         {
-            EditorGUILayout.HelpBox("Unity sorting does not work on Opaque objects, change Format to transparent.", MessageType.Warning);
+            foreach (UnityEngine.Object t in targets)
+            {
+                var r = t as SVGRenderer;
+                if (r != null && r.vectorGraphics != null && r.vectorGraphics.format == SVGAssetFormat.OpaqueAndTransparent)
+                    return true;
+            }
+            return false;
         }
 
         public override void OnInspectorGUI()
@@ -179,24 +188,20 @@ namespace SVGImporter
                 EditorGUI.indentLevel--;
             }
 
-            sortingLayerFoldout = EditorGUILayout.Foldout(sortingLayerFoldout, "Sorting");
-            if (sortingLayerFoldout)
+            EditorGUILayout.Space();
+            SortingLayerField(sortingLayerID);
+            EditorGUILayout.PropertyField(sortingOrder, Styles.orderInLayer);
+            if(HasSelectedOpaqueAsset())
+                EditorGUILayout.HelpBox(Styles.opaqueSorting, MessageType.Info);
+
+            s_AdditionalSettings = EditorGUILayout.Foldout(s_AdditionalSettings, Styles.additionalSettings, true);
+            if (s_AdditionalSettings)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.LabelField("Unity Sorter", EditorStyles.boldLabel);
-                SortingLayerField(sortingLayerID);
-                EditorGUILayout.PropertyField(sortingOrder);
-                if(!HasSelectedTransparentAsset())
-                {
-                    SortingMaterialHelpBox();
-                }
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField("SVG Sorter", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(overrideSorter);
-                if(overrideSorter.hasMultipleDifferentValues || overrideSorter.boolValue)
-                {
-                    EditorGUILayout.PropertyField(overrideSorterChildren, new GUIContent("Override Children", "Override sorting order in all children."));
-                }
+                EditorGUILayout.PropertyField(shadowCastingMode, Styles.castShadows);
+                EditorGUILayout.PropertyField(receiveShadows, Styles.receiveShadows);
+                EditorGUILayout.PropertyField(lightProbeUsage, Styles.lightProbes);
+                EditorGUILayout.PropertyField(renderingLayerMask, Styles.renderingLayerMask);
                 EditorGUI.indentLevel--;
             }
 
@@ -224,8 +229,7 @@ namespace SVGImporter
             return asset._editor_Info;
         }
 
-        static readonly GUIContent s_SortingLayerLabel = EditorGUIUtility.TrTextContent("Sorting Layer");
-
+        
         // A popup of the project's sorting layers, as renderers show it.
         static void SortingLayerField(SerializedProperty layerID)
         {
@@ -239,7 +243,7 @@ namespace SVGImporter
             }
             EditorGUI.showMixedValue = layerID.hasMultipleDifferentValues;
             EditorGUI.BeginChangeCheck();
-            selected = EditorGUILayout.Popup(s_SortingLayerLabel, selected, names);
+            selected = EditorGUILayout.Popup(Styles.sortingLayer, selected, names);
             if(EditorGUI.EndChangeCheck() && selected >= 0)
                 layerID.intValue = layers[selected].id;
             EditorGUI.showMixedValue = false;

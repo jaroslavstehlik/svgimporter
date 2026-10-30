@@ -81,6 +81,8 @@
 - SVG Image's Inspector is built on uGUI's Graphic Inspector, so it has Maskable and Raycast Padding like Image, and edits every selected image.
 - The SVG Renderer's Sorting Layer field no longer uses Unity's internal API.
 - **Generate Collider** outlines are computed by the native core, in one pass, instead of merging shape after shape with Clipper, which made large files slow to import. Holes are kept: a ring gets a ring-shaped collider instead of a disc, unless other shapes cover the hole. The C# Clipper library is removed. Files with Generate Collider on reimport once.
+- SVG Renderer looks after its MeshFilter and MeshRenderer, which are now hidden, as a sprite's are, and are removed with it. Their settings are on SVG Renderer: Sorting Layer and Order in Layer, and under Additional Settings shadows, light probes and the Rendering Layer Mask. New renderers don't cast or receive shadows, as sprites don't; existing ones keep what their MeshRenderer had.
+- Sorting uses Unity's Sorting Layers, Order in Layer and Sorting Group. **SVG Sorter** is now **SVG Opaque Sorting Group**: it places the SVG Renderers below it along z in hierarchy order, for Opaque + Transparent assets, which the depth test orders. It no longer changes Order in Layer, and it places renderers when the hierarchy or an asset changes rather than every frame. **SVG Opaque Sort Override** leaves an object (and optionally its children) where it is, replacing SVG Renderer's Override Sorter settings. Scenes with an SVG Sorter keep it as an SVG Opaque Sorting Group.
 
 ### Script API changes (2.0)
 
@@ -106,6 +108,8 @@
 | `SVGAsset.Load(text, SVGImporterSettings)` | `SVGAsset.Load(text, SVGImportOptions)` or `TryLoad` |
 | `SVGImporterSettings.default…` | Project Settings > SVG Importer; `SVGImportOptions.Default` in scripts |
 | `SVGPath` (global namespace) | `SVGImporter.SVGPath` |
+| `SVGSorter` (`depthOffset`, `layerIndex`, `sort`) | `SVGOpaqueSortingGroup` (`depthOffset`, `Sort()`); Order in Layer is Unity's |
+| `SVGRenderer.overrideSorter`, `overrideSorterChildren` | An `SVGOpaqueSortOverride` component (`includeChildren`) |
 | `SVGImportEngine`, `importEngine`, `ISVGReference`, `AddReference`, `RemoveReference`, `SVGLegacyAnimator`, the obsolete atlas members | Removed |
 
 ## Legacy releases
