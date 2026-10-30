@@ -224,10 +224,16 @@ namespace SVGImporter
         High
     }
 
+    /// <summary>How an SVG Asset is rendered (shown as "Rendering" in the Inspector).</summary>
     public enum SVGAssetFormat
     {
+        /// <summary>Opaque shapes are drawn as opaque geometry with depth; transparent shapes and soft edges on top.</summary>
+        [InspectorName("Opaque + Transparent")]
         Opaque = 0,
+        /// <summary>Every shape is drawn with transparency, in drawing order.</summary>
         Transparent = 1,
+        /// <summary>For SVG Image on a Canvas.</summary>
+        [InspectorName("UI (Canvas)")]
         uGUI = 2
     }
 

@@ -117,7 +117,7 @@ namespace SVGImporter
 
         void OpaqueMaterialHelpBox()
         {
-            EditorGUILayout.HelpBox("Opaque Material is not used when vector graphics format is set to transparent or UGUI.", MessageType.Warning);
+            EditorGUILayout.HelpBox("The Opaque material is used only when the SVG Asset's Rendering is Opaque + Transparent.", MessageType.Warning);
         }
 
         void SortingMaterialHelpBox()

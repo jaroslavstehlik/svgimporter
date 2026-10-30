@@ -428,7 +428,7 @@ namespace SVGImporter
             return new Vector2(x / 2f, y / 2f);
         }
 
-        public static GUIContent FORMAT_LABEL = new GUIContent("Format", "The rendering format of the SVG Asset.");
+        public static GUIContent FORMAT_LABEL = new GUIContent("Rendering", "Transparent: every shape is drawn with transparency, in drawing order; the asset sorts as one transparent object.\nOpaque + Transparent: opaque shapes are drawn as opaque geometry with depth, so hidden pixels are skipped; transparent shapes and soft edges are drawn on top. Shapes are spread slightly along z.\nUI (Canvas): for SVG Image on a Canvas.");
         public static GUIContent USE_GRADIENTS_LABEL = new GUIContent("Gradients", "Simplify shaders and mesh for specific use case");
         public static GUIContent ANTIALIASING_LABEL = new GUIContent("Soft Edges", "Adds a soft one-pixel edge to every shape in the mesh. For MSAA instead, turn this off and enable MSAA on the camera.");
         public static string SHARP_EDGES_HINT = "Edges are sharp unless the camera uses MSAA.";
@@ -438,8 +438,8 @@ namespace SVGImporter
         public static GUIContent OPTIMIZE_MESH_LABEL = new GUIContent("Optimize Mesh", "The vertices and indices will be reorderer for better GPU performance.");
         public static GUIContent SCALE_LABEL = new GUIContent("Scale", "The scale of the mesh relative to the SVG Asset. Does not affect the quality of the mesh");
         public static GUIContent QUALITY_LABEL = new GUIContent("Quality", "Larger number means better but more complex mesh, Vertex Per Meter represents number of vertices in the SVG Asset that correspond to one unit in world space.");
-        public static GUIContent DEPTH_OFFSET_LABEL = new GUIContent("Depth Offset", "The minimal z-offset in WorldSpace for Opaque Rendering.");
-        public static GUIContent COMPRESS_DEPTH_LABEL = new GUIContent("Compress Depth", "Compresses the overlapping objects to reduce z-offset requirements.");
+        public static GUIContent DEPTH_OFFSET_LABEL = new GUIContent("Depth Offset", "Distance along z between shapes that overlap, so the depth test keeps their drawing order.");
+        public static GUIContent COMPRESS_DEPTH_LABEL = new GUIContent("Compress Depth", "Shapes that don't overlap share a depth, so the asset is thinner along z.");
         public static GUIContent CUSTOM_PIVOT_LABEL = new GUIContent("Custom Pivot", "Choose the predefined pivot point or the custom pivot point.");
         public static GUIContent PIVOT_LABEL = new GUIContent("Pivot", "The location of the SVG Asset center point in the original Rect, specified in percents.");
         public static GUIContent GENERATE_COLLIDER_LABEL = new GUIContent("Generate Collider", "Automatically generates polygon colliders.");

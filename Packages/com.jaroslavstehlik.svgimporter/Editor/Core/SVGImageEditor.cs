@@ -158,7 +158,7 @@ namespace SVGImporter
                 if(newVectorGraphics.format != SVGAssetFormat.uGUI)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("Vector Graphics Asset must be set to uGUI format", MessageType.Error);
+                    EditorGUILayout.HelpBox("The SVG Asset's Rendering must be UI (Canvas)", MessageType.Error);
                     if(GUILayout.Button("Apply"))
                     {
                         newVectorGraphics._editor_format = SVGAssetFormat.uGUI;
