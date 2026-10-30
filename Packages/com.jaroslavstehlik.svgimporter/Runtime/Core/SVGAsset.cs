@@ -403,7 +403,8 @@ namespace SVGImporter
                 _layersMesh.name = name;
                 _layersMesh.hideFlags = HideFlags.DontSave;
                 Shader[] shaders;
-                SVGMesh.CombineMeshes(layersClone, _layersMesh, out shaders, useGradients, format, compressDepth, antialiasing, depthOffset);
+                // Asset-local gradient indices: runtimeMesh maps them to atlas slots, once.
+                SVGMesh.CombineMeshes(CloneLayers(false), _layersMesh, out shaders, useGradients, format, compressDepth, antialiasing, depthOffset);
                 _layersMeshImport = _lastTimeModified;
                 return _layersMesh;
             }
@@ -918,7 +919,14 @@ namespace SVGImporter
 
         public SVGLayer[] layersClone
         {
-            get {
+            get { return CloneLayers(true); }
+        }
+
+        // A copy of the layers; with toAtlasSlots, their gradients refer to atlas slots, as meshes
+        // drawn with the atlas need.
+        SVGLayer[] CloneLayers(bool toAtlasSlots)
+        {
+            {
                 if(_layers == null) return null;
                 int _layersLength = _layers.Length;
                 SVGLayer[] output = new SVGLayer[_layersLength];
@@ -928,7 +936,7 @@ namespace SVGImporter
                 }
                 // Meshes built from the layers draw with the atlas, so their gradients refer to
                 // atlas slots, as in runtimeMesh.
-                if (hasGradients)
+                if (toAtlasSlots && hasGradients)
                 {
                     Dictionary<int, int> slots = atlasSlots;
                     int slot;

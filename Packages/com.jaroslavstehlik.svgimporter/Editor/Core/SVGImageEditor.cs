@@ -161,10 +161,22 @@ namespace SVGImporter
                     EditorGUILayout.HelpBox("The SVG Asset's Rendering must be UI (Canvas)", MessageType.Error);
                     if(GUILayout.Button("Apply"))
                     {
-                        newVectorGraphics._editor_format = SVGAssetFormat.uGUI;
-                        newVectorGraphics._editor_ApplyChanges();
-
-                        SVGAssetEditor.UpdateInstances(new SVGAsset[]{newVectorGraphics});
+                        var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(newVectorGraphics)) as SVGFileImporter;
+                        if(importer != null)
+                        {
+                            // An imported .svg file: change its import setting and reimport it.
+                            var settings = new SerializedObject(importer);
+                            settings.FindProperty("_format").intValue = (int)SVGAssetFormat.uGUI;
+                            settings.ApplyModifiedProperties();
+                            importer.SaveAndReimport();
+                        }
+                        else
+                        {
+                            // A 1.x SVG Asset stored as an .asset file.
+                            newVectorGraphics._editor_format = SVGAssetFormat.uGUI;
+                            newVectorGraphics._editor_ApplyChanges();
+                            SVGAssetEditor.UpdateInstances(new SVGAsset[]{newVectorGraphics});
+                        }
                         changed = true;
                     }
                     EditorGUILayout.EndHorizontal();

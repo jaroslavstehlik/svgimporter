@@ -164,7 +164,7 @@ namespace SVGImporter
         public MeshFilter meshFilter {
             get
             {
-                if (_meshFilter == null) GetComponent<MeshRenderer>();
+                if (_meshFilter == null) _meshFilter = GetComponent<MeshFilter>();
                 return _meshFilter;
             }
         }
@@ -172,7 +172,7 @@ namespace SVGImporter
         protected MeshRenderer _meshRenderer;
         public MeshRenderer meshRenderer {
             get {
-                if (_meshRenderer == null) GetComponent<MeshRenderer>();
+                if (_meshRenderer == null) _meshRenderer = GetComponent<MeshRenderer>();
                 return _meshRenderer;
             }
         }
@@ -190,6 +190,7 @@ namespace SVGImporter
         protected Mesh _sharedMesh;
         // Instanced mesh for custom coloring
         protected Mesh _mesh;
+        [System.NonSerialized] long _lastImportHash;
 
         // Unity default transparent sorting ID
         [FormerlySerializedAs("sortingLayerID")]
@@ -448,7 +449,10 @@ namespace SVGImporter
                 }
 #endif
 
-                bool assetChanged = force || _lastVectorGraphics != _vectorGraphics;
+                // A different asset, or the same one reimported; not a forced rebuild (modifiers
+                // force one every frame).
+                bool assetChanged = _lastVectorGraphics != _vectorGraphics || _vectorGraphics.importHash != _lastImportHash;
+                _lastImportHash = _vectorGraphics.importHash;
                 if(_lastVectorGraphics != _vectorGraphics)
                 {
                     meshChanged = true;

@@ -130,6 +130,45 @@ public static class BugFixTests
             PlayerSettings.colorSpace = ColorSpace.Linear;
             Color32 overlay = RenderQuad("SVG Importer/SolidColor/SolidColorTexOverlayAlphaBlended", new Color32(128, 128, 128, 255));
             Check("overlay shader in Linear", Mathf.Abs(overlay.r - 128) <= 3, "grey vertex colour renders as " + overlay);
+
+            // Path bounds used x for the vertical extent.
+            Rect pathBounds = new SVGPath(new[] { new Vector2(1f, 2f), new Vector2(5f, 9f) }).bounds;
+            Check("path bounds", pathBounds == new Rect(1f, 2f, 4f, 7f), pathBounds.ToString());
+
+            // Copying a mesh over 65,535 vertices kept the destination's 16-bit indices.
+            var bigSource = new Mesh { indexFormat = IndexFormat.UInt32, vertices = new Vector3[70000] };
+            var copy = new Mesh();
+            SVGImporter.Utils.SVGMeshUtils.Fill(bigSource, copy);
+            Check("mesh copy keeps 32-bit indices", copy.indexFormat == IndexFormat.UInt32 && copy.vertexCount == 70000, copy.indexFormat + ", " + copy.vertexCount + " vertices");
+
+            // The renderer's component getters returned null until the renderer was enabled, and
+            // the change event fired on every rebuild instead of when the asset changed.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var inactive = new GameObject("inactive", typeof(MeshFilter), typeof(MeshRenderer));
+            inactive.SetActive(false);
+            var inactiveRenderer = inactive.AddComponent<SVGRenderer>();
+            Check("component getters on an inactive object", inactiveRenderer.meshFilter != null && inactiveRenderer.meshRenderer != null, "");
+            var eventRenderer = new GameObject("events").AddComponent<SVGRenderer>();
+            int changes = 0;
+            eventRenderer.onVectorGraphicsChanged += a => changes++;
+            eventRenderer.vectorGraphics = Load("white");
+            eventRenderer.UpdateRenderer();
+            int afterAssign = changes;
+            eventRenderer.UpdateRenderer();
+            eventRenderer.UpdateRenderer();
+            Check("change event only on asset changes", afterAssign >= 1 && changes == afterAssign, afterAssign + " after assigning, " + changes + " after rebuilding twice");
+
+            // The sorter kept counting up from the previous sort.
+            var sorter = new GameObject("sorter").AddComponent<SVGSorter>();
+            sorter.layerIndex = 5;
+            var first = new GameObject("first").AddComponent<SVGRenderer>();
+            var second = new GameObject("second").AddComponent<SVGRenderer>();
+            first.transform.SetParent(sorter.transform);
+            second.transform.SetParent(sorter.transform);
+            first.vectorGraphics = second.vectorGraphics = Load("white");
+            sorter.Sort();
+            sorter.Sort();
+            Check("sorting twice gives the same order", first.sortingOrder == 5 && second.sortingOrder == 6, first.sortingOrder + ", " + second.sortingOrder);
         }
         catch (Exception e)
         {

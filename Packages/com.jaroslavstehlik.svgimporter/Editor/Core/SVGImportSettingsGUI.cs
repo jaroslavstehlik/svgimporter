@@ -87,13 +87,10 @@ namespace SVGImporter
 
             EditorGUILayout.LabelField("Normals & Tangents", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(generateNormals, SVGAssetEditor.GENERATE_NORMALS_LABEL);
-            using(new EditorGUI.DisabledScope(!generateNormals.boolValue))
+            // Tangents need normals; the import ignores them without, so the setting is only disabled.
+            using(new EditorGUI.DisabledScope(!generateNormals.boolValue && !generateNormals.hasMultipleDifferentValues))
             {
                 EditorGUILayout.PropertyField(generateTangents, SVGAssetEditor.GENERATE_TANGENTS_LABEL);
-            }
-            if(!generateNormals.boolValue && generateTangents.boolValue)
-            {
-                generateTangents.boolValue = false;
             }
             EditorGUILayout.Space();
 

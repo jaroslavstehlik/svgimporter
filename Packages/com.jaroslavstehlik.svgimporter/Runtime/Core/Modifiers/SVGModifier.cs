@@ -105,6 +105,8 @@ namespace SVGImporter
 
         protected virtual void Init()
         {
+            if(svgRenderer is SVGImage)
+                Debug.LogWarning(GetType().Name + " on " + name + " has no effect: modifiers work with SVG Renderer, not SVG Image.", this);
             if(svgRenderer != null) 
             {
                 svgRenderer.AddModifier(this);

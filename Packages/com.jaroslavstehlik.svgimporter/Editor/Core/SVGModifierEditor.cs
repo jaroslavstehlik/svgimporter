@@ -125,6 +125,8 @@ namespace SVGImporter
 
 		public override void OnInspectorGUI ()
 		{
+			if (((Component)target).GetComponent<SVGImage>() != null)
+				EditorGUILayout.HelpBox("Modifiers work with SVG Renderer. On SVG Image they have no effect.", MessageType.Warning);
 			serializedObject.Update();
 			EditorGUI.BeginChangeCheck();
             SelectionGUI();

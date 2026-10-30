@@ -466,6 +466,9 @@ namespace SVGImporter.Utils
             if(destination == null) return;
             if(source == null) return;
 
+            // Before the indices: meshes over 65,535 vertices need 32-bit ones.
+            destination.indexFormat = source.indexFormat;
+
             destination.name = source.name;
 
             destination.vertices = (Vector3[])source.vertices.Clone();

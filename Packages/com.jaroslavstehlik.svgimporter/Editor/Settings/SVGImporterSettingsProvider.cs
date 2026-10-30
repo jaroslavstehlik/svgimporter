@@ -69,7 +69,6 @@ namespace SVGImporter
             EditorGUILayout.PropertyField(normals, SVGAssetEditor.GENERATE_NORMALS_LABEL);
             using (new EditorGUI.DisabledScope(!normals.boolValue))
                 EditorGUILayout.PropertyField(d.FindPropertyRelative("generateTangents"), SVGAssetEditor.GENERATE_TANGENTS_LABEL);
-            if (!normals.boolValue) d.FindPropertyRelative("generateTangents").boolValue = false;
             EditorGUILayout.PropertyField(d.FindPropertyRelative("keepSVGFile"), SVGAssetEditor.KEEP_SVG_FILE_LABEL);
             EditorGUILayout.PropertyField(d.FindPropertyRelative("useLayers"), SVGAssetEditor.USE_LAYERS_LABEL);
             EditorGUILayout.PropertyField(d.FindPropertyRelative("ignoreSVGCanvas"), SVGAssetEditor.IGNORE_SVG_CANVAS_LABEL);

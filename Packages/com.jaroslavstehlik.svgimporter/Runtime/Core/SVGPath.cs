@@ -47,11 +47,11 @@ public class SVGPath {
             {
                 if(points[i].x < minX) minX = points[i].x;
                 if(points[i].x > maxX) maxX = points[i].x;
-                if(points[i].y < minY) minY = points[i].x;
-                if(points[i].y > maxY) maxY = points[i].x;
+                if(points[i].y < minY) minY = points[i].y;
+                if(points[i].y > maxY) maxY = points[i].y;
             }
 
-            bounds = new Rect(minX, maxY, maxX - minX, maxY - minY);
+            bounds = new Rect(minX, minY, maxX - minX, maxY - minY);
         }
     }
 }

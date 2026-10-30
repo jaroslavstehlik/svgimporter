@@ -28,7 +28,9 @@ namespace SVGImporter
 
         public void Sort()
         {
+            // Each sort starts from the first index and the sorter's depth again.
             zOffsetStart = transform.position.z;
+            layerIndexStart = layerIndex;
             SortRecursive(transform, ref zOffsetStart, ref layerIndexStart);
         }
 
@@ -54,10 +56,15 @@ namespace SVGImporter
                             bounds = vectorGraphics.bounds;
                             position = renderer.transform.position;
                             zOffset += bounds.size.z * Mathf.Sign(depthOffset);
-                            position.z = zOffset;
-                            renderer.transform.position = position;
+                            // Written only when different, so sorting doesn't modify the scene every frame.
+                            if(position.z != zOffset)
+                            {
+                                position.z = zOffset;
+                                renderer.transform.position = position;
+                            }
                             zOffset += depthOffset;
-                            renderer.sortingOrder = layerIndex++;
+                            if(renderer.sortingOrder != layerIndex) renderer.sortingOrder = layerIndex;
+                            layerIndex++;
                         }
                     } else {
                         if(renderer.overrideSorterChildren) continue;
