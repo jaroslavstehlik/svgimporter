@@ -154,8 +154,8 @@ namespace SVGImporter
                         break;
                     case SVGError.GroupOpacity:
                         EditorGUILayout.HelpBox(exactGroupOpacity
-                            ? "Some semi-transparent groups have semi-transparent shapes: where those overlap, they show through each other"
-                            : "Group opacity is applied to each shape in the group, so overlapping shapes show through each other. Turn on Exact Group Opacity to draw it as browsers do", MessageType.Info);
+                            ? "Semi-transparent shapes in semi-transparent groups still show through each other"
+                            : "Shapes in semi-transparent groups show through each other. Exact Group Opacity fixes this", MessageType.Info);
                         break;
                     case SVGError.TextSkipped:
                         EditorGUILayout.HelpBox("Text was left out", MessageType.Warning);
