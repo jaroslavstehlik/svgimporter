@@ -12,6 +12,11 @@ namespace SVGImporter
     /// For assets in the Opaque + Transparent format: they draw with the depth test, so Sorting
     /// Layer and Order in Layer (and Sorting Group) don't order them, their position along z does.
     /// Renderers with an SVG Opaque Sort Override are left where they are.
+    ///
+    /// In play mode the group sorts again when its children change, and when SVG Renderers and
+    /// overrides below it are moved, change their own children or change asset. Reordering the
+    /// children of other objects below it isn't noticed: call Sort() after doing that. In edit mode
+    /// it checks every frame.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
@@ -36,6 +41,11 @@ namespace SVGImporter
         internal void SetDirty()
         {
             _dirty = true;
+        }
+
+        internal bool isDirty
+        {
+            get { return _dirty; }
         }
 
         void OnEnable()

@@ -175,6 +175,30 @@ public static class BugFixTests
             Check("opaque sorting group stacks along z", Mathf.Abs(a) < 1e-4f && Mathf.Abs(b - a - 0.5f) < 1e-4f && kept.transform.position.z == -7f,
                 "first " + a + ", second " + b + ", overridden " + kept.transform.position.z);
 
+            // The group notices hierarchy changes below it: its own children reordered, renderers
+            // moved in, out or between groups at any depth, and a renderer's children reordered.
+            var other = new GameObject("other group").AddComponent<SVGOpaqueSortingGroup>();
+            var container = new GameObject("container");
+            container.transform.SetParent(group.transform);
+            var nested = new GameObject("nested").AddComponent<SVGRenderer>();
+            nested.vectorGraphics = Load("white");
+            var childA = new GameObject("child a").AddComponent<SVGRenderer>();
+            var childB = new GameObject("child b").AddComponent<SVGRenderer>();
+            childA.transform.SetParent(nested.transform);
+            childB.transform.SetParent(nested.transform);
+            var notices = new List<string>();
+            void Expect(string change, bool dirty) { if (!dirty) notices.Add(change); group.Sort(); other.Sort(); }
+            group.Sort(); other.Sort();
+            first.transform.SetSiblingIndex(2);
+            Expect("group's children reordered", group.isDirty);
+            nested.transform.SetParent(container.transform);
+            Expect("renderer moved in below a container", group.isDirty);
+            childB.transform.SetSiblingIndex(0);
+            Expect("renderer's children reordered", group.isDirty);
+            nested.transform.SetParent(other.transform);
+            Expect("renderer moved to another group", group.isDirty && other.isDirty);
+            Check("opaque sorting group follows hierarchy changes", notices.Count == 0, notices.Count == 0 ? "" : "missed: " + string.Join(", ", notices));
+
             // SVG Renderer hides the MeshFilter and MeshRenderer it draws with and keeps their settings.
             var hidden = new GameObject("hidden").AddComponent<SVGRenderer>();
             hidden.sortingOrder = 3;

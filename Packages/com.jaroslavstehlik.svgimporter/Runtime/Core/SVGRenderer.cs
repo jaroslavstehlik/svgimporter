@@ -324,8 +324,33 @@ namespace SVGImporter
             base.OnDisable();
         }
 
+        // The SVG Opaque Sorting Group above this renderer, kept to re-sort it when the renderer
+        // leaves. Groups learn about changes to their own children; renderers report the rest:
+        // being moved anywhere below a group, and changes to their own children.
+        [System.NonSerialized] SVGOpaqueSortingGroup _sortingGroup;
+
+        void MarkSortingGroupDirty()
+        {
+            SVGOpaqueSortingGroup group = GetComponentInParent<SVGOpaqueSortingGroup>(true);
+            if(_sortingGroup != null && _sortingGroup != group) _sortingGroup.SetDirty();
+            if(group != null) group.SetDirty();
+            _sortingGroup = group;
+        }
+
+        protected override void OnTransformParentChanged()
+        {
+            base.OnTransformParentChanged();
+            MarkSortingGroupDirty();
+        }
+
+        void OnTransformChildrenChanged()
+        {
+            MarkSortingGroupDirty();
+        }
+
         protected override void OnDestroy()
         {
+            if(_sortingGroup != null) _sortingGroup.SetDirty();
             // The renderer's own mesh, for tinted, sliced or layered assets.
             DestroyObjectInternal(_mesh);
             _mesh = null;
@@ -458,12 +483,8 @@ namespace SVGImporter
                 // A different asset, or the same one reimported; not every forced rebuild.
                 bool assetChanged = _lastVectorGraphics != _vectorGraphics || _vectorGraphics.importHash != _lastImportHash;
                 _lastImportHash = _vectorGraphics.importHash;
-                if(assetChanged)
-                {
-                    // The asset's thickness decides how far apart opaque sorting places renderers.
-                    SVGOpaqueSortingGroup group = GetComponentInParent<SVGOpaqueSortingGroup>();
-                    if(group != null) group.SetDirty();
-                }
+                // The asset's thickness decides how far apart opaque sorting places renderers.
+                if(assetChanged) MarkSortingGroupDirty();
                 if(_lastVectorGraphics != _vectorGraphics)
                 {
                     meshChanged = true;
