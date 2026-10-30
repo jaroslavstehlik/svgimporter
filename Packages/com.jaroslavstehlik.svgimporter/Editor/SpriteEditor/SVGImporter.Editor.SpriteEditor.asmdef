@@ -22,6 +22,11 @@
             "name": "com.unity.2d.sprite",
             "expression": "1.0.0",
             "define": "SVGIMPORTER_2D_SPRITE"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.6",
+            "define": "SVGIMPORTER_SPRITE_EDIT_CAPABILITY"
         }
     ],
     "noEngineReferences": false

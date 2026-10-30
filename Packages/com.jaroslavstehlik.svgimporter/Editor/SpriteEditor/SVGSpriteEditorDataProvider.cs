@@ -16,6 +16,9 @@ namespace SVGImporter
     /// Ignore SVG Canvas is off. Apply writes the pivot and border back to the import settings.
     /// </summary>
     internal sealed class SVGSpriteEditorDataProvider : ISpriteEditorDataProvider, ITextureDataProvider
+#if SVGIMPORTER_SPRITE_EDIT_CAPABILITY
+        , ISpriteFrameEditCapability
+#endif
     {
         // The longest side of the texture the Sprite Editor shows.
         const int k_TextureSize = 1024;
@@ -86,8 +89,24 @@ namespace SVGImporter
 
         public bool HasDataProvider(Type type)
         {
-            return type == typeof(ITextureDataProvider);
+            return type.IsInstanceOfType(this);
         }
+
+#if SVGIMPORTER_SPRITE_EDIT_CAPABILITY
+        // Newer Sprite Editors lock what a provider doesn't allow: an SVG file is one sprite, so
+        // its pivot and border can be edited, not its rectangle or name.
+        EditCapability m_Capability = new EditCapability(EEditCapability.EditPivot, EEditCapability.EditBorder);
+
+        public EditCapability GetEditCapability()
+        {
+            return m_Capability;
+        }
+
+        public void SetEditCapability(EditCapability editCapability)
+        {
+            m_Capability = editCapability;
+        }
+#endif
 
         public Texture2D texture { get { return m_Texture; } }
         public Texture2D previewTexture { get { return m_Texture; } }
@@ -133,7 +152,8 @@ namespace SVGImporter
             commands.SetRenderTarget(target);
             commands.ClearRenderTarget(true, true, Color.clear);
             Matrix4x4 projection = Matrix4x4.Ortho(rect.xMin, rect.xMax, rect.yMin, rect.yMax, -1000f, 1000f);
-            commands.SetViewProjectionMatrices(Matrix4x4.identity, GL.GetGPUProjectionMatrix(projection, true));
+            // Not flipped for the render texture: ReadPixels below reads it back the right way up.
+            commands.SetViewProjectionMatrices(Matrix4x4.identity, GL.GetGPUProjectionMatrix(projection, false));
             for (int i = 0; i < mesh.subMeshCount && i < materials.Length; i++)
                 if (materials[i] != null) commands.DrawMesh(mesh, Matrix4x4.identity, materials[i], i);
             Graphics.ExecuteCommandBuffer(commands);
