@@ -1,7 +1,7 @@
 # Changelog
 
 ## [2.0.0] - Unreleased
-- **SVG Importer is now under the MIT license.** The package lists the third-party software it includes, such as the Rust crates of the native library and Clipper, in `Third Party Notices.md`.
+- **SVG Importer is now under the MIT license.** The package lists the third-party software it includes, the Rust crates of the native library, in `Third Party Notices.md`.
 - **SVG files are now imported like any other asset.** An `.svg` file stays in the project and is imported as an SVG Asset, with its settings in the Inspector, instead of being converted into an `.asset` file and deleted.
 - SVG Importer takes over SVG files added to the project. Turn off **Import New SVG Files** in the settings to keep Unity's own SVG importer, or switch individual files in the Inspector.
 - New: **Window > SVG Importer > Convert SVG Assets to SVG Files...** converts 1.x SVG Assets back to `.svg` files and keeps their references.
@@ -80,10 +80,11 @@
 - **Report Import Issue** moved from the bottom of the import settings to the importer's context menu (the ⋮ button).
 - SVG Image's Inspector is built on uGUI's Graphic Inspector, so it has Maskable and Raycast Padding like Image, and edits every selected image.
 - The SVG Renderer's Sorting Layer field no longer uses Unity's internal API.
+- **Generate Collider** outlines are computed by the native core, in one pass, instead of merging shape after shape with Clipper, which made large files slow to import. Holes are kept: a ring gets a ring-shaped collider instead of a disc, unless other shapes cover the hole. The C# Clipper library is removed. Files with Generate Collider on reimport once.
 
 ### Script API changes (2.0)
 
-2.0 cleans up the script API, and scripts written for 1.x need these changes. Everything users need is in the `SVGImporter` namespace; the rest of the package (geometry, mesh and Clipper code, the gradient atlas, the native bindings, the import pipeline, the debug components and the Inspectors) is internal. Serialized data keeps loading: assets, scenes and prefabs don't need changes.
+2.0 cleans up the script API, and scripts written for 1.x need these changes. Everything users need is in the `SVGImporter` namespace; the rest of the package (geometry and mesh code, the gradient atlas, the native bindings, the import pipeline, the debug components and the Inspectors) is internal. Serialized data keeps loading: assets, scenes and prefabs don't need changes.
 
 | 1.x | 2.0 |
 |---|---|

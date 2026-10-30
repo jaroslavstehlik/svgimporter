@@ -46,6 +46,21 @@ public static class ImportTests
             options.scale = 0.02f;
             Check("options change the hash", SVGImport.Import(Svg, options).importHash != a.importHash, "");
 
+            // Collider outlines: the union of all shapes, holes kept unless another shape covers them.
+            // A 100 x 100 ring with a 60 x 60 hole and a 20 x 20 square in the hole, at the default
+            // scale (0.01 units per SVG unit): areas 1, -0.36 and 0.04.
+            SVGImportOptions collider = SVGImportOptions.Default;
+            collider.generateCollider = true;
+            SVGPath[] ring = SVGImport.Import("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
+                + "<path fill-rule=\"evenodd\" d=\"M0 0H100V100H0Z M20 20H80V80H20Z\"/><rect x=\"40\" y=\"40\" width=\"20\" height=\"20\" fill=\"red\"/></svg>", collider).colliderShape;
+            float[] areas = ring == null ? new float[0] : ring.Select(p => Area(p.points)).OrderBy(a => a).ToArray();
+            Check("collider keeps holes", areas.Length == 3 && Mathf.Abs(Mathf.Abs(areas[0]) - 0.36f) < 0.001f && Mathf.Abs(Mathf.Abs(areas[1]) - 0.04f) < 0.001f
+                && Mathf.Abs(Mathf.Abs(areas[2]) - 1f) < 0.001f && areas[0] < 0f && areas[2] > 0f, string.Join(", ", areas.Select(a => a.ToString("F3"))));
+            SVGPath[] overlap = SVGImport.Import("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"100\">"
+                + "<rect width=\"100\" height=\"100\"/><rect x=\"50\" width=\"100\" height=\"100\"/></svg>", collider).colliderShape;
+            Check("collider unites overlapping shapes", overlap != null && overlap.Length == 1 && Mathf.Abs(Mathf.Abs(Area(overlap[0].points)) - 1.5f) < 0.001f,
+                overlap == null ? "none" : overlap.Length + " paths, area " + Area(overlap[0].points).ToString("F3"));
+
             // SVG Importer's conicalGradient extension.
             SVGImportOptions layered = SVGImportOptions.Default;
             layered.useLayers = true;
@@ -101,5 +116,17 @@ public static class ImportTests
         results.Insert(0, "Unity " + Application.unityVersion + ", result: " + (passed ? "PASS" : "FAIL"));
         File.WriteAllLines(Path.Combine(output, "import.txt"), results);
         EditorApplication.Exit(passed ? 0 : 1);
+    }
+
+    // Signed area of a closed polygon.
+    static float Area(Vector2[] points)
+    {
+        float area = 0f;
+        for (int i = 0; i < points.Length; i++)
+        {
+            Vector2 p = points[i], q = points[(i + 1) % points.Length];
+            area += p.x * q.y - q.x * p.y;
+        }
+        return area * 0.5f;
     }
 }

@@ -22,7 +22,7 @@ namespace SVGImporter.Native
         /// <summary>
         ///  Increment whenever the ABI changes. C# checks it before using the library.
         /// </summary>
-        internal const uint SVGI_ABI_VERSION = 5;
+        internal const uint SVGI_ABI_VERSION = 6;
         internal const int SVGI_OK = 0;
         /// <summary>
         ///  The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -123,6 +123,10 @@ namespace SVGImporter.Native
         ///  no longer overlap and the group's opacity can be applied to each.
         /// </summary>
         public byte group_opacity;
+        /// <summary>
+        ///  1 to fill `SvgiResult::collider_contours`: the union of all fill and stroke layers.
+        /// </summary>
+        public byte collider;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -262,6 +266,15 @@ namespace SVGImporter.Native
         public uint extrusion_float_count;
         public float* coverage;
         public uint coverage_count;
+        /// <summary>
+        ///  With `collider`: the outline of everything the document draws, the union of the fill and
+        ///  stroke layers' outlines, as ranges in `collider_points` (oriented as `contours`). Empty
+        ///  otherwise.
+        /// </summary>
+        public SvgiContour* collider_contours;
+        public uint collider_contour_count;
+        public float* collider_points;
+        public uint collider_point_float_count;
         /// <summary>
         ///  `SVGI_DIAG_*` flags.
         /// </summary>

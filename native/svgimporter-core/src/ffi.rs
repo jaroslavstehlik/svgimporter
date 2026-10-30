@@ -6,7 +6,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use crate::import::{self, ImportOptions, Output};
 
 /// Increment whenever the ABI changes. C# checks it before using the library.
-pub const SVGI_ABI_VERSION: u32 = 5;
+pub const SVGI_ABI_VERSION: u32 = 6;
 
 pub const SVGI_OK: i32 = 0;
 /// The SVG could not be parsed; see `SvgiResult::error_message`.
@@ -59,6 +59,8 @@ pub struct SvgiOptions {
     /// children that later opaque children of the same group cover are removed, so the children
     /// no longer overlap and the group's opacity can be applied to each.
     pub group_opacity: u8,
+    /// 1 to fill `SvgiResult::collider_contours`: the union of all fill and stroke layers.
+    pub collider: u8,
 }
 
 #[repr(C)]
@@ -155,6 +157,13 @@ pub struct SvgiResult {
     pub extrusion_float_count: u32,
     pub coverage: *const f32,
     pub coverage_count: u32,
+    /// With `collider`: the outline of everything the document draws, the union of the fill and
+    /// stroke layers' outlines, as ranges in `collider_points` (oriented as `contours`). Empty
+    /// otherwise.
+    pub collider_contours: *const SvgiContour,
+    pub collider_contour_count: u32,
+    pub collider_points: *const f32,
+    pub collider_point_float_count: u32,
     /// `SVGI_DIAG_*` flags.
     pub diagnostics: u32,
     /// UTF-8 message for `SVGI_ERROR_PARSE` and `SVGI_ERROR_INTERNAL`; empty otherwise.
@@ -196,6 +205,10 @@ fn into_raw(output: Output, error_message: String) -> *mut SvgiResult {
             extrusion_float_count: 0,
             coverage: std::ptr::null(),
             coverage_count: 0,
+            collider_contours: std::ptr::null(),
+            collider_contour_count: 0,
+            collider_points: std::ptr::null(),
+            collider_point_float_count: 0,
             diagnostics: output.diagnostics,
             error_message: std::ptr::null(),
             error_message_length: 0,
@@ -228,6 +241,10 @@ fn into_raw(output: Output, error_message: String) -> *mut SvgiResult {
         extrusion_float_count: o.extrusions.len() as u32,
         coverage: o.coverage.as_ptr(),
         coverage_count: o.coverage.len() as u32,
+        collider_contours: o.collider_contours.as_ptr(),
+        collider_contour_count: o.collider_contours.len() as u32,
+        collider_points: o.collider_points.as_ptr(),
+        collider_point_float_count: o.collider_points.len() as u32,
         diagnostics: o.diagnostics,
         error_message: owned.error_message.as_ptr(),
         error_message_length: owned.error_message.len() as u32,
@@ -274,6 +291,7 @@ pub unsafe extern "C" fn svgi_import(
         convert_text: options.convert_text != 0,
         antialiasing: options.antialiasing != 0,
         group_opacity: options.group_opacity != 0,
+        collider: options.collider != 0,
     };
     match catch_unwind(AssertUnwindSafe(|| import::import(data, &import_options))) {
         Ok(Ok(output)) => {

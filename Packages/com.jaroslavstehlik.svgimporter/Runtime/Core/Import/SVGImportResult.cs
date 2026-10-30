@@ -45,7 +45,8 @@ namespace SVGImporter
     {
         public SVGAtlasData atlasData;
         public readonly List<SVGLayer> layers = new List<SVGLayer>();
-        public readonly List<SVGPath> paths = new List<SVGPath>();
+        // With generateCollider: the outline of everything the document draws, in SVG user units.
+        public readonly List<SVGPath> colliderOutline = new List<SVGPath>();
         public readonly List<SVGError> errors;
         public readonly List<string> messages;
 
@@ -60,7 +61,7 @@ namespace SVGImporter
         public void Reset()
         {
             layers.Clear();
-            paths.Clear();
+            colliderOutline.Clear();
             atlasData = new SVGAtlasData();
             atlasData.Init(SVGAtlas.defaultAtlasTextureWidth * SVGAtlas.defaultAtlasTextureHeight);
             atlasData.AddGradient(SVGAtlasData.GetDefaultGradient());

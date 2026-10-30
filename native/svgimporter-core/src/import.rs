@@ -34,6 +34,7 @@ pub struct ImportOptions {
     pub convert_text: bool,
     pub antialiasing: bool,
     pub group_opacity: bool,
+    pub collider: bool,
 }
 
 #[derive(Default)]
@@ -51,6 +52,9 @@ pub struct Output {
     /// With antialiasing, per vertex: the extrusion vector (two floats) and the coverage.
     pub extrusions: Vec<f32>,
     pub coverage: Vec<f32>,
+    /// With the collider option: the union of the layers' outlines.
+    pub collider_contours: Vec<SvgiContour>,
+    pub collider_points: Vec<f32>,
     pub diagnostics: u32,
 }
 
@@ -111,10 +115,53 @@ pub fn import(data: &[u8], options: &ImportOptions) -> Result<Output, String> {
         occluder: None,
     };
     importer.group(tree.root(), 1.0);
-    match importer.limit_exceeded {
-        Some(limit) => Err(limit),
-        None => Ok(importer.output),
+    if let Some(limit) = importer.limit_exceeded {
+        return Err(limit);
     }
+    let mut output = importer.output;
+    if options.collider {
+        for contour in collider_outline(&output) {
+            output.collider_contours.push(SvgiContour {
+                point_offset: (output.collider_points.len() / 2) as u32,
+                point_count: contour.len() as u32,
+            });
+            for p in contour {
+                output.collider_points.push(p[0] as f32);
+                output.collider_points.push(p[1] as f32);
+            }
+        }
+    }
+    Ok(output)
+}
+
+/// The outline of everything the document draws, for 2D colliders: the union of the fill and
+/// stroke layers' outlines. Each layer covers its area once (its outer boundaries wind one way,
+/// its holes the other), so with the non-zero rule a point is inside if any layer covers it.
+fn collider_outline(out: &Output) -> Region {
+    let contours: Region = out
+        .contours
+        .iter()
+        .map(|c| {
+            (0..c.point_count as usize)
+                .map(|k| {
+                    let i = (c.point_offset as usize + k) * 2;
+                    [out.contour_points[i] as f64, out.contour_points[i + 1] as f64]
+                })
+                .collect()
+        })
+        .collect();
+    let mut outline = Region::new();
+    for shape in contours.simplify_shape(OverlayFillRule::NonZero) {
+        // The first contour of a shape is its outer boundary, the rest are holes; orient them as
+        // the layers' contours are.
+        for (i, mut contour) in shape.into_iter().enumerate() {
+            if (signed_area(&contour) > 0.0) != (i == 0) {
+                contour.reverse();
+            }
+            outline.push(contour);
+        }
+    }
+    outline
 }
 
 struct Importer<'a> {
@@ -1064,7 +1111,7 @@ mod tests {
     }
 
     fn run(svg: &str) -> Output {
-        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false }).unwrap()
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false, collider: false }).unwrap()
     }
 
     fn layer_contours(out: &Output, layer: &SvgiLayer) -> Vec<Vec<[f32; 2]>> {
@@ -1216,7 +1263,7 @@ mod tests {
     #[test]
     fn oversized_input_is_refused() {
         let svg = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><!--{}--></svg>", " ".repeat(MAX_INPUT_BYTES));
-        let error = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false }).err().expect("an error");
+        let error = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false, collider: false }).err().expect("an error");
         assert!(error.contains("larger than"), "{error}");
     }
 
@@ -1224,7 +1271,7 @@ mod tests {
     fn dash_flood_is_refused() {
         let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
             <path d="M0 0 H1000000000" stroke="black" stroke-dasharray="0.001 0.001"/></svg>"#,
-            &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false });
+            &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false, collider: false });
         assert!(out.err().expect("an error").contains("dash"));
     }
 
@@ -1234,7 +1281,7 @@ mod tests {
         // of the circle, so the output stays small.
         let out = import(br#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
             <circle cx="0" cy="0" r="10000000"/></svg>"#,
-            &ImportOptions { tolerance: 1e-9, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false }).unwrap();
+            &ImportOptions { tolerance: 1e-9, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity: false, collider: false }).unwrap();
         assert!(out.vertices.len() / 2 < 100_000, "{} vertices", out.vertices.len() / 2);
     }
 
@@ -1251,7 +1298,7 @@ mod tests {
         assert_eq!(out.layers[1].contour_count, 2);
     }
     fn run_antialiased(svg: &str) -> Output {
-        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: true, group_opacity: false }).unwrap()
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: true, group_opacity: false, collider: false }).unwrap()
     }
 
     fn extrusion(out: &Output, vertex: usize) -> [f32; 2] {
@@ -1328,8 +1375,63 @@ mod tests {
         assert_eq!(conical.stop_count, 2);
     }
 
+    fn collider(svg: &str) -> Vec<f64> {
+        let out = import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: true, group_opacity: false, collider: true }).unwrap();
+        // The signed area of each collider contour.
+        out.collider_contours
+            .iter()
+            .map(|c| {
+                let points: Vec<[f32; 2]> = (0..c.point_count as usize)
+                    .map(|k| {
+                        let i = (c.point_offset as usize + k) * 2;
+                        [out.collider_points[i], out.collider_points[i + 1]]
+                    })
+                    .collect();
+                signed_area(&points) as f64
+            })
+            .collect()
+    }
+
+    #[test]
+    fn collider_unites_overlapping_shapes() {
+        // Two 100 x 100 squares overlapping by half: one outline of 150 x 100.
+        let areas = collider(r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+            <rect width="100" height="100"/><rect x="50" width="100" height="100" fill="red"/></svg>"#);
+        assert_eq!(areas.len(), 1);
+        assert!((areas[0] - 15000.0).abs() < 1.0, "{:?}", areas);
+    }
+
+    #[test]
+    fn collider_keeps_holes_and_shapes_inside_them() {
+        // A ring (a 100 x 100 square with a 60 x 60 hole), and a 20 x 20 square inside the hole.
+        let areas = collider(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <path fill-rule="evenodd" d="M0 0H100V100H0Z M20 20H80V80H20Z"/>
+            <rect x="40" y="40" width="20" height="20" fill="red"/></svg>"#);
+        let mut sorted = areas.clone();
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert_eq!(sorted.len(), 3, "{:?}", areas);
+        assert!((sorted[0] + 3600.0).abs() < 1.0, "the hole winds the other way: {:?}", areas);
+        assert!((sorted[1] - 400.0).abs() < 1.0 && (sorted[2] - 10000.0).abs() < 1.0, "{:?}", areas);
+    }
+
+    #[test]
+    fn collider_fills_holes_that_other_shapes_cover() {
+        // A ring whose hole a later shape covers entirely: one solid outline.
+        let areas = collider(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <path fill-rule="evenodd" d="M0 0H100V100H0Z M20 20H80V80H20Z"/>
+            <rect x="10" y="10" width="80" height="80" fill="red"/></svg>"#);
+        assert_eq!(areas.len(), 1, "{:?}", areas);
+        assert!((areas[0] - 10000.0).abs() < 1.0, "{:?}", areas);
+    }
+
+    #[test]
+    fn collider_is_empty_without_the_option() {
+        let out = run(r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>"#);
+        assert!(out.collider_contours.is_empty() && out.collider_points.is_empty());
+    }
+
     fn run_group_opacity(svg: &str, group_opacity: bool) -> Output {
-        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity }).unwrap()
+        import(svg.as_bytes(), &ImportOptions { tolerance: 0.25, dpi: 96.0, convert_text: false, antialiasing: false, group_opacity, collider: false }).unwrap()
     }
 
     #[test]

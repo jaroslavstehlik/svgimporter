@@ -109,6 +109,11 @@ namespace SVGImporter.Native
             public float[] coverage;
             public int[] indices;
             public Paint[] paints;
+            /// <summary>
+            /// With collider: the outline of everything the document draws, in SVG user units, as
+            /// layer contours are. Empty otherwise.
+            /// </summary>
+            public Vector2[][] collider;
         }
 
         /// <summary>Imports an SVG document.</summary>
@@ -116,7 +121,8 @@ namespace SVGImporter.Native
         /// <param name="convertText">Convert text to paths with the system fonts.</param>
         /// <param name="antialiasing">Add an antialiasing fringe after every fill and stroke layer.</param>
         /// <param name="groupOpacity">Remove what later opaque children of a group with opacity cover.</param>
-        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false, bool groupOpacity = false)
+        /// <param name="collider">Compute the outline of everything the document draws (Result.collider).</param>
+        public static unsafe Result Import(byte[] svg, float tolerance = 0.25f, bool convertText = true, float dpi = 96f, bool antialiasing = false, bool groupOpacity = false, bool collider = false)
         {
             if (svg == null) throw new ArgumentNullException("svg");
             if (!isSupported)
@@ -126,7 +132,7 @@ namespace SVGImporter.Native
                     ? "The Editor has an older svgimporter_core loaded (ABI " + abiVersion + ", this package needs " + expectedAbiVersion + "). Native libraries load once per Editor session: restart Unity after updating SVG Importer."
                     : "svgimporter_core ABI version " + abiVersion + " doesn't match the expected " + expectedAbiVersion + ". Rebuild the player with the current package.");
 
-            var options = new SvgiOptions { tolerance = tolerance, dpi = dpi, convert_text = (byte)(convertText ? 1 : 0), antialiasing = (byte)(antialiasing ? 1 : 0), group_opacity = (byte)(groupOpacity ? 1 : 0) };
+            var options = new SvgiOptions { tolerance = tolerance, dpi = dpi, convert_text = (byte)(convertText ? 1 : 0), antialiasing = (byte)(antialiasing ? 1 : 0), group_opacity = (byte)(groupOpacity ? 1 : 0), collider = (byte)(collider ? 1 : 0) };
             SvgiResult* native = null;
             int code;
             fixed (byte* data = svg)
@@ -183,20 +189,10 @@ namespace SVGImporter.Native
                     indexOffset = (int)l.index_offset,
                     indexCount = (int)l.index_count,
                     element = (int)l.element,
-                    contours = new Vector2[l.contour_count][],
+                    contours = Contours(r->contours + l.contour_offset, l.contour_count, r->contour_points),
                 };
-                for (int c = 0; c < l.contour_count; c++)
-                {
-                    SvgiContour contour = r->contours[l.contour_offset + c];
-                    var points = new Vector2[contour.point_count];
-                    for (int p = 0; p < points.Length; p++)
-                    {
-                        uint k = (contour.point_offset + (uint)p) * 2;
-                        points[p] = new Vector2(r->contour_points[k], r->contour_points[k + 1]);
-                    }
-                    result.layers[i].contours[c] = points;
-                }
             }
+            result.collider = Contours(r->collider_contours, r->collider_contour_count, r->collider_points);
 
             result.paints = new Paint[r->paint_count];
             for (int i = 0; i < result.paints.Length; i++)
@@ -223,6 +219,24 @@ namespace SVGImporter.Native
                     stops = stops,
                 };
             }
+        }
+
+        // Contours as arrays of points, from ranges in a points array (two floats per point).
+        static unsafe Vector2[][] Contours(SvgiContour* contours, uint count, float* points)
+        {
+            var output = new Vector2[count][];
+            for (int c = 0; c < count; c++)
+            {
+                SvgiContour contour = contours[c];
+                var contourPoints = new Vector2[contour.point_count];
+                for (int p = 0; p < contourPoints.Length; p++)
+                {
+                    uint k = (contour.point_offset + (uint)p) * 2;
+                    contourPoints[p] = new Vector2(points[k], points[k + 1]);
+                }
+                output[c] = contourPoints;
+            }
+            return output;
         }
     }
 }

@@ -18,7 +18,7 @@ namespace SVGImporter
     /// Registered as an override importer for .svg, because Unity's own Vector Graphics
     /// importer also claims the extension. SVGPostprocessor assigns it to new files.
     /// </summary>
-    [ScriptedImporter(11, null, new[] { "svg" })]
+    [ScriptedImporter(12, null, new[] { "svg" })]
     [HelpURL(SVGDocumentation.url)]
     public class SVGFileImporter : ScriptedImporter
     {

@@ -25,7 +25,7 @@ namespace SVGImporter.Native
         {
             viewport = new Rect();
             float meshScale = options.scale;
-            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance(options.verticesPerMeter), antialiasing: options.softEdges, groupOpacity: options.exactGroupOpacity);
+            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance(options.verticesPerMeter), antialiasing: options.softEdges, groupOpacity: options.exactGroupOpacity, collider: options.generateCollider);
             if (result.status != SVGNativeCore.Status.Ok)
             {
                 context.errors.Add(result.status == SVGNativeCore.Status.ParseError ? SVGError.Syntax : SVGError.CorruptedFile);
@@ -64,11 +64,11 @@ namespace SVGImporter.Native
 
                 shape.fill = CreateFill(result.paints[layer.paint], layer.opacity, viewport, scaledViewport, meshScale, context.atlasData);
                 previousFill = shape.fill;
-                foreach (Vector2[] contour in layer.contours)
-                    context.paths.Add(new SVGPath(contour));
                 shapes.Add(shape);
             }
             Flush(shapes, name, context.layers);
+            foreach (Vector2[] contour in result.collider)
+                context.colliderOutline.Add(new SVGPath(contour));
             return true;
         }
 

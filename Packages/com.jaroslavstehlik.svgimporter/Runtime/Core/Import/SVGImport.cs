@@ -26,7 +26,7 @@ namespace SVGImporter
     internal static class SVGImport
     {
         // Changing what an import produces changes this, and so every import hash.
-        const string pipelineVersion = "9";
+        const string pipelineVersion = "10";
 
         public static SVGImportResult Import(string svgText, SVGImportOptions options)
         {
@@ -63,7 +63,7 @@ namespace SVGImporter
 
                 result.canvasRectangle = canvas;
                 if (options.generateCollider)
-                    result.colliderShape = ColliderShape(context.paths, options.scale, offset);
+                    result.colliderShape = ColliderShape(context.colliderOutline, options.scale, offset);
                 if (hasGradients)
                 {
                     SVGGradient[] gradients = context.atlasData.registeredGradients;
@@ -149,20 +149,18 @@ namespace SVGImporter
                 mesh.tangents = Enumerable.Repeat(new Vector4(-1f, 0f, 0f, -1f), vertexCount).ToArray();
         }
 
-        /// <summary>The union of the shapes' outlines, in mesh units around the pivot.</summary>
-        static SVGPath[] ColliderShape(List<SVGPath> outlines, float scale, Vector2 offset)
+        /// <summary>
+        /// The outline of everything the document draws, which the native core computes (outer
+        /// boundaries and holes), in mesh units around the pivot. Flipping y to point up reverses
+        /// the contours, so that outer boundaries run counter-clockwise again and holes clockwise.
+        /// </summary>
+        static SVGPath[] ColliderShape(List<SVGPath> outline, float scale, Vector2 offset)
         {
-            if (outlines.Count == 0) return null;
-            var polygons = new List<List<Vector2>>(outlines.Count);
-            foreach (SVGPath outline in outlines)
-            {
-                var points = new List<Vector2>(outline.points.Length);
-                foreach (Vector2 point in outline.points)
-                    points.Add(new Vector2(point.x * scale - offset.x, -(point.y * scale + offset.y)));
-                polygons.Add(points);
-            }
-            polygons = SVGGeom.MergePolygon(polygons);
-            return polygons.Count == 0 ? null : polygons.Select(p => new SVGPath(p.ToArray())).ToArray();
+            if (outline.Count == 0) return null;
+            return outline.Select(contour => new SVGPath(contour.points
+                .Select(point => new Vector2(point.x * scale - offset.x, -(point.y * scale + offset.y)))
+                .Reverse()
+                .ToArray())).ToArray();
         }
 
         static long Hash(string svgText, SVGImportOptions options)
