@@ -12,20 +12,18 @@ namespace SVGImporter
     /// </summary>
     internal static class SVGImportSettingsGUI
     {
-        static GUIContent[] s_AnchorPositionContent;
+        /// <summary>
+        /// Whether Unity's Sprite Editor (2D Sprite package) is installed: it edits the pivot and
+        /// border of SVG files (see SVGSpriteEditorDataProvider).
+        /// </summary>
+        internal static bool spriteEditorAvailable
+        {
+            get { return System.Type.GetType("UnityEditor.U2D.Sprites.SpriteEditorWindow, Unity.2D.Sprite.Editor") != null; }
+        }
 
         /// <summary>Draws the settings. Returns true when the SVG Editor button was pressed.</summary>
         public static bool Draw(SerializedObject serializedObject, bool showSVGEditorButton)
         {
-            if(s_AnchorPositionContent == null)
-            {
-                s_AnchorPositionContent = new GUIContent[SVGAssetEditor.anchorPosition.Length];
-                for(int i = 0; i < SVGAssetEditor.anchorPosition.Length; i++)
-                {
-                    s_AnchorPositionContent[i] = new GUIContent(SVGAssetEditor.anchorPosition[i]);
-                }
-            }
-
             SerializedProperty format = serializedObject.FindProperty("_format");
             SerializedProperty useGradients = serializedObject.FindProperty("_useGradients");
             SerializedProperty antialiasing = serializedObject.FindProperty("_antialiasing");
@@ -73,25 +71,17 @@ namespace SVGImporter
                 EditorGUILayout.PropertyField(compressDepth, SVGAssetEditor.COMPRESS_DEPTH_LABEL);
             }
 
-            EditorGUILayout.PropertyField(customPivotPoint, SVGAssetEditor.CUSTOM_PIVOT_LABEL);
-            EditorGUILayout.BeginHorizontal();
-            if(customPivotPoint.boolValue)
-            {
-                EditorGUILayout.PropertyField(pivotPoint, SVGAssetEditor.PIVOT_LABEL);
-            } else {
-                int selectedIndex = SVGAssetEditor.GetPivotPointIndex(pivotPoint.vector2Value);
-                selectedIndex = EditorGUILayout.Popup(SVGAssetEditor.PIVOT_LABEL, selectedIndex, s_AnchorPositionContent);
-                pivotPoint.vector2Value = SVGAssetEditor.GetPivotPoint(selectedIndex);
-            }
-
+            SVGPivotGUI.Draw(customPivotPoint, pivotPoint);
             if(showSVGEditorButton)
             {
-                if(GUILayout.Button("SVG Editor", EditorStyles.miniButton, GUILayout.Width(70f)))
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                if(GUILayout.Button(spriteEditorAvailable && serializedObject.targetObject is SVGFileImporter ? "Sprite Editor" : "SVG Editor", EditorStyles.miniButton, GUILayout.Width(80f)))
                 {
                     openSVGEditor = true;
                 }
+                EditorGUILayout.EndHorizontal();
             }
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.PropertyField(generateCollider, SVGAssetEditor.GENERATE_COLLIDER_LABEL);
             EditorGUILayout.Space();
 

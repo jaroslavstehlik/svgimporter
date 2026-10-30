@@ -63,22 +63,7 @@ namespace SVGImporter
                 EditorGUILayout.PropertyField(d.FindPropertyRelative("depthOffset"), SVGAssetEditor.DEPTH_OFFSET_LABEL);
                 EditorGUILayout.PropertyField(d.FindPropertyRelative("compressDepth"), SVGAssetEditor.COMPRESS_DEPTH_LABEL);
             }
-            SerializedProperty customPivot = d.FindPropertyRelative("customPivotPoint");
-            SerializedProperty pivot = d.FindPropertyRelative("pivotPoint");
-            EditorGUILayout.PropertyField(customPivot, SVGAssetEditor.CUSTOM_PIVOT_LABEL);
-            if (customPivot.boolValue)
-            {
-                EditorGUILayout.PropertyField(pivot, SVGAssetEditor.PIVOT_LABEL);
-            }
-            else
-            {
-                Vector2 p = pivot.vector2Value;
-                int selected = Mathf.RoundToInt(p.x * 2 + Mathf.Clamp(p.y * 6, 0, 8));
-                EditorGUI.BeginChangeCheck();
-                selected = EditorGUILayout.Popup("Pivot", selected, SVGAssetEditor.anchorPosition);
-                if (EditorGUI.EndChangeCheck())
-                    pivot.vector2Value = new Vector2(selected % 3 / 2f, selected / 3 / 2f);
-            }
+            SVGPivotGUI.Draw(d.FindPropertyRelative("customPivotPoint"), d.FindPropertyRelative("pivotPoint"));
             EditorGUILayout.PropertyField(d.FindPropertyRelative("generateCollider"), SVGAssetEditor.GENERATE_COLLIDER_LABEL);
             SerializedProperty normals = d.FindPropertyRelative("generateNormals");
             EditorGUILayout.PropertyField(normals, SVGAssetEditor.GENERATE_NORMALS_LABEL);

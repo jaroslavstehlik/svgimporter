@@ -1,0 +1,28 @@
+{
+    "name": "SVGImporter.Editor.SpriteEditor",
+    "rootNamespace": "SVGImporter",
+    "references": [
+        "SVGImporter.Runtime",
+        "SVGImporter.Editor",
+        "Unity.2D.Sprite.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "SVGIMPORTER_2D_SPRITE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.2d.sprite",
+            "expression": "1.0.0",
+            "define": "SVGIMPORTER_2D_SPRITE"
+        }
+    ],
+    "noEngineReferences": false
+}

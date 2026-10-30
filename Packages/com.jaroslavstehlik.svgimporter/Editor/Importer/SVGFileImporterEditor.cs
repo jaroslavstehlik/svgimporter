@@ -23,7 +23,10 @@ namespace SVGImporter
             if(openSVGEditor)
             {
                 Selection.activeObject = assetTarget;
-                SVGEditorWindow.GetWindow();
+                if(SVGImportSettingsGUI.spriteEditorAvailable)
+                    EditorApplication.ExecuteMenuItem("Window/2D/Sprite Editor");
+                else
+                    SVGEditorWindow.GetWindow();
             }
 
             if(!serializedObject.isEditingMultipleObjects && assetTarget != null)
