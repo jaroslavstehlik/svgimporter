@@ -18,7 +18,7 @@ ScriptedImporter:
   _antialiasing: 0
   _meshCompression: 0
   _optimizeMesh: 1
-  _scale: 0.01
+  _scale: 0.000825
   _vpm: 1000
   _depthOffset: 0.01
   _compressDepth: 1
