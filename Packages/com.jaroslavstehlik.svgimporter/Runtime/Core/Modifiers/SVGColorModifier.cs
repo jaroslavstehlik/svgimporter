@@ -8,6 +8,7 @@ namespace SVGImporter
 {
     [ExecuteInEditMode]
     [RequireComponent(typeof(ISVGRenderer))]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Color Modifier", 22)]
     public class SVGColorModifier : SVGModifier {
 

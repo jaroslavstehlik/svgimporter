@@ -12,6 +12,7 @@ namespace SVGImporter
     [ExecuteInEditMode]
     [RequireComponent(typeof(SVGRenderer))]
     [RequireComponent(typeof(PolygonCollider2D))]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Physics 2D/SVG Collider 2D", 20)]
     public class SVGCollider2D : MonoBehaviour 
     {

@@ -12,158 +12,147 @@ namespace SVGImporter
     /// </summary>
     internal static class SVGImportSettingsGUI
     {
-        /// <summary>
-        /// Whether Unity's Sprite Editor (2D Sprite package) is installed: it edits the pivot and
-        /// border of SVG files (see SVGSpriteEditorDataProvider).
-        /// </summary>
-        internal static bool spriteEditorAvailable
+        internal static class Styles
         {
-            get { return System.Type.GetType("UnityEditor.U2D.Sprites.SpriteEditorWindow, Unity.2D.Sprite.Editor") != null; }
+            public static readonly GUIContent rendering = EditorGUIUtility.TrTextContent("Rendering");
+            public static readonly GUIContent meshes = EditorGUIUtility.TrTextContent("Meshes");
+            public static readonly GUIContent normalsAndTangents = EditorGUIUtility.TrTextContent("Normals & Tangents");
+            public static readonly GUIContent svgDocument = EditorGUIUtility.TrTextContent("SVG Document");
+
+            public static readonly GUIContent format = EditorGUIUtility.TrTextContent("Rendering", "Transparent: every shape is drawn with transparency, in drawing order; the asset sorts as one transparent object.\nOpaque + Transparent: opaque shapes are drawn as opaque geometry with depth, so hidden pixels are skipped; transparent shapes and soft edges are drawn on top. Shapes are spread slightly along z.\nUI (Canvas): for SVG Image on a Canvas.");
+            public static readonly GUIContent useGradients = EditorGUIUtility.TrTextContent("Gradients", "Whether the mesh and shaders support gradients. Auto: only when the SVG has gradients.");
+            public static readonly GUIContent antialiasing = EditorGUIUtility.TrTextContent("Soft Edges", "Adds a soft one-pixel edge to every shape in the mesh. For MSAA instead, turn this off and enable MSAA on the camera.");
+            public static readonly GUIContent sharpEdgesHint = EditorGUIUtility.TrTextContent("Edges are sharp unless the camera uses MSAA.");
+            public static readonly GUIContent antialiasingWidth = EditorGUIUtility.TrTextContent("Soft Edge Width", "Width of the soft edge, in screen pixels.");
+            public static readonly GUIContent exactGroupOpacity = EditorGUIUtility.TrTextContent("Exact Group Opacity", "Stops shapes in a semi-transparent group from showing through each other. Adds vertices.");
+            public static readonly GUIContent meshCompression = EditorGUIUtility.TrTextContent("Mesh Compression", "Reduces the mesh's file size, but may introduce irregularities and visual artefacts.");
+            public static readonly string meshCompressionWarning = L10n.Tr("Mesh compression can introduce visual artefacts. The higher the compression, the higher the risk.");
+            public static readonly GUIContent optimizeMesh = EditorGUIUtility.TrTextContent("Optimize Mesh", "Reorders vertices and indices for better GPU performance.");
+            public static readonly GUIContent scale = EditorGUIUtility.TrTextContent("Scale", "Size of the mesh in units per SVG pixel. Doesn't affect the mesh's detail.");
+            public static readonly GUIContent quality = EditorGUIUtility.TrTextContent("Quality", "Vertices per unit: higher values give smoother curves and more vertices.");
+            public static readonly GUIContent depthOffset = EditorGUIUtility.TrTextContent("Depth Offset", "Distance along z between shapes that overlap, so the depth test keeps their drawing order.");
+            public static readonly GUIContent compressDepth = EditorGUIUtility.TrTextContent("Compress Depth", "Shapes that don't overlap share a depth, so the asset is thinner along z.");
+            public static readonly GUIContent spriteEditor = EditorGUIUtility.TrTextContent("Sprite Editor", "Edit the pivot and the slicing border in the Sprite Editor.");
+            public static readonly GUIContent generateCollider = EditorGUIUtility.TrTextContent("Generate Collider", "Stores the outline for SVG Collider 2D.");
+            public static readonly GUIContent generateNormals = EditorGUIUtility.TrTextContent("Normals", "Generates normals for lighting.");
+            public static readonly GUIContent generateTangents = EditorGUIUtility.TrTextContent("Tangents", "Generates tangents for normal-mapped lighting. Needs normals.");
+            public static readonly GUIContent keepSVGFile = EditorGUIUtility.TrTextContent("Keep SVG File", "Keeps the SVG text in the asset, in builds too. Increases the asset's size.");
+            public static readonly GUIContent useLayers = EditorGUIUtility.TrTextContent("Use Layers", "Keeps the SVG's layers instead of one mesh, for modifiers and scripts.");
+            public static readonly GUIContent ignoreSVGCanvas = EditorGUIUtility.TrTextContent("Ignore SVG Canvas", "Trims the asset to its content's bounds instead of the SVG canvas.");
         }
 
-        /// <summary>Draws the settings. Returns true when the SVG Editor button was pressed.</summary>
-        public static bool Draw(SerializedObject serializedObject, bool showSVGEditorButton)
+        /// <summary>
+        /// Draws the import settings found by find, which takes a setting's name as SVG Assets
+        /// serialize it, without the underscore ("format", "vpm", ...). Returns true when the
+        /// Sprite Editor button, drawn if asked, was pressed.
+        /// </summary>
+        public static bool Draw(System.Func<string, SerializedProperty> find, bool showSpriteEditorButton)
         {
-            SerializedProperty format = serializedObject.FindProperty("_format");
-            SerializedProperty useGradients = serializedObject.FindProperty("_useGradients");
-            SerializedProperty antialiasing = serializedObject.FindProperty("_antialiasing");
-            SerializedProperty meshCompression = serializedObject.FindProperty("_meshCompression");
-            SerializedProperty optimizeMesh = serializedObject.FindProperty("_optimizeMesh");
-            SerializedProperty scale = serializedObject.FindProperty("_scale");
-            SerializedProperty vpm = serializedObject.FindProperty("_vpm");
-            SerializedProperty depthOffset = serializedObject.FindProperty("_depthOffset");
-            SerializedProperty compressDepth = serializedObject.FindProperty("_compressDepth");
-            SerializedProperty customPivotPoint = serializedObject.FindProperty("_customPivotPoint");
-            SerializedProperty pivotPoint = serializedObject.FindProperty("_pivotPoint");
-            SerializedProperty generateCollider = serializedObject.FindProperty("_generateCollider");
-            SerializedProperty generateNormals = serializedObject.FindProperty("_generateNormals");
-            SerializedProperty generateTangents = serializedObject.FindProperty("_generateTangents");
-            SerializedProperty keepSVGFile = serializedObject.FindProperty("_keepSVGFile");
-            SerializedProperty useLayers = serializedObject.FindProperty("_useLayers");
-            SerializedProperty ignoreSVGCanvas = serializedObject.FindProperty("_ignoreSVGCanvas");
-            SerializedProperty exactGroupOpacity = serializedObject.FindProperty("_exactGroupOpacity");
+            SerializedProperty format = find("format");
+            SerializedProperty antialiasing = find("antialiasing");
+            SerializedProperty meshCompression = find("meshCompression");
+            SerializedProperty generateNormals = find("generateNormals");
+            bool openSpriteEditor = false;
 
-            bool openSVGEditor = false;
-
-            EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(format, SVGAssetEditor.FORMAT_LABEL);
-            EditorGUILayout.PropertyField(useGradients, SVGAssetEditor.USE_GRADIENTS_LABEL);
-            EditorGUILayout.PropertyField(antialiasing, SVGAssetEditor.ANTIALIASING_LABEL);
+            EditorGUILayout.LabelField(Styles.rendering, EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(format, Styles.format);
+            EditorGUILayout.PropertyField(find("useGradients"), Styles.useGradients);
+            EditorGUILayout.PropertyField(antialiasing, Styles.antialiasing);
             if (!antialiasing.hasMultipleDifferentValues && !antialiasing.boolValue)
-                EditorGUILayout.LabelField(" ", SVGAssetEditor.SHARP_EDGES_HINT, EditorStyles.miniLabel);
+                EditorGUILayout.LabelField(GUIContent.none, Styles.sharpEdgesHint, EditorStyles.miniLabel);
+            SerializedProperty exactGroupOpacity = find("exactGroupOpacity");
             if (exactGroupOpacity != null)
-                EditorGUILayout.PropertyField(exactGroupOpacity, SVGAssetEditor.EXACT_GROUP_OPACITY_LABEL);
+                EditorGUILayout.PropertyField(exactGroupOpacity, Styles.exactGroupOpacity);
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Meshes", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(meshCompression, SVGAssetEditor.MESH_COMPRESSION_LABEL);
-            if(((SVGMeshCompression)meshCompression.enumValueIndex) != SVGMeshCompression.Off)
+            EditorGUILayout.LabelField(Styles.meshes, EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(meshCompression, Styles.meshCompression);
+            if (!meshCompression.hasMultipleDifferentValues && meshCompression.enumValueIndex != (int)SVGMeshCompression.Off)
+                EditorGUILayout.HelpBox(Styles.meshCompressionWarning, MessageType.Warning);
+            EditorGUILayout.PropertyField(find("optimizeMesh"), Styles.optimizeMesh);
+            EditorGUILayout.PropertyField(find("scale"), Styles.scale);
+            EditorGUILayout.PropertyField(find("vpm"), Styles.quality);
+            if (format.hasMultipleDifferentValues || format.enumValueIndex == (int)SVGAssetFormat.Opaque)
             {
-                EditorGUILayout.HelpBox(SVGAssetEditor.MESH_COMPRESSION_HELPBOX_LABEL, MessageType.Warning);
+                EditorGUILayout.PropertyField(find("depthOffset"), Styles.depthOffset);
+                EditorGUILayout.PropertyField(find("compressDepth"), Styles.compressDepth);
             }
-            EditorGUILayout.PropertyField(optimizeMesh, SVGAssetEditor.OPTIMIZE_MESH_LABEL);
-            EditorGUILayout.PropertyField(scale, SVGAssetEditor.SCALE_LABEL);
-            EditorGUILayout.PropertyField(vpm, SVGAssetEditor.QUALITY_LABEL);
-
-            if(format.enumValueIndex == (int)SVGAssetFormat.Opaque)
+            SVGPivotGUI.Draw(find("customPivotPoint"), find("pivotPoint"));
+            if (showSpriteEditorButton)
             {
-                EditorGUILayout.PropertyField(depthOffset, SVGAssetEditor.DEPTH_OFFSET_LABEL);
-                EditorGUILayout.PropertyField(compressDepth, SVGAssetEditor.COMPRESS_DEPTH_LABEL);
-            }
-
-            SVGPivotGUI.Draw(customPivotPoint, pivotPoint);
-            if(showSVGEditorButton)
-            {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                if(GUILayout.Button(spriteEditorAvailable && serializedObject.targetObject is SVGFileImporter ? "Sprite Editor" : "SVG Editor", EditorStyles.miniButton, GUILayout.Width(80f)))
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    openSVGEditor = true;
+                    GUILayout.FlexibleSpace();
+                    openSpriteEditor = GUILayout.Button(Styles.spriteEditor, EditorStyles.miniButton);
                 }
-                EditorGUILayout.EndHorizontal();
             }
-            EditorGUILayout.PropertyField(generateCollider, SVGAssetEditor.GENERATE_COLLIDER_LABEL);
+            EditorGUILayout.PropertyField(find("generateCollider"), Styles.generateCollider);
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Normals & Tangents", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(generateNormals, SVGAssetEditor.GENERATE_NORMALS_LABEL);
+            EditorGUILayout.LabelField(Styles.normalsAndTangents, EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(generateNormals, Styles.generateNormals);
             // Tangents need normals; the import ignores them without, so the setting is only disabled.
-            using(new EditorGUI.DisabledScope(!generateNormals.boolValue && !generateNormals.hasMultipleDifferentValues))
-            {
-                EditorGUILayout.PropertyField(generateTangents, SVGAssetEditor.GENERATE_TANGENTS_LABEL);
-            }
+            using (new EditorGUI.DisabledScope(!generateNormals.boolValue && !generateNormals.hasMultipleDifferentValues))
+                EditorGUILayout.PropertyField(find("generateTangents"), Styles.generateTangents);
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("SVG Document", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(keepSVGFile, SVGAssetEditor.KEEP_SVG_FILE_LABEL);
-            EditorGUILayout.PropertyField(useLayers, SVGAssetEditor.USE_LAYERS_LABEL);
-            EditorGUILayout.PropertyField(ignoreSVGCanvas, SVGAssetEditor.IGNORE_SVG_CANVAS_LABEL);
-            EditorGUILayout.Space();
+            EditorGUILayout.LabelField(Styles.svgDocument, EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(find("keepSVGFile"), Styles.keepSVGFile);
+            EditorGUILayout.PropertyField(find("useLayers"), Styles.useLayers);
+            EditorGUILayout.PropertyField(find("ignoreSVGCanvas"), Styles.ignoreSVGCanvas);
 
-            return openSVGEditor;
+            return openSpriteEditor;
+        }
+
+        /// <summary>The settings of SVG files or 1.x SVG Assets, which serialize them as _format, _vpm, ...</summary>
+        public static bool Draw(SerializedObject serializedObject, bool showSpriteEditorButton)
+        {
+            return Draw(name => serializedObject.FindProperty("_" + name), showSpriteEditorButton);
         }
 
         public static void DrawErrors(SVGError[] errors, bool exactGroupOpacity = false)
         {
-            if(errors == null)
+            if (errors == null)
                 return;
 
-            for(int i = 0; i < errors.Length; i++)
+            foreach (SVGError error in errors)
             {
-                switch(errors[i])
+                switch (error)
                 {
                     case SVGError.CorruptedFile:
-                        EditorGUILayout.HelpBox("SVG file is corrupted", MessageType.Error);
+                        EditorGUILayout.HelpBox(L10n.Tr("The SVG file can't be read."), MessageType.Error);
                         break;
                     case SVGError.Syntax:
-                        EditorGUILayout.HelpBox("SVG syntax is invalid", MessageType.Error);
-                        break;
-                    case SVGError.ClipPath:
-                        EditorGUILayout.HelpBox("Clip paths are experimental", MessageType.Warning);
+                        EditorGUILayout.HelpBox(L10n.Tr("The SVG file has a syntax error."), MessageType.Error);
                         break;
                     case SVGError.Mask:
-                        EditorGUILayout.HelpBox("Masks are not supported, except opaque shapes with the Native import engine. Unsupported masks are ignored.", MessageType.Warning);
-                        break;
-                    case SVGError.Symbol:
-                        EditorGUILayout.HelpBox("Re-import for working symbols", MessageType.Warning);
+                        EditorGUILayout.HelpBox(L10n.Tr("Masks are left out, except masks made of opaque shapes."), MessageType.Warning);
                         break;
                     case SVGError.Image:
-                        EditorGUILayout.HelpBox("Images are not supported and are left out", MessageType.Warning);
+                        EditorGUILayout.HelpBox(L10n.Tr("Images are left out."), MessageType.Warning);
                         break;
                     case SVGError.Filter:
-                        EditorGUILayout.HelpBox("Filters, such as blurs and drop shadows, are not supported and are ignored", MessageType.Warning);
+                        EditorGUILayout.HelpBox(L10n.Tr("Filters, such as blurs and drop shadows, are left out."), MessageType.Warning);
                         break;
                     case SVGError.Pattern:
-                        EditorGUILayout.HelpBox("Pattern fills and strokes are not supported and are left out", MessageType.Warning);
+                        EditorGUILayout.HelpBox(L10n.Tr("Pattern fills and strokes are left out."), MessageType.Warning);
                         break;
                     case SVGError.BlendMode:
-                        EditorGUILayout.HelpBox("Blend modes are not supported; shapes are blended normally", MessageType.Warning);
+                        EditorGUILayout.HelpBox(L10n.Tr("Blend modes aren't supported: shapes are blended normally."), MessageType.Warning);
                         break;
                     case SVGError.GroupOpacity:
                         EditorGUILayout.HelpBox(exactGroupOpacity
-                            ? "Semi-transparent shapes in semi-transparent groups still show through each other"
-                            : "Shapes in semi-transparent groups show through each other. Exact Group Opacity fixes this", MessageType.Info);
+                            ? L10n.Tr("Semi-transparent shapes in semi-transparent groups still show through each other.")
+                            : L10n.Tr("Shapes in semi-transparent groups show through each other. Exact Group Opacity fixes this."), MessageType.Info);
                         break;
                     case SVGError.TextSkipped:
-                        EditorGUILayout.HelpBox("Text was left out", MessageType.Warning);
+                        EditorGUILayout.HelpBox(L10n.Tr("Some text was left out."), MessageType.Warning);
                         break;
                     case SVGError.Unknown:
-                        EditorGUILayout.HelpBox("Unknow error occurred", MessageType.Error);
+                        EditorGUILayout.HelpBox(L10n.Tr("The SVG file couldn't be imported."), MessageType.Error);
                         break;
                 }
             }
-        }
-
-        public static void DrawReportIssueButton(string assetName)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if(GUILayout.Button(new GUIContent("Report Import Issue", "Opens a new GitHub issue. Please attach the SVG file.")))
-            {
-                Application.OpenURL("https://github.com/jaroslavstehlik/svgimporter/issues/new?title=" +
-                    System.Uri.EscapeDataString("Wrong SVG file import: " + assetName));
-            }
-            GUILayout.EndHorizontal();
         }
     }
 }

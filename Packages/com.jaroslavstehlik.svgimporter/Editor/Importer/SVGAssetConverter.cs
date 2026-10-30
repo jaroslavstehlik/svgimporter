@@ -50,7 +50,15 @@ namespace SVGImporter
                 EditorUtility.DisplayDialog("Convert SVG Assets", "There are no SVG Assets from SVG Importer 1.x in this project.", "OK");
                 return;
             }
+            ConvertWithDialogs(paths);
+        }
 
+        /// <summary>
+        /// Converts the SVG Assets at the paths as the menu command does: it asks first, saves and
+        /// closes the open scenes, and reports the result.
+        /// </summary>
+        internal static void ConvertWithDialogs(string[] paths)
+        {
             if(EditorSettings.serializationMode != SerializationMode.ForceText)
             {
                 EditorUtility.DisplayDialog("Convert SVG Assets",

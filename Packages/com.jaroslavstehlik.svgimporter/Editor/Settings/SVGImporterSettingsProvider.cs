@@ -23,6 +23,14 @@ namespace SVGImporter
             };
         }
 
+        static class Styles
+        {
+            public static readonly GUIContent import = EditorGUIUtility.TrTextContent("Import");
+            public static readonly GUIContent importNewSVGFiles = EditorGUIUtility.TrTextContent("Import New SVG Files",
+                "Import SVG files added to the project with SVG Importer. Turn this off when the project uses Unity's own SVG import, for example for UI Toolkit. Individual files can still be switched in the Inspector.");
+            public static readonly GUIContent defaults = EditorGUIUtility.TrTextContent("Defaults for New SVG Files");
+        }
+
         static SerializedObject s_Settings;
 
         static void Draw()
@@ -34,44 +42,26 @@ namespace SVGImporter
 
             EditorGUIUtility.labelWidth = 220f;
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.LabelField("Import", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(s_Settings.FindProperty("_importNewSVGFiles"), new GUIContent("Import New SVG Files",
-                "Import SVG files added to the project with SVG Importer. Turn this off when the project uses Unity's own SVG import, for example for UI Toolkit. Individual files can still be switched in the Inspector."));
+            EditorGUILayout.LabelField(Styles.import, EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(s_Settings.FindProperty("_importNewSVGFiles"), Styles.importNewSVGFiles);
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(SVGImportSettingsGUI.Styles.rendering, EditorStyles.boldLabel);
             // Stored in half pixels, the unit the shaders and 1.x projects use; shown in pixels.
             SerializedProperty width = s_Settings.FindProperty("_antialiasingWidth");
             EditorGUI.BeginChangeCheck();
-            float pixels = EditorGUILayout.FloatField(SVGAssetEditor.ANTIALIASING_WIDTH_LABEL, width.floatValue * 0.5f);
+            float pixels = EditorGUILayout.FloatField(SVGImportSettingsGUI.Styles.antialiasingWidth, width.floatValue * 0.5f);
             if (EditorGUI.EndChangeCheck())
                 width.floatValue = Mathf.Max(0f, pixels) * 2f;
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Defaults for New SVG Files", EditorStyles.boldLabel);
-            SerializedProperty d = s_Settings.FindProperty("_defaults");
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("format"), SVGAssetEditor.FORMAT_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("useGradients"), SVGAssetEditor.USE_GRADIENTS_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("antialiasing"), SVGAssetEditor.ANTIALIASING_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("exactGroupOpacity"), SVGAssetEditor.EXACT_GROUP_OPACITY_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("meshCompression"), SVGAssetEditor.MESH_COMPRESSION_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("optimizeMesh"), SVGAssetEditor.OPTIMIZE_MESH_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("scale"), SVGAssetEditor.SCALE_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("verticesPerMeter"), SVGAssetEditor.QUALITY_LABEL);
-            if (d.FindPropertyRelative("format").enumValueIndex == (int)SVGAssetFormat.Opaque)
+            EditorGUILayout.LabelField(Styles.defaults, EditorStyles.boldLabel);
+            using (new EditorGUI.IndentLevelScope())
             {
-                EditorGUILayout.PropertyField(d.FindPropertyRelative("depthOffset"), SVGAssetEditor.DEPTH_OFFSET_LABEL);
-                EditorGUILayout.PropertyField(d.FindPropertyRelative("compressDepth"), SVGAssetEditor.COMPRESS_DEPTH_LABEL);
+                // The defaults are named as SVGImportOptions names them.
+                SerializedProperty defaults = s_Settings.FindProperty("_defaults");
+                SVGImportSettingsGUI.Draw(name => defaults.FindPropertyRelative(name == "vpm" ? "verticesPerMeter" : name), false);
             }
-            SVGPivotGUI.Draw(d.FindPropertyRelative("customPivotPoint"), d.FindPropertyRelative("pivotPoint"));
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("generateCollider"), SVGAssetEditor.GENERATE_COLLIDER_LABEL);
-            SerializedProperty normals = d.FindPropertyRelative("generateNormals");
-            EditorGUILayout.PropertyField(normals, SVGAssetEditor.GENERATE_NORMALS_LABEL);
-            using (new EditorGUI.DisabledScope(!normals.boolValue))
-                EditorGUILayout.PropertyField(d.FindPropertyRelative("generateTangents"), SVGAssetEditor.GENERATE_TANGENTS_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("keepSVGFile"), SVGAssetEditor.KEEP_SVG_FILE_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("useLayers"), SVGAssetEditor.USE_LAYERS_LABEL);
-            EditorGUILayout.PropertyField(d.FindPropertyRelative("ignoreSVGCanvas"), SVGAssetEditor.IGNORE_SVG_CANVAS_LABEL);
 
             if (EditorGUI.EndChangeCheck())
             {

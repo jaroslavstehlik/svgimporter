@@ -16,6 +16,7 @@ namespace SVGImporter
     using Geometry;
     
     [ExecuteInEditMode]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Renderer", 20)]
     public class SVGRenderer : UIBehaviour, ISVGShape, ISVGRenderer, ISVGReference, ISVGAtlasClient
     {

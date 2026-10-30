@@ -9,6 +9,7 @@ namespace SVGImporter
     using Rendering;
 
     [ExecuteInEditMode]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Sorter", 20)]
     public class SVGSorter : MonoBehaviour {
 

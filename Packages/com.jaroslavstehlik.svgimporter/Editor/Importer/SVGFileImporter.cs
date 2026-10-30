@@ -19,6 +19,7 @@ namespace SVGImporter
     /// importer also claims the extension. SVGPostprocessor assigns it to new files.
     /// </summary>
     [ScriptedImporter(11, null, new[] { "svg" })]
+    [HelpURL(SVGDocumentation.url)]
     public class SVGFileImporter : ScriptedImporter
     {
         // The field names match SVGAsset's serialized fields, so that the same GUI draws both and

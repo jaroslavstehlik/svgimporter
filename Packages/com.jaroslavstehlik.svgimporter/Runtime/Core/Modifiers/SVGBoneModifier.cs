@@ -11,6 +11,7 @@ namespace SVGImporter
 {    
     [ExecuteInEditMode]
     [RequireComponent(typeof(ISVGRenderer))]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Bone Modifier", 22)]
     public class SVGBoneModifier : SVGModifier
     {

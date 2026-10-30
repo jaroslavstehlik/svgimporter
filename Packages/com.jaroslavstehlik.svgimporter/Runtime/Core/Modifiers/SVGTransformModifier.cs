@@ -8,6 +8,7 @@ namespace SVGImporter
 {    
     [ExecuteInEditMode]
     [RequireComponent(typeof(ISVGRenderer))]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Transform Modifier", 22)]
     public class SVGTransformModifier : SVGModifier
     {

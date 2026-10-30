@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEditorInternal;
 using System;
 using System.Collections;
-using System.Reflection;
 
 namespace SVGImporter
 {
@@ -185,16 +184,7 @@ namespace SVGImporter
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.LabelField("Unity Sorter", EditorStyles.boldLabel);
-                MethodInfo sortingLayerField = typeof(EditorGUILayout).GetMethod("SortingLayerField", 
-                                                                                 BindingFlags.Static | BindingFlags.NonPublic,
-                                                                                 System.Type.DefaultBinder,
-                                                                                 new System.Type[] {typeof(GUIContent), typeof(SerializedProperty), typeof(GUIStyle), typeof(GUIStyle) },
-                                                                                 null
-                                                                                );
-                if(sortingLayerField != null)
-                {
-                    sortingLayerField.Invoke(null, new System.Object[]{ new GUIContent("Sorting Layer"), sortingLayerID, EditorStyles.popup, EditorStyles.label });
-                }
+                SortingLayerField(sortingLayerID);
                 EditorGUILayout.PropertyField(sortingOrder);
                 if(!HasSelectedTransparentAsset())
                 {
@@ -234,8 +224,25 @@ namespace SVGImporter
             return asset._editor_Info;
         }
 
-        // Get the sorting layer names
+        static readonly GUIContent s_SortingLayerLabel = EditorGUIUtility.TrTextContent("Sorting Layer");
 
-        // Get the unique sorting layer IDs -- tossed this in for good measure
+        // A popup of the project's sorting layers, as renderers show it.
+        static void SortingLayerField(SerializedProperty layerID)
+        {
+            SortingLayer[] layers = SortingLayer.layers;
+            var names = new GUIContent[layers.Length];
+            int selected = -1;
+            for(int i = 0; i < layers.Length; i++)
+            {
+                names[i] = new GUIContent(layers[i].name);
+                if(layers[i].id == layerID.intValue) selected = i;
+            }
+            EditorGUI.showMixedValue = layerID.hasMultipleDifferentValues;
+            EditorGUI.BeginChangeCheck();
+            selected = EditorGUILayout.Popup(s_SortingLayerLabel, selected, names);
+            if(EditorGUI.EndChangeCheck() && selected >= 0)
+                layerID.intValue = layers[selected].id;
+            EditorGUI.showMixedValue = false;
+        }
     }
 }

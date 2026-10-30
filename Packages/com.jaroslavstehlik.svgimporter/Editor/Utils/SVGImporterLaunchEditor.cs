@@ -6,7 +6,6 @@ using UnityEditor;
 
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace SVGImporter
 {
@@ -205,8 +204,7 @@ namespace SVGImporter
                     if(svgImages[i] == null)
                         continue;
 
-                    typeof(SVGImage).GetMethod("Clear", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(svgImages[i], null);
-                    typeof(SVGImage).GetMethod("UpdateMaterial", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(svgImages[i], null);
+                    svgImages[i].Refresh();
                     svgImages[i].SetAllDirty();
                 }
             }

@@ -6,6 +6,7 @@ using System.Collections;
 namespace SVGImporter
 {
     [ExecuteInEditMode]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Miscellaneous/SVG Frame Animator", 20)]
     public class SVGFrameAnimator : MonoBehaviour {
 

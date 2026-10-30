@@ -1,101 +1,71 @@
 // Copyright (C) 2015 Jaroslav Stehlik
 // Released under the license found in the LICENSE file.
 
-//#define DEBUG_MATERIALS
-
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEditor;
 using UnityEditor.AnimatedValues;
-
-using System.Linq;
-using System.Reflection;
+using UnityEditor.UI;
 
 namespace SVGImporter
 {
+    /// <summary>The SVG Image Inspector, laid out as uGUI's Image Inspector.</summary>
     [CustomEditor(typeof(SVGImage), true)]
     [CanEditMultipleObjects]
-    public class SVGImageEditor : Editor
+    public class SVGImageEditor : GraphicEditor
     {
-        SVGImage image;
-
-        protected SerializedProperty m_Type;
-        protected SerializedProperty m_Color;
-        protected SerializedProperty m_Material;
-        protected SerializedProperty m_VectorGraphics;
-        protected SerializedProperty m_PreserveAspect;
-        protected SerializedProperty m_UsePivot;
-        protected SerializedProperty m_RaycastTarget;
-
-        protected GUIContent m_VectorContent;
-
-        private GUIContent m_CorrectButtonContent;
-        protected AnimBool m_ShowNativeSize;
-        AnimBool m_ShowSlicedOrTiled;
-        AnimBool m_ShowSliced;
-        AnimBool m_ShowType;
-
-        void OnEnable()
+        static class Styles
         {
-            image = (SVGImage)target;
+            public static readonly GUIContent vectorGraphics = EditorGUIUtility.TrTextContent("Vector Graphics", "The SVG Asset to draw.");
+            public static readonly GUIContent imageType = EditorGUIUtility.TrTextContent("Image Type");
+            public static readonly string noBorder = L10n.Tr("This SVG Asset doesn't have a border.");
+            public static readonly string notForCanvas = L10n.Tr("The SVG Asset's Rendering must be UI (Canvas).");
+            public static readonly GUIContent useCanvasFormat = EditorGUIUtility.TrTextContent("Fix", "Sets the SVG file's Rendering to UI (Canvas) and reimports it.");
+        }
 
-            m_Type = serializedObject.FindProperty("m_Type");
-            m_Color = serializedObject.FindProperty("m_Color");
-            m_Material = serializedObject.FindProperty("m_Material");
-            m_RaycastTarget = serializedObject.FindProperty("m_RaycastTarget");
-            
-            m_ShowNativeSize = new AnimBool(false);
-            m_ShowNativeSize.valueChanged.AddListener(Repaint);
+        SerializedProperty m_VectorGraphics;
+        SerializedProperty m_Type;
+        SerializedProperty m_PreserveAspect;
+        SerializedProperty m_UsePivot;
+        AnimBool m_ShowType;
+        AnimBool m_ShowSliced;
 
+        protected override void OnEnable()
+        {
+            base.OnEnable();
             m_VectorGraphics = serializedObject.FindProperty("_vectorGraphics");
+            m_Type = serializedObject.FindProperty("m_Type");
             m_PreserveAspect = serializedObject.FindProperty("m_PreserveAspect");
             m_UsePivot = serializedObject.FindProperty("m_UsePivot");
 
-            m_VectorContent = new GUIContent("Vector Graphics");
-            m_CorrectButtonContent = new GUIContent("Set Native Size", "Sets the size to match the content.");
-
             m_ShowType = new AnimBool(m_VectorGraphics.objectReferenceValue != null);
             m_ShowType.valueChanged.AddListener(Repaint);
-
-            var typeEnum = (SVGImage.Type)m_Type.enumValueIndex;
-            
-            m_ShowSlicedOrTiled = new AnimBool(!m_Type.hasMultipleDifferentValues && typeEnum == SVGImage.Type.Sliced);
-            m_ShowSliced = new AnimBool(!m_Type.hasMultipleDifferentValues && typeEnum == SVGImage.Type.Sliced);
-            m_ShowSlicedOrTiled.valueChanged.AddListener(Repaint);
+            m_ShowSliced = new AnimBool(IsSliced());
             m_ShowSliced.valueChanged.AddListener(Repaint);
-
             SetShowNativeSize(true);
-        }       
+        }
 
-        protected virtual void OnDisable()
+        protected override void OnDisable()
         {
-            Tools.hidden = false;
-            m_ShowNativeSize.valueChanged.RemoveListener(Repaint);
             m_ShowType.valueChanged.RemoveListener(Repaint);
-            m_ShowSlicedOrTiled.valueChanged.RemoveListener(Repaint);
             m_ShowSliced.valueChanged.RemoveListener(Repaint);
+            base.OnDisable();
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            bool changed = false;
-            if(VectorGUI())
-                changed = true;
-
-            if(AppearanceControlsGUI())
-                changed = true;
+            VectorGraphicsGUI();
+            AppearanceControlsGUI();
+            RaycastControlsGUI();
+            MaskableControlsGUI();
 
             m_ShowType.target = m_VectorGraphics.objectReferenceValue != null;
             if (EditorGUILayout.BeginFadeGroup(m_ShowType.faded))
-            {
-                if(TypeGUI())
-                    changed = true;
-            }
+                TypeGUI();
             EditorGUILayout.EndFadeGroup();
 
-            EditorGUI.BeginChangeCheck();
             SetShowNativeSize(false);
             if (EditorGUILayout.BeginFadeGroup(m_ShowNativeSize.faded))
             {
@@ -106,173 +76,84 @@ namespace SVGImporter
             }
             EditorGUILayout.EndFadeGroup();
             NativeSizeButtonGUI();
-            RaycastControlsGUI();
 
-            if(EditorGUI.EndChangeCheck())
-                changed = true;
+            if (serializedObject.ApplyModifiedProperties())
+            {
+                foreach (SVGImage image in targets.Cast<SVGImage>())
+                    image.SetAllDirty();
+            }
+        }
 
-            if (changed)
+        void VectorGraphicsGUI()
+        {
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_VectorGraphics, Styles.vectorGraphics);
+            var asset = m_VectorGraphics.objectReferenceValue as SVGAsset;
+            if (EditorGUI.EndChangeCheck())
             {
                 serializedObject.ApplyModifiedProperties();
-                image.SetAllDirty();
-            }
-        }
-        
-        protected bool VectorGUI()
-        {
-            bool changed = false;
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(m_VectorGraphics, m_VectorContent);
-            if(EditorGUI.EndChangeCheck())
-            {
-                MethodInfo Refresh = typeof(SVGImage).GetMethod("Refresh", BindingFlags.NonPublic | BindingFlags.Instance);
-                Refresh.Invoke(target, null);
-                changed = true;
-
-                SVGImage.Type oldType = (SVGImage.Type)m_Type.enumValueIndex;
-                SVGAsset vectorGraphics = m_VectorGraphics.objectReferenceValue as SVGAsset;
-                if(vectorGraphics != null)
+                foreach (SVGImage image in targets.Cast<SVGImage>())
+                    image.Refresh();
+                // Assets with a border are drawn sliced, as sprites are.
+                if (asset != null)
                 {
-                    if (vectorGraphics.border.SqrMagnitude() > 0)
-                    {
+                    if (asset.border.sqrMagnitude > 0f)
                         m_Type.enumValueIndex = (int)SVGImage.Type.Sliced;
-                    }
-                    else if (oldType == SVGImage.Type.Sliced)
-                    {
+                    else if (m_Type.enumValueIndex == (int)SVGImage.Type.Sliced)
                         m_Type.enumValueIndex = (int)SVGImage.Type.Simple;
-                    }
                 }
             }
 
-            #if DEBUG_MATERIALS
-            EditorGUILayout.ObjectField("Default Material", image.defaultMaterialTest, typeof(Material), true);
-            EditorGUILayout.ObjectField("Mask Material", image.maskMaterialTest, typeof(Material), true);
-            EditorGUILayout.ObjectField("Current Material", image.currenttMaterialTest, typeof(Material), true);
-            EditorGUILayout.ObjectField("Render Material", image.renderMaterialTest, typeof(Material), true);
-            EditorGUILayout.ObjectField("Canvas Render Material", image.canvasRenderer.GetMaterial(), typeof(Material), true);
-            #endif
-
-            SVGAsset newVectorGraphics = m_VectorGraphics.objectReferenceValue as SVGAsset;
-            if (newVectorGraphics)
+            if (asset != null && !m_VectorGraphics.hasMultipleDifferentValues && asset.format != SVGAssetFormat.uGUI)
             {
-                if(newVectorGraphics.format != SVGAssetFormat.uGUI)
+                // 1.x SVG Assets (.asset files) are read-only until converted to .svg files.
+                var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(asset)) as SVGFileImporter;
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("The SVG Asset's Rendering must be UI (Canvas)", MessageType.Error);
-                    if(GUILayout.Button("Apply"))
+                    EditorGUILayout.HelpBox(Styles.notForCanvas, MessageType.Error);
+                    using (new EditorGUI.DisabledScope(importer == null))
                     {
-                        var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(newVectorGraphics)) as SVGFileImporter;
-                        if(importer != null)
+                        if (GUILayout.Button(Styles.useCanvasFormat, GUILayout.ExpandHeight(true)))
                         {
-                            // An imported .svg file: change its import setting and reimport it.
                             var settings = new SerializedObject(importer);
                             settings.FindProperty("_format").intValue = (int)SVGAssetFormat.uGUI;
-                            settings.ApplyModifiedProperties();
+                            settings.ApplyModifiedPropertiesWithoutUndo();
                             importer.SaveAndReimport();
+                            GUIUtility.ExitGUI();
                         }
-                        else
-                        {
-                            // A 1.x SVG Asset stored as an .asset file.
-                            newVectorGraphics._editor_format = SVGAssetFormat.uGUI;
-                            newVectorGraphics._editor_ApplyChanges();
-                            SVGAssetEditor.UpdateInstances(new SVGAsset[]{newVectorGraphics});
-                        }
-                        changed = true;
                     }
-                    EditorGUILayout.EndHorizontal();
-                } else {
                 }
             }
-
-            return changed;
         }
 
-        protected bool TypeGUI()
+        void TypeGUI()
         {
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(m_Type, new GUIContent("Image Type"));
-
-            ++EditorGUI.indentLevel;
+            EditorGUILayout.PropertyField(m_Type, Styles.imageType);
+            m_ShowSliced.target = IsSliced();
+            EditorGUI.indentLevel++;
+            if (EditorGUILayout.BeginFadeGroup(m_ShowSliced.faded))
             {
-                SVGImage.Type typeEnum = (SVGImage.Type)m_Type.enumValueIndex;
-                
-                bool showSlicedOrTiled = (!m_Type.hasMultipleDifferentValues && (typeEnum == SVGImage.Type.Sliced));
-                if (showSlicedOrTiled && targets.Length > 1)
-                    showSlicedOrTiled = targets.Select(obj => obj as SVGImage).All(img => img.hasBorder);
-
-                SVGImage image = target as SVGImage;
-                if (EditorGUILayout.BeginFadeGroup(m_ShowSliced.faded))
-                {
-                    if (image.vectorGraphics != null && !image.hasBorder)
-                        EditorGUILayout.HelpBox("This Image doesn't have a border.", MessageType.Warning);
-                }
-                EditorGUILayout.EndFadeGroup();
+                if (targets.Cast<SVGImage>().Any(image => image.vectorGraphics != null && !image.hasBorder))
+                    EditorGUILayout.HelpBox(Styles.noBorder, MessageType.Warning);
             }
-            --EditorGUI.indentLevel;
+            EditorGUILayout.EndFadeGroup();
+            EditorGUI.indentLevel--;
+        }
 
-            return EditorGUI.EndChangeCheck();
+        bool IsSliced()
+        {
+            return !m_Type.hasMultipleDifferentValues && m_Type.enumValueIndex == (int)SVGImage.Type.Sliced;
         }
 
         void SetShowNativeSize(bool instant)
         {
-            SVGImage.Type type = (SVGImage.Type)m_Type.enumValueIndex;
-            bool showNativeSize = (type == SVGImage.Type.Simple);
-            SetShowNativeSize(showNativeSize, instant);
-        }
-
-        protected void SetShowNativeSize(bool show, bool instant)
-        {
-            if (instant)
-                m_ShowNativeSize.value = show;
-            else
-                m_ShowNativeSize.target = show;
-        }
-        
-        protected void NativeSizeButtonGUI()
-        {
-            if (EditorGUILayout.BeginFadeGroup(m_ShowNativeSize.faded))
-            {
-                EditorGUILayout.BeginHorizontal();
-                {
-                    GUILayout.Space(EditorGUIUtility.labelWidth);
-                    if (GUILayout.Button(m_CorrectButtonContent, EditorStyles.miniButton))
-                    {
-                        foreach (Graphic graphic in targets.Select(obj => obj as Graphic))
-                        {
-                            Undo.RecordObject(graphic.rectTransform, "Set Native Size");
-                            graphic.SetNativeSize();
-                            EditorUtility.SetDirty(graphic);
-                        }
-                    }
-                }
-                EditorGUILayout.EndHorizontal();
-            }
-            EditorGUILayout.EndFadeGroup();
-        }
-        
-        protected bool AppearanceControlsGUI()
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(m_Color);
-            EditorGUILayout.PropertyField(m_Material);
-            return EditorGUI.EndChangeCheck();
-        }
-
-        protected string GetEditorInfo(SVGAsset asset)
-        {
-            return asset._editor_Info;
+            SetShowNativeSize(!m_Type.hasMultipleDifferentValues && m_Type.enumValueIndex == (int)SVGImage.Type.Simple, instant);
         }
 
         public override string GetInfoString()
         {
-            if(image.vectorGraphics != null)
-                return GetEditorInfo(image.vectorGraphics);
-            return "";
-        }
-
-        protected void RaycastControlsGUI()
-        {
-            EditorGUILayout.PropertyField(m_RaycastTarget);
+            var image = (SVGImage)target;
+            return image.vectorGraphics != null ? image.vectorGraphics._editor_Info : "";
         }
     }
 }

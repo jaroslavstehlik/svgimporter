@@ -11,6 +11,7 @@ namespace SVGImporter
 
     [ExecuteInEditMode]
     [RequireComponent(typeof(ISVGShape), typeof(ISVGRenderer))]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/UV Modifier", 22)]
     public class SVGUVModifier : SVGModifier {
 

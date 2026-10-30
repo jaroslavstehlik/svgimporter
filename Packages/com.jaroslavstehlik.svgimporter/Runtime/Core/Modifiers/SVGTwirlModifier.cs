@@ -8,6 +8,7 @@ namespace SVGImporter
 {
     [ExecuteInEditMode]
     [RequireComponent(typeof(ISVGRenderer))]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Twirl Modifier", 22)]
     public class SVGTwirlModifier : SVGModifier {
 

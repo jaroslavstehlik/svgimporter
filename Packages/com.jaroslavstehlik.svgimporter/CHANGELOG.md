@@ -46,7 +46,7 @@
 - The **Antialiasing** import setting is now called **Soft Edges**, and the project setting **Antialiasing Width** is **Soft Edge Width**, in screen pixels (the default, 1, is the previous 2). It adds a soft edge to the mesh; it isn't MSAA. For MSAA, turn Soft Edges off and enable MSAA on the camera. The script API (`antialiasing`) is unchanged.
 - **Exact Group Opacity** (import setting, off by default): semi-transparent groups can look as they do in browsers, Illustrator and Figma. Where a group's children overlap, the parts hidden by opaque children are removed at import, so lower shapes no longer show through upper ones. It adds vertices along the cuts and can show hairline seams where cut shapes meet, so turn it on for the assets that need it. Translucent children that overlap still show through each other; the Inspector flags files with group opacity.
 - The pivot is set like a sprite's: a **Pivot** popup (Center, Top Left, …, Custom) and, for Custom, a **Custom Pivot** with (0, 0) at the bottom left, as in Unity's sprite importer. Existing pivots are kept.
-- With the 2D Sprite package installed, SVG files open in Unity's **Sprite Editor** (the Sprite Editor button in the import settings, or Window > 2D > Sprite Editor) to drag the pivot and the slicing border. Without it, the SVG Editor window is used as before.
+- SVG files open in Unity's **Sprite Editor** (the Sprite Editor button in the import settings, or Window > 2D > Sprite Editor) to drag the pivot and the slicing border. SVG Importer now depends on the 2D Sprite package (`com.unity.2d.sprite`), which Unity adds with it.
 - Removed code that was no longer used: the `SVGStrokeRenderer`, `SVGRenderTexture` and `StrokeRendererLegacy` components, the additive and multiply "Others" shaders, the SVG utility window, `SVGCombineMesh`, `SVGMeshCutter`, unused math, Bézier and mesh helpers (for example `SVGMeshUtils.MergeMeshes`, `SVGAsset.MergeLayersToShapes`, `SVGAtlas.AssignMaterialGradients`), Unity 4 and 5 code paths and commented-out code.
 - New: `SVGAsset.importOptions`, `importEngine` (the engine that imported it) and `importHash`.
 - Fixed the Opaque format with **Compress Depth** throwing an exception or drawing overlapping shapes in the wrong order when an element has both a fill and a stroke.
@@ -73,6 +73,12 @@
 - Modifiers on an SVG Image have no effect (they work with SVG Renderer); they now say so in the Inspector and the console.
 - SVG Image's **Apply** button changes an imported `.svg` file's format setting and reimports it, instead of rewriting the imported asset.
 - Selecting an SVG file no longer marks its import settings as modified.
+- Removed the SVG Editor window, which the Sprite Editor replaces, and the About window and the Help menus under Window > SVG Importer. The components and the importer have help buttons that open the documentation.
+- 1.x SVG Assets (`.asset` files) are read-only in the Inspector, with a **Convert to SVG File** button; their own Apply, Revert, Recover SVG File and Save Mesh File buttons are removed. Convert them to change their settings, or use Window > SVG Importer > Convert SVG Assets to SVG Files....
+- The import settings, the 1.x SVG Asset Inspector and the defaults in Project Settings are drawn by the same code, so they show the same settings, with the same names and help texts. Project Settings now groups them as the Inspector does.
+- **Report Import Issue** moved from the bottom of the import settings to the importer's context menu (the ⋮ button).
+- SVG Image's Inspector is built on uGUI's Graphic Inspector, so it has Maskable and Raycast Padding like Image, and edits every selected image.
+- The SVG Renderer's Sorting Layer field no longer uses Unity's internal API.
 
 ## Legacy releases
 

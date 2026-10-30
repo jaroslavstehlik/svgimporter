@@ -8,6 +8,7 @@ namespace SVGImporter
 {
     [ExecuteInEditMode]
     [RequireComponent(typeof(ISVGRenderer))]
+    [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Sphere Modifier", 22)]
     public class SVGSphereModifier : SVGModifier {
 
