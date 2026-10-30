@@ -1,6 +1,7 @@
 # Changelog
 
 ## [2.0.0] - Unreleased
+- **SVG Importer is now under the MIT license.** The package lists the third-party software it includes, such as the Rust crates of the native library and Clipper, in `Third Party Notices.md`.
 - **SVG files are now imported like any other asset.** An `.svg` file stays in the project and is imported as an SVG Asset, with its settings in the Inspector, instead of being converted into an `.asset` file and deleted.
 - SVG Importer takes over SVG files added to the project. Turn off **Import New SVG Files** in the settings to keep Unity's own SVG importer, or switch individual files in the Inspector.
 - New: **Window > SVG Importer > Convert SVG Assets to SVG Files...** converts 1.x SVG Assets back to `.svg` files and keeps their references.

@@ -6,8 +6,16 @@
   "unity": "6000.0",
   "documentationUrl": "https://svgimporter.com/",
   "changelogUrl": "https://github.com/jaroslavstehlik/svgimporter/blob/master/Packages/com.jaroslavstehlik.svgimporter/CHANGELOG.md",
-  "licensesUrl": "https://github.com/jaroslavstehlik/svgimporter/blob/master/LICENSE",
-  "keywords": ["svg", "vector", "vector graphics", "2d", "mesh", "ui"],
+  "license": "MIT",
+  "licensesUrl": "https://github.com/jaroslavstehlik/svgimporter/blob/master/Packages/com.jaroslavstehlik.svgimporter/LICENSE.md",
+  "keywords": [
+    "svg",
+    "vector",
+    "vector graphics",
+    "2d",
+    "mesh",
+    "ui"
+  ],
   "author": {
     "name": "Jaroslav Stehlik",
     "email": "support@svgimporter.com",
@@ -19,11 +27,35 @@
     "com.unity.modules.physics2d": "1.0.0"
   },
   "samples": [
-    { "displayName": "Basic Examples", "description": "Example SVG assets: lion, tiger, gradients and a UI button.", "path": "Samples~/Basic Examples" },
-    { "displayName": "Curves Demo", "description": "The animated trailer scene, made with SVG Importer.", "path": "Samples~/Curves Demo" },
-    { "displayName": "Hologram Demo", "description": "Hologram effect demo scene.", "path": "Samples~/Hologram Demo" },
-    { "displayName": "Infinite Scene Demo", "description": "Animated infinite scene demo.", "path": "Samples~/Infinite Scene Demo" },
-    { "displayName": "Realtime Import Demo", "description": "Import SVG files at runtime.", "path": "Samples~/Realtime Import Demo" },
-    { "displayName": "SVG Modifier Demos", "description": "Motion blur, texture overlay and per-layer recoloring.", "path": "Samples~/SVG Modifier Demos" }
+    {
+      "displayName": "Basic Examples",
+      "description": "Example SVG assets: lion, tiger, gradients and a UI button.",
+      "path": "Samples~/Basic Examples"
+    },
+    {
+      "displayName": "Curves Demo",
+      "description": "The animated trailer scene, made with SVG Importer.",
+      "path": "Samples~/Curves Demo"
+    },
+    {
+      "displayName": "Hologram Demo",
+      "description": "Hologram effect demo scene.",
+      "path": "Samples~/Hologram Demo"
+    },
+    {
+      "displayName": "Infinite Scene Demo",
+      "description": "Animated infinite scene demo.",
+      "path": "Samples~/Infinite Scene Demo"
+    },
+    {
+      "displayName": "Realtime Import Demo",
+      "description": "Import SVG files at runtime.",
+      "path": "Samples~/Realtime Import Demo"
+    },
+    {
+      "displayName": "SVG Modifier Demos",
+      "description": "Motion blur, texture overlay and per-layer recoloring.",
+      "path": "Samples~/SVG Modifier Demos"
+    }
   ]
 }

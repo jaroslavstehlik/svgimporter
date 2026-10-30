@@ -40,7 +40,7 @@ SVG files are imported by a native library included in the package.
 | iOS (arm64), Android (arm64-v8a, armeabi-v7a) | | Yes | Yes |
 | WebGL and other platforms | | **No** | Yes |
 
-SVG Assets imported in the Editor render on every platform. Runtime import needs the native library, so on WebGL (and other platforms without one) `SVGAsset.Load` returns null and logs why: import the files in the Editor instead.
+SVG Assets imported in the Editor render on every platform. Runtime import needs the native library, so on WebGL (and other platforms without one) `SVGAsset.Load` returns null, and `SVGAsset.TryLoad` says why: import the files in the Editor instead.
 
 ## Known limitations
 
@@ -50,6 +50,14 @@ SVG Assets imported in the Editor render on every platform. Runtime import needs
 ## Documentation
 
 See [svgimporter.com](https://svgimporter.com/) and the [YouTube channel](https://www.youtube.com/@Svgimporter).
+
+## License
+
+SVG Importer is free and open source under the [MIT license](https://github.com/jaroslavstehlik/svgimporter/blob/master/Packages/com.jaroslavstehlik.svgimporter/LICENSE.md): use it in commercial and non-commercial projects.
+
+It includes third-party software, listed in [Third Party Notices](https://github.com/jaroslavstehlik/svgimporter/blob/master/Packages/com.jaroslavstehlik.svgimporter/Third%20Party%20Notices.md). Games and apps that include the native library should reproduce those notices, for example in their credits or legal notices.
+
+Made something with SVG Importer? A "Made with SVG Importer" in your credits is appreciated, never required.
 
 ## Unity 2017
 
