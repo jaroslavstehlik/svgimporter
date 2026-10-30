@@ -112,7 +112,9 @@ namespace SVGImporter
                 // A missing or mismatched native library, for example on a platform it isn't built for.
                 viewport = new Rect();
                 context.errors.Add(SVGError.CorruptedFile);
-                context.messages.Add("The SVG import library isn't available on this platform: " + exception.Message);
+                context.messages.Add(exception is InvalidOperationException
+                    ? exception.Message
+                    : "The SVG import library isn't available on this platform: " + exception.Message);
                 return false;
             }
         }

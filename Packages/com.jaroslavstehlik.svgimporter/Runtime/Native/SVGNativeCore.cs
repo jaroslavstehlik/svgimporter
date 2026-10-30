@@ -122,7 +122,9 @@ namespace SVGImporter.Native
             if (!isSupported)
                 throw new InvalidOperationException("SVG Importer can't import at runtime on " + Application.platform + ", which has no native library; import the files in the Editor.");
             if (abiVersion != expectedAbiVersion)
-                throw new InvalidOperationException("svgimporter_core ABI version " + abiVersion + " doesn't match the expected " + expectedAbiVersion + ". Reinstall the package.");
+                throw new InvalidOperationException(Application.isEditor
+                    ? "The Editor has an older svgimporter_core loaded (ABI " + abiVersion + ", this package needs " + expectedAbiVersion + "). Native libraries load once per Editor session: restart Unity after updating SVG Importer."
+                    : "svgimporter_core ABI version " + abiVersion + " doesn't match the expected " + expectedAbiVersion + ". Rebuild the player with the current package.");
 
             var options = new SvgiOptions { tolerance = tolerance, dpi = dpi, convert_text = (byte)(convertText ? 1 : 0), antialiasing = (byte)(antialiasing ? 1 : 0), group_opacity = (byte)(groupOpacity ? 1 : 0) };
             SvgiResult* native = null;
