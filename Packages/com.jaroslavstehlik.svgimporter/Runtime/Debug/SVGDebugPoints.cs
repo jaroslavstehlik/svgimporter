@@ -7,7 +7,7 @@ using System;
 
 namespace SVGImporter.Utils
 {        
-    public class SVGDebugPoints : MonoBehaviour
+    internal class SVGDebugPoints : MonoBehaviour
     {
 #if UNITY_EDITOR
         void OnDrawGizmos()

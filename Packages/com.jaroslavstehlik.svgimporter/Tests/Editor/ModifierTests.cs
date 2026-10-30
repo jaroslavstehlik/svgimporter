@@ -38,34 +38,32 @@ public static class ModifierTests
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Shader.SetGlobalFloat("SVG_ANTIALIASING_WIDTH", 2f);
-            foreach (SVGImportEngine engine in new[] { SVGImportEngine.Native })
             {
-                string e = engine + ": ";
-                Color[] plain = Render(engine, null, output, e + "plain");
-                Color[] blurred = Render(engine, renderer => {
+                Color[] plain = Render(null, output, "plain");
+                Color[] blurred = Render(renderer => {
                     var blur = renderer.gameObject.AddComponent<SVGBlurModifier>();
                     blur.radius = 3f;
-                }, output, e + "blur");
-                Color[] smeared = Render(engine, renderer => {
+                }, output, "blur");
+                Color[] smeared = Render(renderer => {
                     var blur = renderer.gameObject.AddComponent<SVGBlurModifier>();
                     blur.radius = 3f;
                     blur.motionBlur = true;
                     blur.manualMotionBlur = true;
                     blur.direction = 0f;
-                }, output, e + "motion");
-                Color[] tinted = Render(engine, renderer => {
+                }, output, "motion");
+                Color[] tinted = Render(renderer => {
                     renderer.gameObject.AddComponent<SVGColorModifier>().color = new Color(0.5f, 1f, 1f, 1f);
-                }, output, e + "color");
+                }, output, "color");
 
                 // Blur: the inside of the stick and the square stays as it was, up to a few pixels from the edge.
                 float core = new[] { At(blurred, 50, 150), At(blurred, 44, 150), At(blurred, 190, 150), At(blurred, 144, 150) }
                     .Zip(new[] { At(plain, 50, 150), At(plain, 44, 150), At(plain, 190, 150), At(plain, 144, 150) }, Difference).Max();
-                Check(e + "blur keeps shapes solid", core < 4f / 255f, "largest change inside " + core.ToString("F3"));
+                Check("blur keeps shapes solid", core < 4f / 255f, "largest change inside " + core.ToString("F3"));
 
                 // ... and glows outward: pixels outside the edge that were background now aren't, fading with distance.
                 float[] glow = Enumerable.Range(1, 8).Select(d => Difference(At(blurred, 140 - d, 150), Background)).ToArray();
                 bool fades = glow[0] > 0.05f && glow.Zip(glow.Skip(1), (a, b) => b <= a + 1f / 255f).All(x => x);
-                Check(e + "blur glows outward and fades", fades && Difference(At(plain, 137, 150), Background) < 1f / 255f,
+                Check("blur glows outward and fades", fades && Difference(At(plain, 137, 150), Background) < 1f / 255f,
                     string.Join(", ", glow.Select(g => g.ToString("F2"))));
 
                 // ... and only mixes the shape's colour with the background: no ring brighter or darker
@@ -77,26 +75,26 @@ public static class ModifierTests
                     for (int x = span.from; x < span.to; x++)
                         stray = Mathf.Max(stray, Outside(At(blurred, x, 150), fill, Background));
                 }
-                Check(e + "blur only mixes shape and background", stray < 3f / 255f, "largest stray " + stray.ToString("F3"));
+                Check("blur only mixes shape and background", stray < 3f / 255f, "largest stray " + stray.ToString("F3"));
 
                 // The glow ramps into the shape without a step at its edge.
                 float step = Enumerable.Range(25, 30).Max(x => Difference(At(blurred, x, 150), At(blurred, x + 1, 150)));
-                Check(e + "blur ramps into the shape", step < 12f / 255f, "largest step between neighbours " + step.ToString("F3"));
+                Check("blur ramps into the shape", step < 12f / 255f, "largest step between neighbours " + step.ToString("F3"));
 
                 // A blur wider than the stick still leaves its middle solid.
-                Color[] wide = Render(engine, renderer => renderer.gameObject.AddComponent<SVGBlurModifier>().radius = 6f, output, e + "wide blur");
+                Color[] wide = Render(renderer => renderer.gameObject.AddComponent<SVGBlurModifier>().radius = 6f, output, "wide blur");
                 float stick = Difference(At(wide, 50, 150), At(plain, 50, 150));
-                Check(e + "a wide blur keeps thin shapes solid", stick < 4f / 255f, "change in the middle of the stick " + stick.ToString("F3"));
+                Check("a wide blur keeps thin shapes solid", stick < 4f / 255f, "change in the middle of the stick " + stick.ToString("F3"));
 
                 // Motion blur along x: the square smears left and right, not up and down.
                 float sideways = Difference(At(smeared, 135, 150), Background);
                 float vertical = Difference(At(smeared, 190, 96), Background);
-                Check(e + "motion blur smears along its direction", sideways > 0.05f && vertical < 0.02f,
+                Check("motion blur smears along its direction", sideways > 0.05f && vertical < 0.02f,
                     "4 px left " + sideways.ToString("F2") + ", 4 px above " + vertical.ToString("F2"));
 
                 // The colour modifier multiplies the fill: half the red, the rest unchanged.
                 Color before = At(plain, 190, 150), after = At(tinted, 190, 150);
-                Check(e + "colour modifier tints", Mathf.Abs(after.r - before.r * 0.5f) < 3f / 255f && Mathf.Abs(after.g - before.g) < 2f / 255f,
+                Check("colour modifier tints", Mathf.Abs(after.r - before.r * 0.5f) < 3f / 255f && Mathf.Abs(after.g - before.g) < 2f / 255f,
                     before + " -> " + after);
             }
 
@@ -110,13 +108,13 @@ public static class ModifierTests
                         grid.Append("<circle cx=\"" + (x * 10 + 5) + "\" cy=\"" + (y * 10 + 5) + "\" r=\"4\" fill=\"#45B86F\"/>");
                 grid.Append("</svg>");
                 SVGImportOptions options = SVGImportOptions.Default;
-                options.antialiasing = true;
+                options.softEdges = true;
                 options.useLayers = true;
                 SVGAsset asset = SVGAsset.Load(grid.ToString(), options);
                 var go = new GameObject("animated");
                 var renderer = go.AddComponent<SVGRenderer>();
                 renderer.vectorGraphics = asset;
-                go.AddComponent<SVGTransformModifier>().properties.positon = new Vector3(1f, 0f, 0f);
+                go.AddComponent<SVGTransformModifier>().properties.position = new Vector3(1f, 0f, 0f);
                 go.AddComponent<SVGColorModifier>().color = new Color(0.5f, 1f, 1f, 1f);
                 var rebuild = (Action)Delegate.CreateDelegate(typeof(Action), renderer,
                     typeof(SVGRenderer).GetMethod("RebuildModifiedMesh", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic));
@@ -180,11 +178,10 @@ public static class ModifierTests
 
     // Renders the test SVG, imported with layers (modifiers need them) and soft edges, in Gamma
     // values as read back from an sRGB target.
-    static Color[] Render(SVGImportEngine engine, Action<SVGRenderer> setup, string output, string name)
+    static Color[] Render(Action<SVGRenderer> setup, string output, string name)
     {
         SVGImportOptions options = SVGImportOptions.Default;
-        options.engine = engine;
-        options.antialiasing = true;
+        options.softEdges = true;
         options.useLayers = true;
         options.ignoreSVGCanvas = false;
         SVGAsset asset = SVGAsset.Load(Svg, options);

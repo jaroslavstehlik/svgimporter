@@ -12,7 +12,7 @@ namespace SVGImporter
     /// <summary>The SVG Image Inspector, laid out as uGUI's Image Inspector.</summary>
     [CustomEditor(typeof(SVGImage), true)]
     [CanEditMultipleObjects]
-    public class SVGImageEditor : GraphicEditor
+    internal class SVGImageEditor : GraphicEditor
     {
         static class Styles
         {
@@ -98,13 +98,13 @@ namespace SVGImporter
                 if (asset != null)
                 {
                     if (asset.border.sqrMagnitude > 0f)
-                        m_Type.enumValueIndex = (int)SVGImage.Type.Sliced;
-                    else if (m_Type.enumValueIndex == (int)SVGImage.Type.Sliced)
-                        m_Type.enumValueIndex = (int)SVGImage.Type.Simple;
+                        m_Type.enumValueIndex = (int)SVGDrawMode.Sliced;
+                    else if (m_Type.enumValueIndex == (int)SVGDrawMode.Sliced)
+                        m_Type.enumValueIndex = (int)SVGDrawMode.Simple;
                 }
             }
 
-            if (asset != null && !m_VectorGraphics.hasMultipleDifferentValues && asset.format != SVGAssetFormat.uGUI)
+            if (asset != null && !m_VectorGraphics.hasMultipleDifferentValues && asset.format != SVGAssetFormat.Canvas)
             {
                 // 1.x SVG Assets (.asset files) are read-only until converted to .svg files.
                 var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(asset)) as SVGFileImporter;
@@ -116,7 +116,7 @@ namespace SVGImporter
                         if (GUILayout.Button(Styles.useCanvasFormat, GUILayout.ExpandHeight(true)))
                         {
                             var settings = new SerializedObject(importer);
-                            settings.FindProperty("_format").intValue = (int)SVGAssetFormat.uGUI;
+                            settings.FindProperty("_format").intValue = (int)SVGAssetFormat.Canvas;
                             settings.ApplyModifiedPropertiesWithoutUndo();
                             importer.SaveAndReimport();
                             GUIUtility.ExitGUI();
@@ -142,12 +142,12 @@ namespace SVGImporter
 
         bool IsSliced()
         {
-            return !m_Type.hasMultipleDifferentValues && m_Type.enumValueIndex == (int)SVGImage.Type.Sliced;
+            return !m_Type.hasMultipleDifferentValues && m_Type.enumValueIndex == (int)SVGDrawMode.Sliced;
         }
 
         void SetShowNativeSize(bool instant)
         {
-            SetShowNativeSize(!m_Type.hasMultipleDifferentValues && m_Type.enumValueIndex == (int)SVGImage.Type.Simple, instant);
+            SetShowNativeSize(!m_Type.hasMultipleDifferentValues && m_Type.enumValueIndex == (int)SVGDrawMode.Simple, instant);
         }
 
         public override string GetInfoString()

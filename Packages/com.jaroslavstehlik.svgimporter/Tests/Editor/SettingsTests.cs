@@ -43,8 +43,8 @@ public static class SettingsTests
             settings.antialiasingWidth = 3.5f;
             string text = File.ReadAllText(FilePath);
             Check("saved to ProjectSettings", text.Contains("_antialiasingWidth: 3.5"), FilePath);
-            Check("runtime settings follow", Mathf.Approximately(SVGImporterSettings.Get.defaultAntialiasingWidth, 3.5f),
-                "SVGImporterSettings.Get.defaultAntialiasingWidth = " + SVGImporterSettings.Get.defaultAntialiasingWidth);
+            Check("runtime settings follow", Mathf.Approximately(SVGImporterSettings.Get.softEdgeWidth, 3.5f),
+                "SVGImporterSettings.Get.softEdgeWidth = " + SVGImporterSettings.Get.softEdgeWidth);
 
             // A change made outside Unity (a version control update) is picked up.
             System.Threading.Thread.Sleep(1100); // File times can have a resolution of one second.
@@ -56,12 +56,9 @@ public static class SettingsTests
             // 2.0 projects: settings in an asset in a Resources folder are migrated once.
             Directory.CreateDirectory(OldAssetFolder);
             var old = ScriptableObject.CreateInstance<SVGImporterSettings>();
-#pragma warning disable 618
-            old.importEngine = SVGImportEngine.Native;
             old.importNewSVGFiles = false;
-#pragma warning restore 618
             old.defaultScale = 0.5f;
-            old.defaultAntialiasingWidth = 4f;
+            old.softEdgeWidth = 4f;
             AssetDatabase.CreateAsset(old, OldAssetFolder + "/svgImporterSettings.asset");
             File.Delete(FilePath);
             unload();
@@ -75,8 +72,8 @@ public static class SettingsTests
             var build = Activator.CreateInstance(typeof(SVGImporterProjectSettings).Assembly.GetType("SVGImporter.SVGImporterBuildSettings"), true);
             build.GetType().GetMethod("OnPreprocessBuild").Invoke(build, new object[] { null });
             var preloaded = PlayerSettings.GetPreloadedAssets().OfType<SVGImporterSettings>().FirstOrDefault();
-            Check("build preloads the runtime settings", preloaded != null && Mathf.Approximately(preloaded.defaultAntialiasingWidth, 4f),
-                preloaded == null ? "none" : "width " + preloaded.defaultAntialiasingWidth);
+            Check("build preloads the runtime settings", preloaded != null && Mathf.Approximately(preloaded.softEdgeWidth, 4f),
+                preloaded == null ? "none" : "width " + preloaded.softEdgeWidth);
             build.GetType().GetMethod("OnPostprocessBuild").Invoke(build, new object[] { null });
             Check("build settings removed afterwards", !PlayerSettings.GetPreloadedAssets().OfType<SVGImporterSettings>().Any()
                 && !File.Exists("Assets/SVGImporterBuildSettings.asset"), "");

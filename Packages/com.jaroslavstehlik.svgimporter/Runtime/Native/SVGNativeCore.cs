@@ -11,7 +11,7 @@ namespace SVGImporter.Native
     /// Safe wrapper around the native import core (svgimporter-core, see DESIGN.md). Copies the
     /// native result into managed arrays and always releases the native memory.
     /// </summary>
-    public static class SVGNativeCore
+    internal static class SVGNativeCore
     {
         /// <summary>Whether the native core is available on this platform.</summary>
         public static bool isSupported

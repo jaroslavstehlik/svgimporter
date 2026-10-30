@@ -2,101 +2,70 @@
 // Released under the license found in the LICENSE file.
 
 using UnityEngine;
-using System.Collections;
+using UnityEngine.Serialization;
 
 namespace SVGImporter
 {
     /// <summary>
-    /// Which implementation parses and tessellates SVG files. There is one, the native core (usvg
-    /// and lyon, see DESIGN.md); the C# parser of 1.x and early 2.0 previews was removed. Kept so
-    /// that assets and settings that recorded an engine still load.
-    /// </summary>
-    public enum SVGImportEngine
-    {
-        Legacy,
-        Native,
-    }
-
-    /// <summary>
-    /// Import options for SVGAsset.Load, and the settings players use at runtime.
+    /// The project settings players use at runtime: the soft edge width.
     ///
     /// The project's settings are edited in Edit > Project Settings > SVG Importer and stored in
-    /// ProjectSettings (SVGImporterProjectSettings, Editor only). Get returns the runtime part of
-    /// them: in the Editor it is kept up to date from the project settings, and builds include it
-    /// as a preloaded asset (SVGImporterBuildSettings).
+    /// ProjectSettings (SVGImporterProjectSettings, Editor only). In the Editor, Get is kept up to
+    /// date from them; builds preload a copy (SVGImporterBuildSettings).
     /// </summary>
-    public class SVGImporterSettings : ScriptableObject 
+    public sealed class SVGImporterSettings : ScriptableObject
     {
-        [System.Obsolete("Settings are no longer loaded from Resources; see Edit > Project Settings > SVG Importer.")]
-        public const string resourceName = "svgImporterSettings";
-
         // True for the copy of the project settings a build preloads.
         [SerializeField, HideInInspector] internal bool _isPlayerSettings;
 
-        protected static SVGImporterSettings _instance;
+        /// <summary>Width of the soft edge in half pixels, the unit of the shaders.</summary>
+        [FormerlySerializedAs("defaultAntialiasingWidth")]
+        [SerializeField] internal float softEdgeWidth = 2f;
 
-        /// <summary>The project's runtime settings.</summary>
-        public static SVGImporterSettings Get
+        static SVGImporterSettings s_Instance;
+
+        internal static SVGImporterSettings Get
         {
             get {
-                if(_instance == null)
+                if(s_Instance == null)
                 {
-                    _instance = ScriptableObject.CreateInstance<SVGImporterSettings>();
-                    _instance.hideFlags = HideFlags.DontSave;
+                    s_Instance = CreateInstance<SVGImporterSettings>();
+                    s_Instance.hideFlags = HideFlags.DontSave;
                 }
-
-                return _instance;
+                return s_Instance;
             }
         }
 
         void OnEnable()
         {
             // Preloaded assets are loaded when the player starts.
-            if(_isPlayerSettings) _instance = this;
+            if(_isPlayerSettings) s_Instance = this;
         }
 
-        public static void UpdateAntialiasing()
+        internal static void UpdateAntialiasing()
         {
-            Shader.SetGlobalFloat("SVG_ANTIALIASING_WIDTH", Get.defaultAntialiasingWidth);
+            Shader.SetGlobalFloat("SVG_ANTIALIASING_WIDTH", Get.softEdgeWidth);
         }
 
-        protected static string _version = "2.0.0";
-        public static string version
-        {
-            get {
-                return _version;
-            }
-        }
-
-        [System.Obsolete("Use SVGImporterProjectSettings.instance.importNewSVGFiles (Editor).")]
-        [HideInInspector] public bool importNewSVGFiles = true;
-
-        [System.Obsolete("SVG Importer has one import engine, the native core.")]
-        [HideInInspector] public SVGImportEngine importEngine = SVGImportEngine.Native;
-
-        public SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;
-        public SVGUseGradients defaultUseGradients = SVGUseGradients.Auto;
-        public bool defaultAntialiasing = true;
-        public float defaultAntialiasingWidth = 2f;
-        public SVGMeshCompression defaultMeshCompression = SVGMeshCompression.Off;
-        public int defaultVerticesPerMeter = 1000;
-        public float defaultScale = 0.01f;
-        public float defaultDepthOffset = 0.01f;
-        public bool defaultCompressDepth = true;
-        public bool defaultCustomPivotPoint = false;
-        public Vector2 defaultPivotPoint = new Vector2(0.5f, 0.5f);
-        public bool defaultGenerateCollider = false;
-        public bool defaultKeepSVGFile = false;
-        public bool defaultUseLayers = false;
-        public bool defaultIgnoreSVGCanvas = true;
-        public bool defaultExactGroupOpacity = false;
-        public bool defaultOptimizeMesh = true;
-        public bool defaultGenerateNormals = false;
-        public bool defaultGenerateTangents = false;
-        [System.Obsolete("Not used: the asset icon is SVG Importer's own.")]
-        [HideInInspector] public Texture2D defaultSVGIcon;
-
-        public bool ignoreImportExceptions = true;
+        // Settings of SVG Importer 1.x and 2.0 previews, which kept them in an asset in a Resources
+        // folder. Read once by the Editor to move them to the project settings.
+        [SerializeField, HideInInspector] internal bool importNewSVGFiles = true;
+        [SerializeField, HideInInspector] internal SVGAssetFormat defaultSVGFormat = SVGAssetFormat.Transparent;
+        [SerializeField, HideInInspector] internal SVGUseGradients defaultUseGradients = SVGUseGradients.Auto;
+        [SerializeField, HideInInspector] internal bool defaultAntialiasing = true;
+        [SerializeField, HideInInspector] internal SVGMeshCompression defaultMeshCompression = SVGMeshCompression.Off;
+        [SerializeField, HideInInspector] internal int defaultVerticesPerMeter = 1000;
+        [SerializeField, HideInInspector] internal float defaultScale = 0.01f;
+        [SerializeField, HideInInspector] internal float defaultDepthOffset = 0.01f;
+        [SerializeField, HideInInspector] internal bool defaultCompressDepth = true;
+        [SerializeField, HideInInspector] internal bool defaultCustomPivotPoint = false;
+        [SerializeField, HideInInspector] internal Vector2 defaultPivotPoint = new Vector2(0.5f, 0.5f);
+        [SerializeField, HideInInspector] internal bool defaultGenerateCollider = false;
+        [SerializeField, HideInInspector] internal bool defaultKeepSVGFile = false;
+        [SerializeField, HideInInspector] internal bool defaultUseLayers = false;
+        [SerializeField, HideInInspector] internal bool defaultIgnoreSVGCanvas = true;
+        [SerializeField, HideInInspector] internal bool defaultOptimizeMesh = true;
+        [SerializeField, HideInInspector] internal bool defaultGenerateNormals = false;
+        [SerializeField, HideInInspector] internal bool defaultGenerateTangents = false;
     }
-
 }

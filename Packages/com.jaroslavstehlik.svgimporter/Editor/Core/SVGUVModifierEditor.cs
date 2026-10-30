@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
@@ -6,7 +6,7 @@ using SVGImporter;
 using SVGImporter.Rendering;
 
 [CustomEditor(typeof(SVGUVModifier))]
-public class SVGUVModifierEditor : Editor {
+internal class SVGUVModifierEditor : Editor {
 
     SVGUVModifier uvModifier;
     //    bool rendererFoldout = false;

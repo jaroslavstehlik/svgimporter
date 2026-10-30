@@ -8,7 +8,7 @@ namespace SVGImporter.Utils
 {
     using Rendering;
 
-    public class SVGGeomUtils {
+    internal class SVGGeomUtils {
 
         public static Vector2 TransformPoint(Vector2 point, SVGMatrix matrix)
         {

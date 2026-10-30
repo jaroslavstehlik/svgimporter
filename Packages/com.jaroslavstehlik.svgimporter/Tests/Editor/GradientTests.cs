@@ -30,21 +30,21 @@ public static class GradientTests
         {
             // The same colours with a stop 0.0004 apart: the old string hash rounded offsets (and
             // alphas) to 1/999, so these two shared one atlas slot.
-            CCGradient a = Gradient(new[] { (0f, Color.red), (0.5f, Color.green), (1f, Color.blue) });
-            CCGradient b = Gradient(new[] { (0f, Color.red), (0.5004f, Color.green), (1f, Color.blue) });
+            SVGGradient a = Gradient(new[] { (0f, Color.red), (0.5f, Color.green), (1f, Color.blue) });
+            SVGGradient b = Gradient(new[] { (0f, Color.red), (0.5004f, Color.green), (1f, Color.blue) });
             Check("nearly equal gradients differ", !a.GradientEquals(b), "stop at 0.5 vs 0.5004");
             var data = new SVGAtlasData();
             data.Init(16);
-            CCGradient ra = data.AddGradient(a.Clone()), rb = data.AddGradient(b.Clone());
+            SVGGradient ra = data.AddGradient(a.Clone()), rb = data.AddGradient(b.Clone());
             Check("nearly equal gradients get their own slots", ra.index != rb.index, "slots " + ra.index + " and " + rb.index);
             Check("an equal gradient finds its slot", data.AddGradient(a.Clone()).index == ra.index && data.GetGradient(b.Clone()) == rb, "");
 
             // The same keys in a different order describe the same gradient.
-            CCGradient shuffled = new CCGradient(a.colorKeys.Reverse().ToArray(), a.alphaKeys.Reverse().ToArray());
+            SVGGradient shuffled = new SVGGradient(a.colorKeys.Reverse().ToArray(), a.alphaKeys.Reverse().ToArray());
             Check("key order doesn't matter", a.GradientEquals(shuffled), "");
 
             // The spread method and focal point are part of what a gradient draws.
-            CCGradient reflected = a.Clone(), focused = a.Clone(), padded = a.Clone();
+            SVGGradient reflected = a.Clone(), focused = a.Clone(), padded = a.Clone();
             reflected.spreadMethod = SVGSpreadMethod.Reflect;
             focused.focalOffset = new Vector2(0.25f, 0f);
             padded.spreadMethod = SVGSpreadMethod.Pad;
@@ -53,8 +53,8 @@ public static class GradientTests
             Check("an unset spread method is pad", a.GradientEquals(padded), "");
 
             // A hard stop at 0.5: red before it, blue from it on, as the shaders draw it.
-            CCGradient hard = Gradient(new[] { (0f, Color.red), (0.5f, Color.red), (0.5f, Color.blue), (1f, Color.blue) });
-            List<CCGradientStop> stops = hard.GetStops();
+            SVGGradient hard = Gradient(new[] { (0f, Color.red), (0.5f, Color.red), (0.5f, Color.blue), (1f, Color.blue) });
+            List<SVGGradientStop> stops = hard.GetStops();
             Check("hard stops keep their order", stops.Count == 4 && stops[1].color == Color.red && stops[2].color == Color.blue,
                 string.Join(", ", stops.Select(s => s.offset + " " + s.color)));
             Color32 before = hard.Evaluate(0.4999f), at = hard.Evaluate(0.5f);
@@ -64,10 +64,10 @@ public static class GradientTests
             Check("Evaluate interpolates", Mathf.Abs(middle.r - 128) <= 1, middle.ToString());
 
             // Colour and alpha keys at different offsets merge into stops with both.
-            var mixed = new CCGradient(
-                new[] { new CCGradientColorKey(Color.black, 0f), new CCGradientColorKey(Color.white, 1f) },
-                new[] { new CCGradientAlphaKey(1f, 0f), new CCGradientAlphaKey(0f, 0.5f), new CCGradientAlphaKey(1f, 1f) });
-            List<CCGradientStop> merged = mixed.GetStops();
+            var mixed = new SVGGradient(
+                new[] { new SVGGradientColorKey(Color.black, 0f), new SVGGradientColorKey(Color.white, 1f) },
+                new[] { new SVGGradientAlphaKey(1f, 0f), new SVGGradientAlphaKey(0f, 0.5f), new SVGGradientAlphaKey(1f, 1f) });
+            List<SVGGradientStop> merged = mixed.GetStops();
             Check("colour and alpha keys merge", merged.Count == 3 && Mathf.Abs(merged[1].color.r - 0.5f) < 1e-4f && merged[1].color.a == 0f,
                 string.Join(", ", merged.Select(s => s.offset + " " + s.color)));
 
@@ -102,10 +102,10 @@ public static class GradientTests
         EditorApplication.Exit(passed ? 0 : 1);
     }
 
-    static CCGradient Gradient((float offset, Color color)[] stops)
+    static SVGGradient Gradient((float offset, Color color)[] stops)
     {
-        return new CCGradient(
-            stops.Select(s => new CCGradientColorKey(s.color, s.offset)).ToArray(),
-            stops.Select(s => new CCGradientAlphaKey(s.color.a, s.offset)).ToArray());
+        return new SVGGradient(
+            stops.Select(s => new SVGGradientColorKey(s.color, s.offset)).ToArray(),
+            stops.Select(s => new SVGGradientAlphaKey(s.color.a, s.offset)).ToArray());
     }
 }

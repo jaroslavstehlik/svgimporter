@@ -81,7 +81,7 @@ public static class RendererTests
             ((RectTransform)go.transform).sizeDelta = new Vector2(3f, 2f);
             renderer = go.AddComponent<SVGRenderer>();
             renderer.vectorGraphics = layers;
-            renderer.type = SVGRenderer.Type.Sliced;
+            renderer.drawMode = SVGDrawMode.Sliced;
             Vector3[] vertices = go.GetComponent<MeshFilter>().sharedMesh.vertices;
             bool finite = vertices.Length > 0 && vertices.All(v => !float.IsNaN(v.x) && !float.IsNaN(v.y) && !float.IsInfinity(v.x) && !float.IsInfinity(v.y));
             Check("a sliced renderer of a Use Layers asset has finite vertices", finite, vertices.Length + " vertices");

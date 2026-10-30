@@ -46,7 +46,7 @@ public static class BugFixTests
             SVGAsset opaque = Import("opaque", "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"100\">"
                 + "<rect x=\"10\" y=\"10\" width=\"180\" height=\"80\" fill=\"red\" stroke=\"lime\" stroke-width=\"4\"/>"
                 + "<rect x=\"110\" y=\"20\" width=\"180\" height=\"60\" fill=\"blue\"/></svg>",
-                i => { i.FindProperty("_format").enumValueIndex = (int)SVGAssetFormat.Opaque; i.FindProperty("_compressDepth").boolValue = true; i.FindProperty("_antialiasing").boolValue = false; });
+                i => { i.FindProperty("_format").enumValueIndex = (int)SVGAssetFormat.OpaqueAndTransparent; i.FindProperty("_compressDepth").boolValue = true; i.FindProperty("_antialiasing").boolValue = false; });
             Color32 overlap = Render("opaque", 150, 50);
             Check("Opaque depth: the later shape is in front", opaque.sharedMesh != null && overlap.b > 200 && overlap.r < 60, "overlap pixel " + overlap);
 
@@ -150,7 +150,7 @@ public static class BugFixTests
             Check("component getters on an inactive object", inactiveRenderer.meshFilter != null && inactiveRenderer.meshRenderer != null, "");
             var eventRenderer = new GameObject("events").AddComponent<SVGRenderer>();
             int changes = 0;
-            eventRenderer.onVectorGraphicsChanged += a => changes++;
+            eventRenderer.vectorGraphicsChanged += a => changes++;
             eventRenderer.vectorGraphics = Load("white");
             eventRenderer.UpdateRenderer();
             int afterAssign = changes;

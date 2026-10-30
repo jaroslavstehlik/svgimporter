@@ -124,9 +124,9 @@ public static class AtlasLifecycleTests
                 for (int i = 0; i < 600; i++)
                 {
                     var color = new Color32((byte)(i * 7), (byte)(i * 13), (byte)(i * 29), 255);
-                    SVGAtlas.Instance.AddGradient(new CCGradient(
-                        new[] { new CCGradientColorKey(color, 0f), new CCGradientColorKey(Color.black, 1f) },
-                        new[] { new CCGradientAlphaKey(1f, 0f), new CCGradientAlphaKey(1f, 1f) }));
+                    SVGAtlas.Instance.AddGradient(new SVGGradient(
+                        new[] { new SVGGradientColorKey(color, 0f), new SVGGradientColorKey(Color.black, 1f) },
+                        new[] { new SVGGradientAlphaKey(1f, 0f), new SVGGradientAlphaKey(1f, 1f) }));
                 }
                 EditorApplication.delayCall += Continue;
                 break;

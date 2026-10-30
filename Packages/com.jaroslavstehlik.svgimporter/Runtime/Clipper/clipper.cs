@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
 * Version   :  6.1.3a                                                          *
@@ -72,7 +72,7 @@ namespace SVGImporter.ClipperLib
   using Path = List<IntPoint>;
     using Paths = List<List<IntPoint>>;
 
-    public struct DoublePoint
+    internal struct DoublePoint
     {
         public double X;
         public double Y;
@@ -99,7 +99,7 @@ namespace SVGImporter.ClipperLib
     // PolyTree & PolyNode classes
     //------------------------------------------------------------------------------
 
-    public class PolyTree : PolyNode
+    internal class PolyTree : PolyNode
     {
         internal List<PolyNode> m_AllPolys = new List<PolyNode>();
 
@@ -131,7 +131,7 @@ namespace SVGImporter.ClipperLib
 
     }
         
-    public class PolyNode
+    internal class PolyNode
     {
         internal PolyNode m_Parent;
         internal Path m_polygon = new Path();
@@ -427,7 +427,7 @@ namespace SVGImporter.ClipperLib
     //------------------------------------------------------------------------------
     //------------------------------------------------------------------------------
 
-    public struct IntPoint
+    internal struct IntPoint
     {
         public cInt X;
         public cInt Y;
@@ -501,7 +501,7 @@ namespace SVGImporter.ClipperLib
         }
     }
 
-    public struct IntRect
+    internal struct IntRect
     {
         public cInt left;
         public cInt top;
@@ -524,14 +524,14 @@ namespace SVGImporter.ClipperLib
         }
     }
 
-    public enum ClipType
+    internal enum ClipType
     {
         ctIntersection,
         ctUnion,
         ctDifference,
         ctXor }
     ;
-    public enum PolyType
+    internal enum PolyType
     {
         ptSubject,
         ptClip }
@@ -541,7 +541,7 @@ namespace SVGImporter.ClipperLib
     //EvenOdd & NonZero (GDI, GDI+, XLib, OpenGL, Cairo, AGG, Quartz, SVG, Gr32)
     //Others rules include Positive, Negative and ABS_GTR_EQ_TWO (only in OpenGL)
     //see http://glprogramming.com/red/chapter11.html
-    public enum PolyFillType
+    internal enum PolyFillType
     {
         pftEvenOdd,
         pftNonZero,
@@ -549,13 +549,13 @@ namespace SVGImporter.ClipperLib
         pftNegative }
     ;
   
-    public enum JoinType
+    internal enum JoinType
     {
         jtSquare,
         jtRound,
         jtMiter }
     ;
-    public enum EndType
+    internal enum EndType
     {
         etClosedPolygon,
         etClosedLine,
@@ -564,7 +564,7 @@ namespace SVGImporter.ClipperLib
         etOpenRound }
     ;
 #if use_deprecated
-  public enum EndType_ { etClosed, etButt, etSquare, etRound };
+  internal enum EndType_ { etClosed, etButt, etSquare, etRound };
 #endif
 
     internal enum EdgeSide
@@ -600,14 +600,14 @@ namespace SVGImporter.ClipperLib
         internal TEdge PrevInSEL;
     };
 
-    public class IntersectNode
+    internal class IntersectNode
     {
         internal TEdge Edge1;
         internal TEdge Edge2;
         internal IntPoint Pt;
     };
 
-    public class MyIntersectNodeSort : IComparer<IntersectNode>
+    internal class MyIntersectNodeSort : IComparer<IntersectNode>
     {
         public int Compare(IntersectNode node1, IntersectNode node2)
         {
@@ -655,7 +655,7 @@ namespace SVGImporter.ClipperLib
         internal IntPoint OffPt;
     };
 
-    public class ClipperBase
+    internal class ClipperBase
     {    
         protected const double horizontal = -3.4E+38;
         protected const int Skip = -2;
@@ -1328,7 +1328,7 @@ namespace SVGImporter.ClipperLib
 
     } //end ClipperBase
 
-    public class Clipper : ClipperBase
+    internal class Clipper : ClipperBase
     {
         //InitOptions that can be passed to the constructor ...
         public const int ioReverseSolution = 1;
@@ -4602,7 +4602,7 @@ namespace SVGImporter.ClipperLib
 
     } //end Clipper
 
-    public class ClipperOffset
+    internal class ClipperOffset
     {
         private Paths m_destPolys;
         private Path m_srcPoly;

@@ -1,10 +1,10 @@
-﻿
+
 
 using System;
 
 namespace SVGImporter.Utils
 {
-    public class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
+    internal class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
     {
         public object GetFormat(Type formatType)
         {

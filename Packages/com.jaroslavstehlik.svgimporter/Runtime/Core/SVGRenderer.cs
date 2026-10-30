@@ -18,41 +18,23 @@ namespace SVGImporter
     [ExecuteInEditMode]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Renderer", 20)]
-    public class SVGRenderer : UIBehaviour, ISVGShape, ISVGRenderer, ISVGReference, ISVGAtlasClient
+    public class SVGRenderer : UIBehaviour, ISVGShape, ISVGRenderer, ISVGAtlasClient
     {
-        public enum Type
-        {
-            Simple,
-            Sliced
-        }
+
+        /// <summary>Raised when the renderer's SVG Asset changes or is reimported, with the new asset (or null).</summary>
+        public event System.Action<SVGAsset> vectorGraphicsChanged;
 
         /// <summary>
-        /// delegate which indicates that the source SVG graphics changed.
+        /// Raised before the renderer builds its mesh from a copy of the asset's layers, which
+        /// handlers may change; modifiers do. Only for assets imported with Use Layers.
         /// </summary>
-        public System.Action<SVGAsset> onVectorGraphicsChanged;
+        public event System.Action<SVGLayer[], SVGAsset> willBuildMesh;
 
-        protected System.Action<SVGLayer[], SVGAsset, bool> _OnPrepareForRendering;
-        /// <summary>
-        /// delegate which indicates that the mesh has changed.
-        /// You can use it as your custom mesh postprocessor.
-        /// </summary>
-        public virtual System.Action<SVGLayer[], SVGAsset, bool> OnPrepareForRendering
-        {
-            get {
-                return _OnPrepareForRendering;
-            }
-            set {
-                _OnPrepareForRendering = value;
-            }
-        }
-
-        protected Type _lastType;
-        /// <summary>
-        /// Render type of the Image
-        /// </summary>
+        private SVGDrawMode _lastType;
         [FormerlySerializedAs("type")]
-        [SerializeField] private Type _type = Type.Simple;
-        public Type type
+        [SerializeField] private SVGDrawMode _type = SVGDrawMode.Simple;
+        /// <summary>Simple, or Sliced to fit the RectTransform's size by stretching between the asset's border.</summary>
+        public SVGDrawMode drawMode
         {
             get { return _type; }
             set {
@@ -63,12 +45,12 @@ namespace SVGImporter
         }
 
         // Tracking of modified assets
-        protected Rect _rectTransformRect;
-        protected Rect _lastRectTransformRect;
+        private Rect _rectTransformRect;
+        private Rect _lastRectTransformRect;
 
         // Tracking of mesh change
-        protected int _lastFrameChanged;
-        public int lastFrameChanged
+        private int _lastFrameChanged;
+        internal int lastFrameChanged
         {
             get {
                 return _lastFrameChanged;
@@ -78,8 +60,8 @@ namespace SVGImporter
         // Serialized SVG Asset
         [FormerlySerializedAs("vectorGraphics")]
         [SerializeField]
-        protected SVGAsset _vectorGraphics;
-        protected SVGAsset _lastVectorGraphics;
+        private SVGAsset _vectorGraphics;
+        private SVGAsset _lastVectorGraphics;
 
         /// <summary>
         /// The SVG Asset to render.
@@ -99,10 +81,10 @@ namespace SVGImporter
         // Serialized rendering color
         [FormerlySerializedAs("color")]
         [SerializeField]
-        protected Color _color = Color.white;
-        protected Color _lastColor = Color.white;
-        protected Color32[] _cachedColors;
-        protected Vector3[] _cachedVertices;
+        private Color _color = Color.white;
+        private Color _lastColor = Color.white;
+        private Color32[] _cachedColors;
+        private Vector3[] _cachedVertices;
 
         /// <summary>
         /// Rendering color for the SVG Asset..
@@ -121,8 +103,8 @@ namespace SVGImporter
         
         [FormerlySerializedAs("opaqueMaterial")]
         [SerializeField]
-        protected Material _opaqueMaterial;
-        protected Material _lastOpaqueMaterial;
+        private Material _opaqueMaterial;
+        private Material _lastOpaqueMaterial;
         /// <summary>
         /// The opaque override material
         /// </summary>
@@ -142,8 +124,8 @@ namespace SVGImporter
 
         [FormerlySerializedAs("transparentMaterial")]
         [SerializeField]
-        protected Material _transparentMaterial;
-        protected Material _lastTransparentMaterial;
+        private Material _transparentMaterial;
+        private Material _lastTransparentMaterial;
         /// <summary>
         /// The opaque override material
         /// </summary>
@@ -161,7 +143,7 @@ namespace SVGImporter
             }
         }
 
-        protected MeshFilter _meshFilter;
+        private MeshFilter _meshFilter;
         public MeshFilter meshFilter {
             get
             {
@@ -170,7 +152,7 @@ namespace SVGImporter
             }
         }
 
-        protected MeshRenderer _meshRenderer;
+        private MeshRenderer _meshRenderer;
         public MeshRenderer meshRenderer {
             get {
                 if (_meshRenderer == null) _meshRenderer = GetComponent<MeshRenderer>();
@@ -178,7 +160,7 @@ namespace SVGImporter
             }
         }
 
-        public RectTransform rectTransform
+        internal RectTransform rectTransform
         {
             get {
                 return transform as RectTransform;
@@ -186,20 +168,20 @@ namespace SVGImporter
         }
 
         // Cached SVG Layers
-        protected SVGLayer[] _layers;
+        private SVGLayer[] _layers;
         // The asset's layers as the renderer draws them, before modifiers and tints change _layers.
         [System.NonSerialized] SVGLayer[] _layersSource;
         // Shared mesh for better gpu instancing
-        protected Mesh _sharedMesh;
+        private Mesh _sharedMesh;
         // Instanced mesh for custom coloring
-        protected Mesh _mesh;
+        private Mesh _mesh;
         [System.NonSerialized] long _lastImportHash;
 
         // Unity default transparent sorting ID
         [FormerlySerializedAs("sortingLayerID")]
         [SerializeField]
-        protected int _sortingLayerID = 0;
-        protected int _lastSortingLayerID = 0;
+        private int _sortingLayerID = 0;
+        private int _lastSortingLayerID = 0;
         /// <summary>
         /// Unique ID of the Renderer's sorting layer.
         /// </summary>
@@ -228,7 +210,7 @@ namespace SVGImporter
         // Unity default transparent sorting layer name
         [FormerlySerializedAs("sortingLayerName")]
         [SerializeField]
-        protected string _sortingLayerName;
+        private string _sortingLayerName;
         /// <summary>
         /// Name of the Renderer's sorting layer.
         /// </summary>
@@ -246,8 +228,8 @@ namespace SVGImporter
         // Unity default transparent sorting order
         [FormerlySerializedAs("sortingOrder")]
         [SerializeField]
-        protected int _sortingOrder = 0;
-        protected int _lastSortingOrder = 0;
+        private int _sortingOrder = 0;
+        private int _lastSortingOrder = 0;
         /// <summary>
         /// Renderer's order within a sorting layer.
         /// </summary>
@@ -266,8 +248,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("overrideSorter")]
         [SerializeField]
-        protected bool _overrideSorter = false;
-        protected bool _lastOverrideSorter = false;
+        private bool _overrideSorter = false;
         /// <summary>
         /// Override SVG Sorter Default Behaviour
         /// </summary>
@@ -283,8 +264,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("overrideSorterChildren")]
         [SerializeField]
-        protected bool _overrideSorterChildren = false;
-        protected bool _lastOverrideSorterChildren = false;
+        private bool _overrideSorterChildren = false;
         /// <summary>
         /// Override SVG Sorter Default Behaviour
         /// </summary>
@@ -301,7 +281,7 @@ namespace SVGImporter
         /// <summary>
         /// Get SVG Outline, part of the ISVGPath interface..
         /// </summary>
-        public SVGPath[] shape
+        SVGPath[] ISVGShape.shape
         {
             get {
                 if(_vectorGraphics == null) return null;
@@ -316,10 +296,6 @@ namespace SVGImporter
             base.Awake();
             CacheComponents();            
             meshFilter.sharedMesh = null;
-            if(_vectorGraphics != null)
-            {
-                _vectorGraphics.AddReference(this);
-            }
 
             Clear();
             PrepareForRendering(true);
@@ -369,10 +345,6 @@ namespace SVGImporter
 
         protected override void OnDestroy()
         {
-            if (_vectorGraphics != null)
-            {
-                _vectorGraphics.RemoveReference(this);
-            }
             // The renderer's own mesh, for tinted, sliced or layered assets.
             DestroyObjectInternal(_mesh);
             _mesh = null;
@@ -400,7 +372,7 @@ namespace SVGImporter
             }
         }
         
-        public void UpdateRenderer()
+        internal void UpdateRenderer()
         {
             PrepareForRendering(true);
         }
@@ -412,7 +384,7 @@ namespace SVGImporter
         }
         
         // This is the main rendering method
-        protected void PrepareForRendering(bool force = false)
+        private void PrepareForRendering(bool force = false)
         {
             SVGAtlas.BeginRebuild();
             try { Rebuild(force); }
@@ -433,10 +405,9 @@ namespace SVGImporter
             {
                 if(_lastVectorGraphics != null)
                 {
-                    _lastVectorGraphics.RemoveReference(this);
                     _lastVectorGraphics = null;
-                    if(onVectorGraphicsChanged != null)
-                        onVectorGraphicsChanged(null);
+                    if(vectorGraphicsChanged != null)
+                        vectorGraphicsChanged(null);
                 }
                 Clear();
             } else {
@@ -470,14 +441,6 @@ namespace SVGImporter
                     colorChanged = true;
                     materialChanged = true;
 
-                    if (_lastVectorGraphics != null)
-                    {
-                        _lastVectorGraphics.RemoveReference(this);
-                    }
-                    if(_vectorGraphics != null)
-                    {
-                        _vectorGraphics.AddReference(this);
-                    }
                 }
 
                 if(useLayers || !useSharedMesh)
@@ -485,7 +448,7 @@ namespace SVGImporter
                     if(_lastUseSharedMesh != false) meshChanged = true;
                     if(!meshChanged)
                     {
-                        if(_type == Type.Sliced && rectTransform != null)
+                        if(_type == SVGDrawMode.Sliced && rectTransform != null)
                         {
                             _rectTransformRect = rectTransform.rect;
                             if(_rectTransformRect != _lastRectTransformRect)
@@ -505,7 +468,7 @@ namespace SVGImporter
                         InitMesh();
                         materialChanged = true;
                         
-                        if(_type == Type.Sliced)
+                        if(_type == SVGDrawMode.Sliced)
                         {
                             UpdateSlicedMesh();
                         }
@@ -514,8 +477,8 @@ namespace SVGImporter
                         _lastFrameChanged = Time.frameCount;
                         materialChanged = true;
                         
-                        if(_OnPrepareForRendering != null)
-                            _OnPrepareForRendering(_layers, _vectorGraphics, force);
+                        if(willBuildMesh != null)
+                            willBuildMesh(_layers, _vectorGraphics);
                         
                         GenerateMesh();
                         
@@ -533,7 +496,7 @@ namespace SVGImporter
                         {
                             InitMesh();
                             materialChanged = true;
-                            if(_type == Type.Sliced)
+                            if(_type == SVGDrawMode.Sliced)
                             {
                                 UpdateSlicedMesh();
                             }
@@ -558,8 +521,8 @@ namespace SVGImporter
 
                 _lastVectorGraphics = _vectorGraphics;
                 // Colliders and other listeners follow asset changes and reimports.
-                if(assetChanged && onVectorGraphicsChanged != null)
-                    onVectorGraphicsChanged(_vectorGraphics);
+                if(assetChanged && vectorGraphicsChanged != null)
+                    vectorGraphicsChanged(_vectorGraphics);
 
                 _lastOpaqueMaterial = _opaqueMaterial;
                 _lastTransparentMaterial = _transparentMaterial;
@@ -572,8 +535,8 @@ namespace SVGImporter
 
         void InitLayers()
         {
-            _layersSource = _vectorGraphics.layersClone;
-            _layers = _vectorGraphics.layersClone;
+            _layersSource = _vectorGraphics.CloneLayers();
+            _layers = _vectorGraphics.CloneLayers();
         }
 
         /// <summary>
@@ -593,11 +556,11 @@ namespace SVGImporter
             }
 
             ResetLayers(_layersSource, _layers);
-            if(_type == Type.Sliced) UpdateSlicedMesh();
+            if(_type == SVGDrawMode.Sliced) UpdateSlicedMesh();
             UpdateColors();
             _lastFrameChanged = Time.frameCount;
-            if(_OnPrepareForRendering != null)
-                _OnPrepareForRendering(_layers, _vectorGraphics, false);
+            if(willBuildMesh != null)
+                willBuildMesh(_layers, _vectorGraphics);
             GenerateMesh();
         }
 
@@ -631,11 +594,11 @@ namespace SVGImporter
         }
 
         [System.NonSerialized] SVGMeshBuffers _meshBuffers;
-        protected void GenerateMesh()
+        private void GenerateMesh()
         {
             if(_meshBuffers == null) _meshBuffers = new SVGMeshBuffers();
             string[] shaders;
-            SVGMesh.CombineMeshes(_layers, _mesh, out shaders, _vectorGraphics.useGradients, _vectorGraphics.format, _vectorGraphics.compressDepth, _vectorGraphics.antialiasing, _vectorGraphics.depthOffset, _meshBuffers);
+            SVGMesh.CombineMeshes(_layers, _mesh, out shaders, _vectorGraphics.useGradients, _vectorGraphics.format, _vectorGraphics.compressDepth, _vectorGraphics.softEdges, _vectorGraphics.depthOffset, _meshBuffers);
         }
 
 #if UNITY_EDITOR
@@ -651,8 +614,8 @@ namespace SVGImporter
         }
 #endif
 
-        protected Color32[] _finalColors;
-        protected void UpdateColors(bool force = false)
+        private Color32[] _finalColors;
+        private void UpdateColors(bool force = false)
         {
             if(_color == Color.white)
             {
@@ -683,7 +646,7 @@ namespace SVGImporter
 
                         if(alphaBlended)
                         {
-                            _layers[i].shapes[j].fill.blend = FILL_BLEND.ALPHA_BLENDED;
+                            _layers[i].shapes[j].fill.blend = SVGFillBlend.Transparent;
                         }
                     }
                 }
@@ -734,7 +697,7 @@ namespace SVGImporter
         /// <summary>
         /// Conversion ratio for UI Interpretation
         /// </summary>
-        protected float pixelsPerUnit
+        private float pixelsPerUnit
         {
             get
             {
@@ -743,7 +706,7 @@ namespace SVGImporter
             }
         }
 
-        protected float InverseLerp(float from, float to, float value)
+        private float InverseLerp(float from, float to, float value)
         {
             if (from < to)
             {               
@@ -757,20 +720,20 @@ namespace SVGImporter
             }
         }
 
-        protected float SafeDivide(float a, float b)
+        private float SafeDivide(float a, float b)
         {
             if(b == 0) return 0f;
             return a / b;
         }
         
-        protected string BorderToString(Vector4 border)
+        private string BorderToString(Vector4 border)
         {
             return string.Format("left: {0}, bottom: {1}, right: {2}, top: {3}", border.x, border.y, border.z, border.w);
         }
 
         const float epsilon = 0.0000001f;
-        protected Vector3[] _finalVertices;
-        protected void UpdateSlicedMesh()
+        private Vector3[] _finalVertices;
+        private void UpdateSlicedMesh()
         {
             if(hasBorder && rectTransform != null)
             {
@@ -911,7 +874,7 @@ namespace SVGImporter
             }
         }
 
-        protected void SwapMaterials(bool transparent = true)
+        private void SwapMaterials(bool transparent = true)
         {
             if(_vectorGraphics == null)
             {
@@ -920,7 +883,7 @@ namespace SVGImporter
             }
             bool hasGradients = _vectorGraphics.hasGradients || _vectorGraphics.useGradients == SVGUseGradients.Always;
             Material sharedOpaqueMaterial = SVGAtlas.Instance.GetOpaqueMaterial(hasGradients);
-            Material sharedTransparentMaterial = SVGAtlas.Instance.GetTransparentMaterial(_vectorGraphics.antialiasing, hasGradients);
+            Material sharedTransparentMaterial = SVGAtlas.Instance.GetTransparentMaterial(_vectorGraphics.softEdges, hasGradients);
 
             int subMeshCount = 0;
             if(useLayers)
@@ -980,17 +943,14 @@ namespace SVGImporter
             meshRenderer.SetSharedMaterials(s_Materials);
         }
 
-        public void UpdateMaterials()
+        internal void UpdateMaterials()
         {
             if(_opaqueMaterial != null) SVGAtlas.Instance.UpdateMaterialProperties(_opaqueMaterial);
             if(_transparentMaterial != null) SVGAtlas.Instance.UpdateMaterialProperties(_transparentMaterial);
             SwapMaterials(_color.a != 1);
         }
 
-        /// <summary>
-        /// Mark the Graphic as dirty and prepare it for rendering.
-        /// </summary>
-        /// <param name="force">Force re-updating the whole object</param>
+        /// <summary>Rebuilds the renderer's mesh and materials, for example after changing the asset's layers from a script.</summary>
         public void SetAllDirty()
         {
 #if UNITY_EDITOR
@@ -1030,11 +990,11 @@ namespace SVGImporter
             }
         }
 
-        protected bool _lastUseSharedMesh;
+        private bool _lastUseSharedMesh;
         bool useSharedMesh
         {
             get {
-                return !useLayers && _color == Color.white && _type == Type.Simple;
+                return !useLayers && _color == Color.white && _type == SVGDrawMode.Simple;
             }
         }
 
@@ -1087,13 +1047,13 @@ namespace SVGImporter
             }
         }
 
-        public void AddModifier(ISVGModify modifier)
+        internal void AddModifier(SVGModifier modifier)
         {
             if(_modifiers.Contains(modifier)) return;
             _modifiers.Add(modifier);
         }
 
-        public void RemoveModifier(ISVGModify modifier)
+        internal void RemoveModifier(SVGModifier modifier)
         {
             if(!_modifiers.Contains(modifier)) return;
             _modifiers.Remove(modifier);
@@ -1109,15 +1069,15 @@ namespace SVGImporter
             }
         }
 
-        protected List<ISVGModify> _modifiers = new List<ISVGModify>();
-        public List<ISVGModify> modifiers
+        readonly List<SVGModifier> _modifiers = new List<SVGModifier>();
+        internal List<SVGModifier> modifiers
         {
             get {
                 return _modifiers;
             }
         }
 
-        protected void Clear()
+        private void Clear()
         {
             CleanMaterials();
             CleanMesh();

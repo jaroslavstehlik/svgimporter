@@ -42,7 +42,7 @@ namespace SVGImporter.Geometry
         }
     }
 
-    public class SVGMesh
+    internal class SVGMesh
     {
         static readonly string[] s_NoShaders = new string[0];
         public static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out Shader[] shaders, SVGUseGradients useGradients = SVGUseGradients.Always, SVGAssetFormat format = SVGAssetFormat.Transparent, bool compressDepth = true, bool antialiased = false, float depthOffset = 0.01f)
@@ -73,7 +73,7 @@ namespace SVGImporter.Geometry
             
             if(layers == null) return false;
             int totalLayers = layers.Length, totalTriangles = 0, opaqueTriangles = 0, transparentTriangles = 0;
-            FILL_BLEND lastBlendType = FILL_BLEND.ALPHA_BLENDED;
+            SVGFillBlend lastBlendType = SVGFillBlend.Transparent;
             
             // Depth of each shape (Opaque format), numbered across all layers in drawing order. Kept
             // here: the layers belong to the caller and are drawn again later.
@@ -81,7 +81,7 @@ namespace SVGImporter.Geometry
             for(int i = 0; i < totalLayers; i++) shapeCount += layers[i].shapes.Length;
             SVGMeshBuffers b = buffers ?? new SVGMeshBuffers();
             float[] depths = SVGMeshBuffers.Ensure(ref b.depths, shapeCount, false);
-            if(format == SVGAssetFormat.Opaque)
+            if(format == SVGAssetFormat.OpaqueAndTransparent)
             {
                 if(compressDepth)
                 {
@@ -101,7 +101,7 @@ namespace SVGImporter.Geometry
                     {
                         quadTreeBounds.size *= 1.2f;
                         SVGDepthTree depthTree = new SVGDepthTree(quadTreeBounds);
-                        FILL_BLEND[] blends = new FILL_BLEND[shapeCount];
+                        SVGFillBlend[] blends = new SVGFillBlend[shapeCount];
                         int index = 0;
                         for(int i = 0; i < totalLayers; i++)
                         {
@@ -122,7 +122,7 @@ namespace SVGImporter.Geometry
                                             highest = other;
                                         }
                                     }
-                                    bool opaque = shape.fill.blend == FILL_BLEND.OPAQUE || (highest != -1 && blends[highest] == FILL_BLEND.OPAQUE);
+                                    bool opaque = shape.fill.blend == SVGFillBlend.Opaque || (highest != -1 && blends[highest] == SVGFillBlend.Opaque);
                                     depth = opaque ? highestDepth + 1 : highestDepth;
                                 }
                                 depths[index++] = depth;
@@ -136,7 +136,7 @@ namespace SVGImporter.Geometry
                         foreach(SVGShape shape in layers[i].shapes)
                         {
                             fill = shape.fill;
-                            depths[index++] = fill.blend == FILL_BLEND.OPAQUE || lastBlendType == FILL_BLEND.OPAQUE ? ++highestDepth : highestDepth;
+                            depths[index++] = fill.blend == SVGFillBlend.Opaque || lastBlendType == SVGFillBlend.Opaque ? ++highestDepth : highestDepth;
                             lastBlendType = fill.blend;
                         }
                     }
@@ -155,15 +155,15 @@ namespace SVGImporter.Geometry
                 for(int j = 0; j < totalShapes; j++)
                 {
                     fill = layers[i].shapes[j].fill;
-                    if(fill.blend == FILL_BLEND.OPAQUE) { 
+                    if(fill.blend == SVGFillBlend.Opaque) { 
                         opaqueTriangles += layers[i].shapes[j].triangles.Length;
                         useOpaqueShader = true; 
                     }
-                    else if(fill.blend == FILL_BLEND.ALPHA_BLENDED) { 
+                    else if(fill.blend == SVGFillBlend.Transparent) { 
                         transparentTriangles += layers[i].shapes[j].triangles.Length;
                         useTransparentShader = true; 
                     }
-                    if(fill.fillType == FILL_TYPE.GRADIENT) hasGradients = true;
+                    if(fill.fillType == SVGFillType.Gradient) hasGradients = true;
                     vertexCount = layers[i].shapes[j].vertices.Length;
                     totalVertices += vertexCount;
                 }
@@ -172,7 +172,7 @@ namespace SVGImporter.Geometry
             totalTriangles = opaqueTriangles + transparentTriangles;
             
             if(useGradients == SVGUseGradients.Never) hasGradients = false;
-            if(format != SVGAssetFormat.Opaque)
+            if(format != SVGAssetFormat.OpaqueAndTransparent)
             { 
                 useOpaqueShader = false; 
                 useTransparentShader = true;
@@ -259,7 +259,7 @@ namespace SVGImporter.Geometry
                     
                     if(hasGradients)
                     {
-                        if(layers[i].shapes[j].fill.fillType == FILL_TYPE.GRADIENT && layers[i].shapes[j].fill.gradientColors != null)
+                        if(layers[i].shapes[j].fill.fillType == SVGFillType.Gradient && layers[i].shapes[j].fill.gradientColors != null)
                         {
                             SVGMatrix svgFillTransform = layers[i].shapes[j].fill.transform;
                             Rect viewport = layers[i].shapes[j].fill.viewport;
@@ -293,7 +293,7 @@ namespace SVGImporter.Geometry
                                     uv2[currentVertex] = uv2Value;
                                 }
                             }
-                        } else if(layers[i].shapes[j].fill.fillType == FILL_TYPE.TEXTURE)
+                        } else if(layers[i].shapes[j].fill.fillType == SVGFillType.Texture)
                         {
                             SVGMatrix svgFillTransform = layers[i].shapes[j].fill.transform;
                             Vector2 uvPoint = Vector2.zero;
@@ -362,7 +362,7 @@ namespace SVGImporter.Geometry
                     for(int j = 0; j < totalShapes; j++)
                     {
                         triangleCount = layers[i].shapes[j].triangles.Length;
-                        if(layers[i].shapes[j].fill.blend == FILL_BLEND.OPAQUE)
+                        if(layers[i].shapes[j].fill.blend == SVGFillBlend.Opaque)
                         {
                             for(int k = 0; k < triangleCount; k++)
                             {

@@ -5,7 +5,7 @@ using System.Collections;
 
 namespace SVGImporter.Utils
 {        
-    public static class SVGPropertyUtility
+    internal static class SVGPropertyUtility
     {
         public static bool SetColor(ref Color currentValue, Color newValue)
         {
@@ -35,7 +35,7 @@ namespace SVGImporter.Utils
         }
     }
 
-    public static class SVGDeleagate {
+    internal static class SVGDeleagate {
         public static bool IsRegistered(System.Delegate source, System.Action compare)
         {   
             if (source == null || compare == null)

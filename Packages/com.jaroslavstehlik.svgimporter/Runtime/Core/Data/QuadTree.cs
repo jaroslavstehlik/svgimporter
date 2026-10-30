@@ -8,7 +8,7 @@ namespace SVGImporter.Data
 {
     using Utils;
 
-    public class QuadTreeNode<T> : System.Object
+    internal class QuadTreeNode<T> : System.Object
     {
         public T data;
         public SVGBounds bounds;
@@ -68,7 +68,7 @@ namespace SVGImporter.Data
         }
     }
 
-    public class QuadTreeCell<T> : System.Object
+    internal class QuadTreeCell<T> : System.Object
     {
 
         const int DEFAULT_MAX_CAPACITY = 1;
@@ -534,7 +534,7 @@ namespace SVGImporter.Data
         }
     }
 
-    public class QuadTree<T> : System.Object
+    internal class QuadTree<T> : System.Object
     {
         protected internal QuadTreeCell<T> _root;
         protected internal SVGBounds _originalBounds;

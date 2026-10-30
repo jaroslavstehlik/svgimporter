@@ -13,7 +13,7 @@ namespace SVGImporter
     /// importer is the default importer for .svg, so SVGFileImporter is an override that has
     /// to be set per file.
     /// </summary>
-    public class SVGPostprocessor : AssetPostprocessor
+    internal class SVGPostprocessor : AssetPostprocessor
     {
         // New .svg files, collected in OnPreprocessAsset: only there does Unity tell whether
         // a file has import settings yet. Files that already have settings (existing files, or
@@ -76,7 +76,7 @@ namespace SVGImporter
                 return false;
             }
 
-            importer.ApplyDefaults(SVGImporterProjectSettings.instance.defaults);
+            importer.importOptions = SVGImporterProjectSettings.instance.defaults;
             // SaveAndReimport only writes the settings of an importer marked as changed.
             EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();

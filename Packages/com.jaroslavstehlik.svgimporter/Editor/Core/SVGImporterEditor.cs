@@ -5,17 +5,12 @@ using UnityEditor;
 
 namespace SVGImporter
 {
-    public class SVGImporterEditor
+    internal class SVGImporterEditor
     {
         [MenuItem("Window/SVG Importer/Settings")]
         static public void ShowSettings () {
             SettingsService.OpenProjectSettings(SVGImporterSettingsProvider.settingsPath);
         }
 
-        [System.Obsolete("Use SVGImporterProjectSettings.instance.")]
-        public static SVGImporterSettings settings
-        {
-            get { return SVGImporterSettings.Get; }
-        }
     }
 }

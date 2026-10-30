@@ -12,14 +12,11 @@ namespace SVGImporter
     using Utils;
 
     [InitializeOnLoad]
-    public class SVGImporterLaunchEditor {
+    internal class SVGImporterLaunchEditor {
 
         static SVGImporterLaunchEditor() {
             RegisterDelegates();
         }
-
-        [System.Obsolete("SVG Importer's editor support is always on.")]
-        public static bool active { get { return true; } set { } }
 
         static void RegisterDelegates()
         {
@@ -60,12 +57,6 @@ namespace SVGImporter
 #endif
             EditorApplication.update -= Update;
         }
-
-        [System.Obsolete("SVG Importer's editor support is always on.")]
-        public static void Start() { }
-
-        [System.Obsolete("SVG Importer's editor support is always on.")]
-        public static void Stop() { }
 
         /// <summary>Creates an SVG Renderer where SVG Assets are dropped in the Scene view.</summary>
         static DragAndDropVisualMode OnSceneDrop(Object dropUpon, Vector3 worldPosition, Vector2 viewportPosition, Transform parentForDraggedObjects, bool perform)

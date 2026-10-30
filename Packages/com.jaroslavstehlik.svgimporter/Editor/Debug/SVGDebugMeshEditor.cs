@@ -1,11 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
 [CustomEditor(typeof(SVGDebugMesh))]
-public class SVGDebugMeshEditor : Editor
+internal class SVGDebugMeshEditor : Editor
 {
-    public enum DebugType
+    internal enum DebugType
     {
         NONE,
         INDEXES,

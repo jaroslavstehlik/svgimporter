@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -7,7 +7,6 @@ using System.Collections.Generic;
 namespace SVGImporter 
 {
     [ExecuteInEditMode]
-    [RequireComponent(typeof(ISVGRenderer))]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Twirl Modifier", 22)]
     public class SVGTwirlModifier : SVGModifier {
@@ -16,7 +15,7 @@ namespace SVGImporter
         public float radius;
         public float intensity;
 
-        protected override void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force) 
+        protected override void ModifyLayers(SVGLayer[] layers, SVGAsset svgAsset) 
         {
             if (!active) return;
             if (center == null) return;

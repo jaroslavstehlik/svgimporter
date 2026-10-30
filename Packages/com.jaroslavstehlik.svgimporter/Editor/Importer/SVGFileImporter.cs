@@ -50,8 +50,8 @@ namespace SVGImporter
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
-            // Reimport when the engine changes (Project Settings > SVG Importer).
-            ctx.DependsOnCustomDependency(SVGImportEngineDependency.name);
+            // Reimport when the native library changes.
+            ctx.DependsOnCustomDependency(SVGNativeLibraryDependency.name);
 
             SVGImportOptions options = importOptions;
             string svgText = File.ReadAllText(ctx.assetPath);
@@ -79,18 +79,43 @@ namespace SVGImporter
             ctx.SetMainObject(asset);
         }
 
-        /// <summary>The import settings as options for SVGImport.</summary>
-        internal SVGImportOptions importOptions
+        /// <summary>
+        /// The file's import settings. Setting them changes the importer only: call
+        /// SaveAndReimport() to apply them, as with other importers.
+        /// </summary>
+        public SVGImportOptions importOptions
         {
             get {
                 return new SVGImportOptions {
-                    format = _format, useGradients = _useGradients, antialiasing = _antialiasing,
+                    format = _format, useGradients = _useGradients, softEdges = _antialiasing,
                     verticesPerMeter = _vpm, scale = _scale, depthOffset = _depthOffset, compressDepth = _compressDepth,
                     customPivotPoint = _customPivotPoint, pivotPoint = _pivotPoint, border = _border, sliceMesh = _sliceMesh,
                     ignoreSVGCanvas = _ignoreSVGCanvas, exactGroupOpacity = _exactGroupOpacity, generateCollider = _generateCollider, useLayers = _useLayers,
                     generateNormals = _generateNormals, generateTangents = _generateTangents,
                     meshCompression = _meshCompression, optimizeMesh = _optimizeMesh, keepSVGFile = _keepSVGFile,
                 };
+            }
+            set {
+                _format = value.format;
+                _useGradients = value.useGradients;
+                _antialiasing = value.softEdges;
+                _vpm = value.verticesPerMeter;
+                _scale = value.scale;
+                _depthOffset = value.depthOffset;
+                _compressDepth = value.compressDepth;
+                _customPivotPoint = value.customPivotPoint;
+                _pivotPoint = value.pivotPoint;
+                _border = value.border;
+                _sliceMesh = value.sliceMesh;
+                _ignoreSVGCanvas = value.ignoreSVGCanvas;
+                _exactGroupOpacity = value.exactGroupOpacity;
+                _generateCollider = value.generateCollider;
+                _useLayers = value.useLayers;
+                _generateNormals = value.generateNormals;
+                _generateTangents = value.generateTangents;
+                _meshCompression = value.meshCompression;
+                _optimizeMesh = value.optimizeMesh;
+                _keepSVGFile = value.keepSVGFile;
             }
         }
 
@@ -140,27 +165,5 @@ namespace SVGImporter
             }
         }
 
-        /// <summary>Applies the project's default import settings to a newly assigned importer.</summary>
-        internal void ApplyDefaults(SVGImportDefaults defaults)
-        {
-            _format = defaults.format;
-            _useGradients = defaults.useGradients;
-            _antialiasing = defaults.antialiasing;
-            _meshCompression = defaults.meshCompression;
-            _optimizeMesh = defaults.optimizeMesh;
-            _scale = defaults.scale;
-            _vpm = defaults.verticesPerMeter;
-            _depthOffset = defaults.depthOffset;
-            _compressDepth = defaults.compressDepth;
-            _customPivotPoint = defaults.customPivotPoint;
-            _pivotPoint = defaults.pivotPoint;
-            _generateCollider = defaults.generateCollider;
-            _generateNormals = defaults.generateNormals;
-            _generateTangents = defaults.generateTangents;
-            _keepSVGFile = defaults.keepSVGFile;
-            _useLayers = defaults.useLayers;
-            _ignoreSVGCanvas = defaults.ignoreSVGCanvas;
-            _exactGroupOpacity = defaults.exactGroupOpacity;
-        }
     }
 }

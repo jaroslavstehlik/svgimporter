@@ -32,23 +32,23 @@
 - Gradients are now smooth when zoomed in: shaders compute the position along a gradient instead of reading it from a 512×512 lookup texture, which made radial gradients blocky and left a seam in conical gradients. The gradient shape texture is gone, and `SVGAtlas.gradientShapeTexture` is obsolete.
 - Gradient colours are exact: the gradient atlas stores each gradient's stops (up to 64) instead of 128 sampled colours, and shaders interpolate between them in sRGB, as browsers do. Hard stops are sharp at any size, colours of neighbouring gradients can't bleed in, and gradients look the same in Gamma and Linear projects. Requires shader model 3.5 (OpenGL ES 3.0, Metal, Vulkan or Direct3D 11).
 - Fixed gradients showing the wrong colours or disappearing in the Editor after entering or leaving play mode, script reloads, reimports or long editing sessions: the gradient atlas is rebuilt consistently after each of them, and grows instead of running out of space (512 gradients before).
-- Gradients are identified by exactly what they draw. The old text hash rounded stop offsets and alphas to 1/999, so slightly different gradients could share one atlas slot. `CCGradient.GetStops()` returns a gradient's merged stops; `CCGradient.Evaluate` now matches the shaders, including hard stops. `CCGradient.hash`, `SVGFill.gradientHash` and the gradient reference counting are obsolete; `SVGAtlasData.gradientCache` is replaced by `registeredGradients`.
+- Gradients are identified by exactly what they draw. The old text hash rounded stop offsets and alphas to 1/999, so slightly different gradients could share one atlas slot. `SVGGradient.GetStops()` returns a gradient's merged stops; `SVGGradient.Evaluate` now matches the shaders, including hard stops.
 - Removed the per-machine "Support Service" switch; drag and drop and gradient updates are always on. Its Start button used to turn it off.
 - Fixed dropping an SVG Asset on empty space in the Hierarchy throwing an exception.
 - One import pipeline, `SVGImport.Import(svgText, SVGImportOptions)`, used by the Editor importer, `SVGAsset.Load` and 1.x SVG Assets. Imports depend only on the SVG text and the options: the same file imports the same way every time (no time stamps), and no state is left between imports.
-- `SVGAsset.Load` works in edit mode too, and has an overload taking `SVGImportOptions`. It returns null when the document can't be imported. Assets it creates destroy their mesh when destroyed.
+- `SVGAsset.Load` works in edit mode too, and imports with the settings a new SVG file gets, so it gives the same asset as importing the file. It has an overload taking `SVGImportOptions`, and returns null when the text can't be imported; the new `SVGAsset.TryLoad` also returns the import's messages. Neither logs to the Console. Assets they create destroy their mesh when destroyed.
 - Import warnings and errors are logged by the importer, so they show again when an import comes from the cache, instead of once per import in the console.
 - Gradients support `spreadMethod` (pad, reflect and repeat) and the focal point of radial gradients (`fx`, `fy` and SVG 2's `fr`), including focal points outside the circle, as browsers draw them. All 87 resvg gradient tests pass. `CCGradient` has `spreadMethod`, `focalOffset` and `focalRadius`. SVG files reimport once.
 - New antialiasing: the soft edge is centred on the shape's outline, so antialiased shapes keep their true size instead of growing by half a pixel, and holes no longer shrink. Its width is measured in screen pixels for any transform, camera or canvas, including rotation, non-uniform scale and perspective; sharp corners are bevelled instead of shooting out spikes; and semi-transparent shapes no longer show a brighter or darker line where the fill meets the edge. The Antialiasing Width setting keeps its meaning (2 is a one-pixel edge). Reimport to update existing files; this happens automatically.
 - Fixed SVG Collider 2D keeping the previous asset's shape when the renderer's asset changed or was reimported.
 - Fixed meshes leaking: a renderer's own mesh (tinted, sliced or layered) is freed with the renderer, and meshes derived from an asset with it.
 - Fixed assets imported with Use Layers drawing a white rectangle in SVG Image, and producing invalid vertices in sliced renderers: they now have a mesh and bounds built from their layers.
-- The **Antialiasing** import setting is now called **Soft Edges**, and the project setting **Antialiasing Width** is **Soft Edge Width**, in screen pixels (the default, 1, is the previous 2). It adds a soft edge to the mesh; it isn't MSAA. For MSAA, turn Soft Edges off and enable MSAA on the camera. The script API (`antialiasing`) is unchanged.
+- The **Antialiasing** import setting is now called **Soft Edges**, and the project setting **Antialiasing Width** is **Soft Edge Width**, in screen pixels (the default, 1, is the previous 2). It adds a soft edge to the mesh; it isn't MSAA. For MSAA, turn Soft Edges off and enable MSAA on the camera. In scripts it's `softEdges`.
 - **Exact Group Opacity** (import setting, off by default): semi-transparent groups can look as they do in browsers, Illustrator and Figma. Where a group's children overlap, the parts hidden by opaque children are removed at import, so lower shapes no longer show through upper ones. It adds vertices along the cuts and can show hairline seams where cut shapes meet, so turn it on for the assets that need it. Translucent children that overlap still show through each other; the Inspector flags files with group opacity.
 - The pivot is set like a sprite's: a **Pivot** popup (Center, Top Left, …, Custom) and, for Custom, a **Custom Pivot** with (0, 0) at the bottom left, as in Unity's sprite importer. Existing pivots are kept.
 - SVG files open in Unity's **Sprite Editor** (the Sprite Editor button in the import settings, or Window > 2D > Sprite Editor) to drag the pivot and the slicing border. SVG Importer now depends on the 2D Sprite package (`com.unity.2d.sprite`), which Unity adds with it.
 - Removed code that was no longer used: the `SVGStrokeRenderer`, `SVGRenderTexture` and `StrokeRendererLegacy` components, the additive and multiply "Others" shaders, the SVG utility window, `SVGCombineMesh`, `SVGMeshCutter`, unused math, Bézier and mesh helpers (for example `SVGMeshUtils.MergeMeshes`, `SVGAsset.MergeLayersToShapes`, `SVGAtlas.AssignMaterialGradients`), Unity 4 and 5 code paths and commented-out code.
-- New: `SVGAsset.importOptions`, `importEngine` (the engine that imported it) and `importHash`.
+- New: `SVGAsset.importOptions`, `SVGFileImporter.importOptions` (settable, as `TextureImporter`'s settings are) and `SVGAsset.importHash`.
 - Fixed the Opaque format with **Compress Depth** throwing an exception or drawing overlapping shapes in the wrong order when an element has both a fill and a stroke.
 - Meshes may have more than 65,535 vertices (32-bit indices); before, such files imported as an empty asset with only a console error.
 - Fixed SVG files imported while the game runs in the Editor being saved empty.
@@ -79,6 +79,32 @@
 - **Report Import Issue** moved from the bottom of the import settings to the importer's context menu (the ⋮ button).
 - SVG Image's Inspector is built on uGUI's Graphic Inspector, so it has Maskable and Raycast Padding like Image, and edits every selected image.
 - The SVG Renderer's Sorting Layer field no longer uses Unity's internal API.
+
+### Script API changes (2.0)
+
+2.0 cleans up the script API, and scripts written for 1.x need these changes. Everything users need is in the `SVGImporter` namespace; the rest of the package (geometry, mesh and Clipper code, the gradient atlas, the native bindings, the import pipeline, the debug components and the Inspectors) is internal. Serialized data keeps loading: assets, scenes and prefabs don't need changes.
+
+| 1.x | 2.0 |
+|---|---|
+| `CCGradient`, `CCGradientColorKey`, `CCGradientAlphaKey` | `SVGGradient`, `SVGGradientColorKey`, `SVGGradientAlphaKey` |
+| `FILL_BLEND.OPAQUE`, `FILL_BLEND.ALPHA_BLENDED` | `SVGFillBlend.Opaque`, `SVGFillBlend.Transparent` |
+| `FILL_TYPE.SOLID` / `GRADIENT` / `TEXTURE` | `SVGFillType.Solid` / `Gradient` / `Texture` |
+| `GRADIENT_TYPE.LINEAR` / `RADIAL` / `CONICAL` | `SVGGradientType.Linear` / `Radial` / `Conical` |
+| `SVGShapeType.NONE` / `FILL` / `STROKE` / `ANTIALIASING` | `SVGShapeType.None` / `Fill` / `Stroke` / `SoftEdge` |
+| `SVGAssetFormat.Opaque`, `SVGAssetFormat.uGUI` | `SVGAssetFormat.OpaqueAndTransparent`, `SVGAssetFormat.Canvas` |
+| `SVGRenderer.Type`, `SVGImage.Type` | `SVGDrawMode` |
+| `SVGRenderer.type` | `SVGRenderer.drawMode` (`SVGImage.type` is unchanged, as on Image) |
+| `SVGRenderer.onVectorGraphicsChanged` (a field) | `SVGRenderer.vectorGraphicsChanged` (an event) |
+| `SVGRenderer.OnPrepareForRendering` | `SVGRenderer.willBuildMesh`, an event without the `force` argument |
+| `SVGRenderer.UpdateRenderer()`, `UpdateMaterials()` | `SVGRenderer.SetAllDirty()` |
+| `SVGModifier.PrepareForRendering(layers, asset, force)` | `SVGModifier.ModifyLayers(layers, asset)`; modifiers require an SVG Renderer |
+| `SVGTransformModifier.Properties.positon` | `position` |
+| `SVGAsset.layersClone` | `SVGAsset.CloneLayers()` |
+| `SVGAsset.antialiasing`, `vpm`, `scale` and the other import settings | `SVGAsset.importOptions.softEdges`, `.verticesPerMeter`, `.scale`, … |
+| `SVGAsset.Load(text, SVGImporterSettings)` | `SVGAsset.Load(text, SVGImportOptions)` or `TryLoad` |
+| `SVGImporterSettings.default…` | Project Settings > SVG Importer; `SVGImportOptions.Default` in scripts |
+| `SVGPath` (global namespace) | `SVGImporter.SVGPath` |
+| `SVGImportEngine`, `importEngine`, `ISVGReference`, `AddReference`, `RemoveReference`, `SVGLegacyAnimator`, the obsolete atlas members | Removed |
 
 ## Legacy releases
 

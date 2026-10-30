@@ -25,7 +25,7 @@ namespace SVGImporter.Native
         {
             viewport = new Rect();
             float meshScale = options.scale;
-            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance(options.verticesPerMeter), antialiasing: options.antialiasing, groupOpacity: options.exactGroupOpacity);
+            SVGNativeCore.Result result = SVGNativeCore.Import(Encoding.UTF8.GetBytes(svgText), Tolerance(options.verticesPerMeter), antialiasing: options.softEdges, groupOpacity: options.exactGroupOpacity);
             if (result.status != SVGNativeCore.Status.Ok)
             {
                 context.errors.Add(result.status == SVGNativeCore.Status.ParseError ? SVGError.Syntax : SVGError.CorruptedFile);
@@ -55,9 +55,9 @@ namespace SVGImporter.Native
                 if (layer.kind == SVGNativeCore.LayerKind.Fringe)
                 {
                     // The antialiasing fringe of the previous layer, built by the native core.
-                    shape.type = SVGShapeType.ANTIALIASING;
+                    shape.type = SVGShapeType.SoftEdge;
                     shape.fill = previousFill.Clone();
-                    shape.fill.blend = FILL_BLEND.ALPHA_BLENDED;
+                    shape.fill.blend = SVGFillBlend.Transparent;
                     shapes.Add(shape);
                     continue;
                 }
@@ -101,7 +101,7 @@ namespace SVGImporter.Native
             System.Array.Copy(result.indices, layer.indexOffset, triangles, 0, layer.indexCount);
 
             var shape = new SVGShape {
-                type = layer.kind == SVGNativeCore.LayerKind.Stroke ? SVGShapeType.STROKE : SVGShapeType.FILL,
+                type = layer.kind == SVGNativeCore.LayerKind.Stroke ? SVGShapeType.Stroke : SVGShapeType.Fill,
                 vertices = vertices,
                 triangles = triangles,
             };
@@ -126,7 +126,7 @@ namespace SVGImporter.Native
             SVGFill fill;
             if (paint.kind == SVGNativeCore.PaintKind.Solid)
             {
-                fill = new SVGFill(new Color(paint.color.r, paint.color.g, paint.color.b, 1f), FILL_BLEND.OPAQUE, FILL_TYPE.SOLID);
+                fill = new SVGFill(new Color(paint.color.r, paint.color.g, paint.color.b, 1f), SVGFillBlend.Opaque, SVGFillType.Solid);
                 fill.opacity = opacity;
                 fill.transform = SVGMatrix.identity;
             }
@@ -136,15 +136,15 @@ namespace SVGImporter.Native
                 foreach (SVGNativeCore.Stop stop in paint.stops)
                     translucent |= stop.color.a < 1f;
 
-                fill = new SVGFill(Color.white, FILL_BLEND.OPAQUE, FILL_TYPE.GRADIENT,
-                    paint.kind == SVGNativeCore.PaintKind.Radial ? GRADIENT_TYPE.RADIAL
-                    : paint.kind == SVGNativeCore.PaintKind.Conical ? GRADIENT_TYPE.CONICAL : GRADIENT_TYPE.LINEAR);
+                fill = new SVGFill(Color.white, SVGFillBlend.Opaque, SVGFillType.Gradient,
+                    paint.kind == SVGNativeCore.PaintKind.Radial ? SVGGradientType.Radial
+                    : paint.kind == SVGNativeCore.PaintKind.Conical ? SVGGradientType.Conical : SVGGradientType.Linear);
                 fill.opacity = opacity;
                 fill.gradientColors = atlasData.AddGradient(CreateGradient(paint));
                 fill.transform = GradientTransform(paint, viewport);
-                if (translucent) fill.blend = FILL_BLEND.ALPHA_BLENDED;
+                if (translucent) fill.blend = SVGFillBlend.Transparent;
             }
-            if (opacity < 1f) fill.blend = FILL_BLEND.ALPHA_BLENDED;
+            if (opacity < 1f) fill.blend = SVGFillBlend.Transparent;
 
             // The gradient transform and viewport in mesh units.
             SVGMatrix scale = SVGMatrix.identity.Scale(meshScale);
@@ -158,9 +158,9 @@ namespace SVGImporter.Native
         /// method and, for radial gradients, the focal point in the space GradientTransform maps
         /// to (centre at 0.5, radius 0.5).
         /// </summary>
-        static CCGradient CreateGradient(SVGNativeCore.Paint paint)
+        static SVGGradient CreateGradient(SVGNativeCore.Paint paint)
         {
-            CCGradient gradient = CreateGradient(paint.stops);
+            SVGGradient gradient = CreateGradient(paint.stops);
             gradient.spreadMethod = paint.spread == SVGNativeCore.Spread.Reflect ? SVGSpreadMethod.Reflect
                 : paint.spread == SVGNativeCore.Spread.Repeat ? SVGSpreadMethod.Repeat : SVGSpreadMethod.Pad;
             float[] g = paint.geometry;
@@ -173,35 +173,35 @@ namespace SVGImporter.Native
             return gradient;
         }
 
-        static CCGradient CreateGradient(SVGNativeCore.Stop[] stops)
+        static SVGGradient CreateGradient(SVGNativeCore.Stop[] stops)
         {
-            var colorKeys = new List<CCGradientColorKey>();
-            var alphaKeys = new List<CCGradientAlphaKey>();
+            var colorKeys = new List<SVGGradientColorKey>();
+            var alphaKeys = new List<SVGGradientAlphaKey>();
             if (stops.Length == 0)
             {
-                colorKeys.Add(new CCGradientColorKey(Color.black, 0f));
-                alphaKeys.Add(new CCGradientAlphaKey(1f, 0f));
+                colorKeys.Add(new SVGGradientColorKey(Color.black, 0f));
+                alphaKeys.Add(new SVGGradientAlphaKey(1f, 0f));
             }
             else
             {
                 if (stops[0].offset > 0f)
                 {
-                    colorKeys.Add(new CCGradientColorKey(stops[0].color, 0f));
-                    alphaKeys.Add(new CCGradientAlphaKey(stops[0].color.a, 0f));
+                    colorKeys.Add(new SVGGradientColorKey(stops[0].color, 0f));
+                    alphaKeys.Add(new SVGGradientAlphaKey(stops[0].color.a, 0f));
                 }
                 foreach (SVGNativeCore.Stop stop in stops)
                 {
-                    colorKeys.Add(new CCGradientColorKey(stop.color, stop.offset));
-                    alphaKeys.Add(new CCGradientAlphaKey(stop.color.a, stop.offset));
+                    colorKeys.Add(new SVGGradientColorKey(stop.color, stop.offset));
+                    alphaKeys.Add(new SVGGradientAlphaKey(stop.color.a, stop.offset));
                 }
                 SVGNativeCore.Stop last = stops[stops.Length - 1];
                 if (last.offset < 1f)
                 {
-                    colorKeys.Add(new CCGradientColorKey(last.color, 1f));
-                    alphaKeys.Add(new CCGradientAlphaKey(last.color.a, 1f));
+                    colorKeys.Add(new SVGGradientColorKey(last.color, 1f));
+                    alphaKeys.Add(new SVGGradientAlphaKey(last.color.a, 1f));
                 }
             }
-            return new CCGradient(colorKeys.ToArray(), alphaKeys.ToArray());
+            return new SVGGradient(colorKeys.ToArray(), alphaKeys.ToArray());
         }
 
         /// <summary>
@@ -244,7 +244,6 @@ namespace SVGImporter.Native
 
         static void AddDiagnostics(SVGNativeCore.Diagnostics diagnostics, List<SVGError> errors)
         {
-            if ((diagnostics & SVGNativeCore.Diagnostics.ClipPath) != 0) errors.Add(SVGError.ClipPath);
             if ((diagnostics & SVGNativeCore.Diagnostics.Mask) != 0) errors.Add(SVGError.Mask);
             if ((diagnostics & SVGNativeCore.Diagnostics.Image) != 0) errors.Add(SVGError.Image);
             if ((diagnostics & SVGNativeCore.Diagnostics.Filter) != 0) errors.Add(SVGError.Filter);

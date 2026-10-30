@@ -6,52 +6,47 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace SVGImporter.Rendering
+namespace SVGImporter
 {
     using Utils;
 
-    public enum FILL_BLEND : byte
+    /// <summary>Whether a fill is drawn opaque or with transparency.</summary>
+    public enum SVGFillBlend : byte
     {
-    	OPAQUE,
-    	ALPHA_BLENDED,
-    	ADDITIVE,
-    	MULTIPLY
+        Opaque = 0,
+        Transparent = 1,
     }
 
-    public enum FILL_TYPE : byte
+    /// <summary>What a fill paints with.</summary>
+    public enum SVGFillType : byte
     {
-    	SOLID,
-    	GRADIENT,
-    	TEXTURE
+        Solid = 0,
+        Gradient = 1,
+        Texture = 2,
     }
 
-    public enum GRADIENT_TYPE : byte
+    /// <summary>The shape of a gradient fill.</summary>
+    public enum SVGGradientType : byte
     {
-    	LINEAR = 0,
-    	RADIAL = 1,
-        CONICAL = 2
+        Linear = 0,
+        Radial = 1,
+        Conical = 2,
     }
 
     [System.Serializable]
     public class SVGFill : System.Object
     {	
-    	public FILL_TYPE fillType;
-    	public FILL_BLEND blend;
-        public GRADIENT_TYPE gradientType;
+    	public SVGFillType fillType;
+    	public SVGFillBlend blend;
+        public SVGGradientType gradientType;
     	public Color32 color;
         public float opacity;
         public Rect viewport;
         public SVGMatrix transform;
 
         public string gradientId;
-        [System.Obsolete("Compare gradients with CCGradient.GradientEquals.")]
-        public string gradientHash {
-            get {
-                return gradientColors.hash;
-            }
-        }
 
-        public CCGradient gradientColors;
+        public SVGGradient gradientColors;
 
         public Color32 finalColor
         {
@@ -69,20 +64,20 @@ namespace SVGImporter.Rendering
             this.color = color;
         }
 
-        public SVGFill (Color32 color, FILL_BLEND blend)
+        public SVGFill (Color32 color, SVGFillBlend blend)
         {
             this.color = color;
             this.blend = blend;
         }
 
-        public SVGFill (Color32 color, FILL_BLEND blend, FILL_TYPE fillType)
+        public SVGFill (Color32 color, SVGFillBlend blend, SVGFillType fillType)
         {
             this.color = color;
             this.blend = blend;
             this.fillType = fillType;
         }
 
-        public SVGFill (Color32 color, FILL_BLEND blend, FILL_TYPE fillType, GRADIENT_TYPE gradientType)
+        public SVGFill (Color32 color, SVGFillBlend blend, SVGFillType fillType, SVGGradientType gradientType)
         {
             this.color = color;
             this.blend = blend;

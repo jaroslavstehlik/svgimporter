@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -7,7 +7,6 @@ using System.Collections.Generic;
 namespace SVGImporter 
 {    
     [ExecuteInEditMode]
-    [RequireComponent(typeof(ISVGRenderer))]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Transform Modifier", 22)]
     public class SVGTransformModifier : SVGModifier
@@ -15,13 +14,14 @@ namespace SVGImporter
         [System.Serializable]
         public struct Properties
         {
-            public Vector3 positon;
+            [UnityEngine.Serialization.FormerlySerializedAs("positon")]
+            public Vector3 position;
             public Vector3 rotation;
             public Vector3 scale;
 
-            public Properties(Vector3 positon, Vector3 rotation, Vector3 scale)
+            public Properties(Vector3 position, Vector3 rotation, Vector3 scale)
             {
-                this.positon = positon;
+                this.position = position;
                 this.rotation = rotation;
                 this.scale = scale;
             }
@@ -30,14 +30,14 @@ namespace SVGImporter
             {
                 get
                 {
-                    return Matrix4x4.TRS(positon, Quaternion.Euler(rotation), scale);
+                    return Matrix4x4.TRS(position, Quaternion.Euler(rotation), scale);
                 }
             }
         }
 
         public Properties properties = new Properties(Vector3.zero, Vector3.zero, Vector3.one);
         public Transform target;
-        protected override void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force) 
+        protected override void ModifyLayers(SVGLayer[] layers, SVGAsset svgAsset) 
         {
             if (!active) return;
             if (layers == null) return;

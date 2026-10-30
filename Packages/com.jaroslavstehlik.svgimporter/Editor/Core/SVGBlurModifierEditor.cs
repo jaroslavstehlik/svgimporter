@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2015 Jaroslav Stehlik
+// Copyright (C) 2015 Jaroslav Stehlik
 // Released under the license found in the LICENSE file.
 
 using UnityEngine;
@@ -10,7 +10,7 @@ namespace SVGImporter
 {
 	[CustomEditor(typeof(SVGBlurModifier), true)]
 	[CanEditMultipleObjects]
-	public class SVGBlurModifierEditor : SVGModifierEditor {
+	internal class SVGBlurModifierEditor : SVGModifierEditor {
 
 		SerializedProperty camera;
 		SerializedProperty radius;
@@ -41,7 +41,7 @@ namespace SVGImporter
 				if(modifier == null) continue;
 				if(modifier.svgRenderer == null) continue;
 				if(modifier.svgRenderer.vectorGraphics == null) continue;
-				if(!modifier.svgRenderer.vectorGraphics.antialiasing) 
+				if(!modifier.svgRenderer.vectorGraphics.softEdges) 
 				{
 					validSVGAsset = false;
 					break;

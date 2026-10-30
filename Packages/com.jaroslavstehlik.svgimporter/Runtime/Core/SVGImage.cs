@@ -18,18 +18,13 @@ namespace SVGImporter
     [RequireComponent(typeof(CanvasRenderer))]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("UI/SVG Image", 21)]
-    public class SVGImage : MaskableGraphic, ILayoutElement, ICanvasRaycastFilter, ISVGRenderer, ISVGReference, ISVGAtlasClient
+    public class SVGImage : MaskableGraphic, ILayoutElement, ICanvasRaycastFilter, ISVGRenderer, ISVGAtlasClient
     {
-        public enum Type
-        {
-            Simple,
-            Sliced
-        }
 
         [FormerlySerializedAs("vectorGraphics")]
         [SerializeField]
-        protected SVGAsset _vectorGraphics;
-        protected SVGAsset _lastVectorGraphics;
+        private SVGAsset _vectorGraphics;
+        private SVGAsset _lastVectorGraphics;
         public SVGAsset vectorGraphics
         {
             get {
@@ -46,8 +41,8 @@ namespace SVGImporter
         }
 
         /// How the Image is drawn.
-        [SerializeField] private Type m_Type = Type.Simple;
-        public Type type { get { return m_Type; } set { if (SVGPropertyUtility.SetStruct(ref m_Type, value)) SetVerticesDirty(); } }
+        [SerializeField] private SVGDrawMode m_Type = SVGDrawMode.Simple;
+        public SVGDrawMode type { get { return m_Type; } set { if (SVGPropertyUtility.SetStruct(ref m_Type, value)) SetVerticesDirty(); } }
 
         [SerializeField] private bool m_PreserveAspect = false;
         public bool preserveAspect { get { return m_PreserveAspect; } set { if (SVGPropertyUtility.SetStruct(ref m_PreserveAspect, value)) SetVerticesDirty(); } }
@@ -59,56 +54,9 @@ namespace SVGImporter
         private float m_EventAlphaThreshold = 1;
         public float eventAlphaThreshold { get { return m_EventAlphaThreshold; } set { m_EventAlphaThreshold = value; } }
 
-        protected Material _defaultMaterial;
-
-        protected List<ISVGModify> _modifiers = new List<ISVGModify>();
-        public List<ISVGModify> modifiers
-        {
-            get {
-                return _modifiers;
-            }
-        }
+        private Material _defaultMaterial;
 
         // Tracking of mesh change
-        protected int _lastFrameChanged;
-        public int lastFrameChanged
-        {
-            get {
-                return _lastFrameChanged;
-            }
-        }
-
-        public void AddModifier(ISVGModify modifier)
-        {
-            if(_modifiers.Contains(modifier)) return;
-            _modifiers.Add(modifier);
-        }
-        
-        public void RemoveModifier(ISVGModify modifier)
-        {
-            if(!_modifiers.Contains(modifier)) return;
-            _modifiers.Remove(modifier);
-        }
-
-        public void UpdateRenderer()
-        {
-            this.SetAllDirty();
-        }
-
-        protected System.Action<SVGLayer[], SVGAsset, bool> _OnPrepareForRendering;
-        /// <summary>
-        /// delegate which indicates that the mesh has changed.
-        /// You can use it as your custom mesh postprocessor.
-        /// </summary>
-        public virtual System.Action<SVGLayer[], SVGAsset, bool> OnPrepareForRendering
-        {
-            get {
-                return _OnPrepareForRendering;
-            }
-            set {
-                _OnPrepareForRendering = value;
-            }
-        }
 
         bool useLayers
         {
@@ -121,21 +69,9 @@ namespace SVGImporter
         {            
             Clear();
             UpdateMaterial();
-            if(_vectorGraphics != null)
-            {
-                _vectorGraphics.AddReference(this);
-            }
             base.Awake();
         }
 
-        protected override void OnDestroy()
-        {
-            if (_vectorGraphics != null)
-            {
-                _vectorGraphics.RemoveReference(this);
-            }
-            base.OnDestroy();
-        }
 
         protected override void OnEnable()
         {
@@ -168,7 +104,7 @@ namespace SVGImporter
         }
 
         // Also for the Editor, after the asset changed.
-        protected internal void Refresh()
+        internal void Refresh()
         {
             Clear();
             UpdateMaterial();
@@ -202,7 +138,7 @@ namespace SVGImporter
             }
         }
 
-        protected Mesh sharedMesh
+        private Mesh sharedMesh
         {
             get {
                 if(_vectorGraphics == null)
@@ -269,7 +205,7 @@ namespace SVGImporter
             }
         }
 
-        protected float InverseLerp(float from, float to, float value)
+        private float InverseLerp(float from, float to, float value)
         {
             if (from < to)
             {               
@@ -283,7 +219,7 @@ namespace SVGImporter
             }
         }
 
-        protected float Lerp(float from, float to, float value)
+        private float Lerp(float from, float to, float value)
         {
             return from + value * (to-from);
         }
@@ -355,13 +291,13 @@ namespace SVGImporter
             base.SetMaterialDirty();
         }  
 
-        protected float SafeDivide(float a, float b)
+        private float SafeDivide(float a, float b)
         {
             if(b == 0) return 0f;
             return a / b;
         }
 
-        protected string BorderToString(Vector4 border)
+        private string BorderToString(Vector4 border)
         {
             return string.Format("left: {0}, bottom: {1}, right: {2}, top: {3}", border.x, border.y, border.z, border.w);
         }
@@ -425,7 +361,7 @@ namespace SVGImporter
             // Add the channels SVG meshes need; other graphics on the canvas (TextMeshPro, for
             // example) need theirs.
             AdditionalCanvasShaderChannels channels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.TexCoord2;
-            if (_vectorGraphics.antialiasing || _vectorGraphics.generateNormals)
+            if (_vectorGraphics.softEdges || _vectorGraphics.generateNormals)
                 channels |= AdditionalCanvasShaderChannels.Normal;
             if ((canvas.additionalShaderChannels & channels) != channels)
                 canvas.additionalShaderChannels |= channels;
@@ -436,7 +372,7 @@ namespace SVGImporter
                 bounds.center += new Vector3((-0.5f + _vectorGraphics.pivotPoint.x) * bounds.size.x, (0.5f - _vectorGraphics.pivotPoint.y) * bounds.size.y, 0f);
             }
 
-            if(m_Type == Type.Simple)
+            if(m_Type == SVGDrawMode.Simple)
             {
                 Vector4 v = GetDrawingDimensions(preserveAspect);
                 
@@ -537,9 +473,9 @@ namespace SVGImporter
                 }                
             }
             
-            if(_vectorGraphics.antialiasing)
+            if(_vectorGraphics.softEdges)
             {
-                if(_vectorGraphics.antialiasing)
+                if(_vectorGraphics.softEdges)
                 {
                     if(tempVBOLength == normals.Count)
                     {
@@ -567,21 +503,12 @@ namespace SVGImporter
             vertexList.AddRange(vertexStream);
             vh.AddUIVertexStream(vertexList, triangles);
 
-            _lastFrameChanged = Time.frameCount;
         }
 
-        protected void GetDefaultMaterial()
+        private void GetDefaultMaterial()
         {
             if(_lastVectorGraphics != _vectorGraphics)
             {
-                if(_lastVectorGraphics != null)
-                {
-                    _lastVectorGraphics.RemoveReference(this);
-                }
-                if(_vectorGraphics != null)
-                {
-                    _vectorGraphics.AddReference(this);
-                }
                 _lastVectorGraphics = _vectorGraphics;
                 Clear();
             }
@@ -595,7 +522,7 @@ namespace SVGImporter
             }
         }
         
-        protected void Clear()
+        private void Clear()
         {            
             _defaultMaterial = null;
         }

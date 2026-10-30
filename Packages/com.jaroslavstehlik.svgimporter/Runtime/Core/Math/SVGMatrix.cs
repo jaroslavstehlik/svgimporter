@@ -3,7 +3,7 @@
 using UnityEngine;
 using System;
 
-namespace SVGImporter.Rendering
+namespace SVGImporter
 {
     [System.Serializable]
     public struct SVGMatrix

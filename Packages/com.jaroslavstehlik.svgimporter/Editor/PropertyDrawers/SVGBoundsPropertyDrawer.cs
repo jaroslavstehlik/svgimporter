@@ -10,7 +10,7 @@ namespace SVGImporter
     using Utils;
 
     [CustomPropertyDrawer(typeof(SVGBounds))]
-    public class SVGBoundsPropertyDrawer : PropertyDrawer {
+    internal class SVGBoundsPropertyDrawer : PropertyDrawer {
 
     	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {

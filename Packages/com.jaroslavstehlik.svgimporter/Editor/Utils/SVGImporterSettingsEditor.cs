@@ -10,7 +10,7 @@ namespace SVGImporter {
     /// Settings. Such an asset only says so.
     /// </summary>
     [CustomEditor(typeof(SVGImporterSettings))]
-    public class SVGImporterSettingsEditor : Editor
+    internal class SVGImporterSettingsEditor : Editor
     {
         public override void OnInspectorGUI()
         {

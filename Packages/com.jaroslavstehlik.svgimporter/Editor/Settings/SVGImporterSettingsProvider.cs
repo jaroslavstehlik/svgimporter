@@ -60,7 +60,7 @@ namespace SVGImporter
             {
                 // The defaults are named as SVGImportOptions names them.
                 SerializedProperty defaults = s_Settings.FindProperty("_defaults");
-                SVGImportSettingsGUI.Draw(name => defaults.FindPropertyRelative(name == "vpm" ? "verticesPerMeter" : name), false);
+                SVGImportSettingsGUI.Draw(name => defaults.FindPropertyRelative(name == "vpm" ? "verticesPerMeter" : name == "antialiasing" ? "softEdges" : name), false);
             }
 
             if (EditorGUI.EndChangeCheck())

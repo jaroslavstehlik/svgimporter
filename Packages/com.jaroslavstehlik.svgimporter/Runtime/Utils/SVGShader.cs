@@ -5,7 +5,7 @@ using System.Collections;
 
 namespace SVGImporter.Rendering
 {
-    public class SVGShader 
+    internal class SVGShader 
     {    	
         // The shaders' names. Imports store these rather than looking the shaders up, which
         // fails while Unity hasn't imported the shaders yet (on a project's first import).

@@ -9,7 +9,7 @@ namespace SVGImporter
 {
     [CustomEditor(typeof(SVGFileImporter))]
     [CanEditMultipleObjects]
-    public class SVGFileImporterEditor : ScriptedImporterEditor
+    internal class SVGFileImporterEditor : ScriptedImporterEditor
     {
         public override void OnInspectorGUI()
         {

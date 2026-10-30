@@ -12,11 +12,12 @@ namespace SVGImporter
     /// SVGFileImporter depends on it, so every .svg file reimports when the library changes.
     /// </summary>
     [InitializeOnLoad]
-    internal static class SVGImportEngineDependency
+    internal static class SVGNativeLibraryDependency
     {
+        // The name of earlier versions, so that the dependency doesn't change.
         public const string name = "SVGImporter/ImportEngine";
 
-        static SVGImportEngineDependency()
+        static SVGNativeLibraryDependency()
         {
             Register();
         }

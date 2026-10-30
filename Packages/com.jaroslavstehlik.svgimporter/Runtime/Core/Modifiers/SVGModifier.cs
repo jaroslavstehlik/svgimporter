@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -10,11 +10,11 @@ namespace SVGImporter
     using Utils;
 
     [System.Serializable]
-    public class LayerSelection
+    public sealed class LayerSelection
     {
         [HideInInspector]
         [SerializeField]
-        protected List<int> _layers;
+        private List<int> _layers;
         public List<int> layers
         {
             get {
@@ -23,8 +23,8 @@ namespace SVGImporter
             }
         }
         
-        protected HashSet<int> _cache;
-        public HashSet<int> cache
+        private HashSet<int> _cache;
+        internal HashSet<int> cache
         {
             get {
                 UpdateCache();
@@ -51,7 +51,7 @@ namespace SVGImporter
             return cache.Contains(index);
         }
 
-        public void UpdateCache()
+        internal void UpdateCache()
         {
             if(_cache == null) _cache = new HashSet<int>();
             for(int i = 0; i < layers.Count; i++)
@@ -60,7 +60,7 @@ namespace SVGImporter
             }
         }
         
-        public void ClearCache()
+        internal void ClearCache()
         {
             if(_cache != null) _cache.Clear();
         }
@@ -72,14 +72,21 @@ namespace SVGImporter
         }
     }
 
-    public abstract class SVGModifier : MonoBehaviour, ISVGModify
+    /// <summary>
+    /// Base class of components that change an SVG Renderer's layers before it builds its mesh,
+    /// every frame or when asked (manualUpdate). Works with assets imported with Use Layers.
+    /// </summary>
+    [RequireComponent(typeof(SVGRenderer))]
+    public abstract class SVGModifier : MonoBehaviour
     {
 #if UNITY_EDITOR
-        public static SVGModifier _internal_selectingModifier;
+        internal static SVGModifier _internal_selectingModifier;
 #endif
 
+        /// <summary>Off: the renderer rebuilds with the modifier only when asked (SVGRenderer.SetAllDirty).</summary>
         [HideInInspector]
         public bool manualUpdate = false;
+        /// <summary>On: only the layers in layerSelection are modified.</summary>
         [HideInInspector]
         public bool useSelection = false;
         [HideInInspector]
@@ -94,41 +101,41 @@ namespace SVGImporter
             }
         }
 
-        protected ISVGRenderer _svgRenderer;
-        public ISVGRenderer svgRenderer
+        SVGRenderer _svgRenderer;
+        /// <summary>The renderer the modifier changes.</summary>
+        public SVGRenderer svgRenderer
         {
             get {
-                if(_svgRenderer == null) _svgRenderer = GetComponent<ISVGRenderer>();
+                if(_svgRenderer == null) _svgRenderer = GetComponent<SVGRenderer>();
                 return _svgRenderer;
             }
         }
 
         protected virtual void Init()
         {
-            if(svgRenderer is SVGImage)
+            if(GetComponent<SVGImage>() != null)
                 Debug.LogWarning(GetType().Name + " on " + name + " has no effect: modifiers work with SVG Renderer, not SVG Image.", this);
-            if(svgRenderer != null) 
+            if(svgRenderer != null)
             {
                 svgRenderer.AddModifier(this);
-                svgRenderer.OnPrepareForRendering += PrepareForRendering;
+                svgRenderer.willBuildMesh += OnWillBuildMesh;
             }
         }
-        
+
         protected virtual void Clear()
         {
-            if(svgRenderer != null) 
+            if(svgRenderer != null)
             {
-                svgRenderer.OnPrepareForRendering -= PrepareForRendering;
+                svgRenderer.willBuildMesh -= OnWillBuildMesh;
                 svgRenderer.RemoveModifier(this);
-                _svgRenderer = null;
             }
         }
-        
+
         protected virtual void OnEnable()
         {
             Init();
         }
-        
+
         protected virtual void OnDisable()
         {
             Clear();
@@ -140,7 +147,7 @@ namespace SVGImporter
         // applies all of them).
         protected virtual void OnWillRenderObject()
         {
-            var renderer = svgRenderer as SVGRenderer;
+            SVGRenderer renderer = svgRenderer;
             if(renderer == null || manualUpdate || !RebuildsForAll(renderer)) return;
             if(Application.isPlaying && renderer.lastFrameChanged == Time.frameCount) return;
             renderer.RebuildModifiedMesh();
@@ -148,16 +155,16 @@ namespace SVGImporter
 
         bool RebuildsForAll(SVGRenderer renderer)
         {
-            List<ISVGModify> modifiers = renderer.modifiers;
+            List<SVGModifier> modifiers = renderer.modifiers;
             for(int i = 0; i < modifiers.Count; i++)
             {
-                var modifier = modifiers[i] as SVGModifier;
-                if(modifier != null && !modifier.manualUpdate) return modifier == this;
+                if(modifiers[i] != null && !modifiers[i].manualUpdate) return modifiers[i] == this;
             }
             return false;
         }
 
-        public virtual bool active
+        /// <summary>Whether the modifier applies now: it's enabled, and its layers aren't being picked in the Editor.</summary>
+        protected bool active
         {
             get
             {
@@ -170,7 +177,13 @@ namespace SVGImporter
                 return enabled;
             }
         }
-        
-        protected abstract void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force);
+
+        void OnWillBuildMesh(SVGLayer[] layers, SVGAsset asset)
+        {
+            ModifyLayers(layers, asset);
+        }
+
+        /// <summary>Changes the layers, a copy of the asset's, which the renderer then builds its mesh from.</summary>
+        protected abstract void ModifyLayers(SVGLayer[] layers, SVGAsset asset);
     }
 }

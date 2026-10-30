@@ -15,30 +15,30 @@ namespace SVGImporter
     /// gradient that draws the same as a registered one gets that one's slot. Also used during
     /// import, where the slots become the asset's gradient indices.
     /// </summary>
-    public class SVGAtlasData
+    internal class SVGAtlasData
     {
-        public CCGradient[] gradients;
-        Dictionary<GradientKey, CCGradient> byContent;
-        private static readonly CCGradient DefaultGradient = GetDefaultGradient();
+        public SVGGradient[] gradients;
+        Dictionary<GradientKey, SVGGradient> byContent;
+        private static readonly SVGGradient DefaultGradient = GetDefaultGradient();
 
         public void Init(int length)
         {
-            gradients = new CCGradient[length];
-            byContent = new Dictionary<GradientKey, CCGradient>();
+            gradients = new SVGGradient[length];
+            byContent = new Dictionary<GradientKey, SVGGradient>();
         }
 
         /// <summary>The registered gradients, in slot order.</summary>
-        public CCGradient[] registeredGradients
+        public SVGGradient[] registeredGradients
         {
-            get { return gradients == null ? new CCGradient[0] : gradients.Where(g => g != null).ToArray(); }
+            get { return gradients == null ? new SVGGradient[0] : gradients.Where(g => g != null).ToArray(); }
         }
 
         /// <summary>Rebuilds the content index from the slots.</summary>
         public void RebuildGradientCache()
         {
-            byContent = new Dictionary<GradientKey, CCGradient>();
+            byContent = new Dictionary<GradientKey, SVGGradient>();
             if (gradients == null) return;
-            foreach (CCGradient gradient in gradients)
+            foreach (SVGGradient gradient in gradients)
             {
                 if (gradient == null || !gradient.initialised) continue;
                 GradientKey key = new GradientKey(gradient);
@@ -46,29 +46,23 @@ namespace SVGImporter
             }
         }
 
-        [System.Obsolete("Use RebuildGradientCache.")]
-        public void InitGradientCache() { if (byContent == null) RebuildGradientCache(); }
-
-        [System.Obsolete("Use RebuildGradientCache.")]
-        public void ClearGradientCache() { byContent = null; }
-
-        public static CCGradient GetDefaultGradient()
+        public static SVGGradient GetDefaultGradient()
         {
-            CCGradientColorKey[] colorKeys = new CCGradientColorKey[]{
-                new CCGradientColorKey(Color.white, 0f), new CCGradientColorKey(Color.white, 1f)
+            SVGGradientColorKey[] colorKeys = new SVGGradientColorKey[]{
+                new SVGGradientColorKey(Color.white, 0f), new SVGGradientColorKey(Color.white, 1f)
             };
-            CCGradientAlphaKey[] alphaKeys = new CCGradientAlphaKey[]{
-                new CCGradientAlphaKey(1f, 0f), new CCGradientAlphaKey(1f, 1f)
+            SVGGradientAlphaKey[] alphaKeys = new SVGGradientAlphaKey[]{
+                new SVGGradientAlphaKey(1f, 0f), new SVGGradientAlphaKey(1f, 1f)
             };            
-            return new CCGradient(colorKeys, alphaKeys);
+            return new SVGGradient(colorKeys, alphaKeys);
         }
 
-        public static bool IsDefaultGradient(CCGradient gradient)
+        public static bool IsDefaultGradient(SVGGradient gradient)
         {
             return DefaultGradient.GradientEquals(gradient);
         }
 
-        public CCGradient AddGradient(CCGradient gradient)
+        public SVGGradient AddGradient(SVGGradient gradient)
         {
             bool gradientExist;
             return AddGradient(gradient, out gradientExist);
@@ -78,7 +72,7 @@ namespace SVGImporter
         /// Returns the registered gradient that draws the same as gradient, or registers gradient
         /// in a free slot (setting its index). Null if there is no free slot.
         /// </summary>
-        public CCGradient AddGradient(CCGradient gradient, out bool gradientExist)
+        public SVGGradient AddGradient(SVGGradient gradient, out bool gradientExist)
         {
             gradientExist = false;
             if (gradient == null || !gradient.initialised || gradients == null)
@@ -87,7 +81,7 @@ namespace SVGImporter
                 RebuildGradientCache();
 
             GradientKey key = new GradientKey(gradient);
-            CCGradient registered;
+            SVGGradient registered;
             if (byContent.TryGetValue(key, out registered))
             {
                 gradientExist = true;
@@ -109,12 +103,12 @@ namespace SVGImporter
             System.Array.Resize(ref gradients, length);
         }
 
-        public bool RemoveGradient(CCGradient gradient)
+        public bool RemoveGradient(SVGGradient gradient)
         {
             if (gradient == null || !gradient.initialised || gradients == null || byContent == null)
                 return false;
             GradientKey key = new GradientKey(gradient);
-            CCGradient registered;
+            SVGGradient registered;
             if (!byContent.TryGetValue(key, out registered))
                 return false;
             byContent.Remove(key);
@@ -123,7 +117,7 @@ namespace SVGImporter
             return true;
         }
         
-        public CCGradient GetGradient (int index)
+        public SVGGradient GetGradient (int index)
         {
             index = Mathf.Clamp (index, 0, gradients.Length - 1);
             return gradients [index];
@@ -136,17 +130,17 @@ namespace SVGImporter
         }
 
         /// <summary>The registered gradient that draws the same as gradient, or null.</summary>
-        public CCGradient GetGradient (CCGradient gradient)
+        public SVGGradient GetGradient (SVGGradient gradient)
         {
             if (gradient == null || !gradient.initialised || gradients == null)
                 return null;
             if (byContent == null)
                 RebuildGradientCache();
-            CCGradient registered;
+            SVGGradient registered;
             return byContent.TryGetValue(new GradientKey(gradient), out registered) ? registered : null;
         }
 
-        public bool HasGradient (CCGradient gradient)
+        public bool HasGradient (SVGGradient gradient)
         {
             return GetGradient(gradient) != null;
         }
@@ -180,7 +174,7 @@ namespace SVGImporter
     ///   exists, so a slot never changes meaning.
     /// </summary>
     [ExecuteInEditMode]
-    public class SVGAtlas : MonoBehaviour {
+    internal class SVGAtlas : MonoBehaviour {
 
         /// <summary>
         /// Changes whenever a new atlas is created, so slot numbers and materials from an earlier
@@ -258,19 +252,6 @@ namespace SVGImporter
 				return _whiteTexture;
 			}
 		}
-
-        /// <summary>No longer used: shaders compute gradient positions themselves.</summary>
-        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
-        public static Texture2D gradientShapeTexture
-        {
-            get { return null; }
-        }
-
-        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
-        public static int gradientShapeTextureSize { get { return 0; } set { } }
-
-        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
-        public static void ClearGradientShapeTexture () { }
 
         //todo Atlas data gets deleted!!!
         protected SVGAtlasData _atlasData;
@@ -549,12 +530,6 @@ namespace SVGImporter
             else NotifyReset();
         }
 
-        [System.Obsolete("Use SVGAtlas.ResetAtlas().")]
-        public void ClearAll()
-        {
-            ResetAtlas();
-        }
-
         /// <summary>Destroys the atlas, its textures and materials, and the meshes built from it.</summary>
         void DestroyAtlas()
         {
@@ -615,12 +590,12 @@ namespace SVGImporter
         /// texels per stop, its colour (sRGB, straight alpha) and its offset; row 1 starts with the
         /// stop count. The gradient shaders find the stops around a position and interpolate.
         /// </summary>
-        public static void RenderGradient (Texture2D texture, CCGradient gradient, int x, int y, int gradientWidth, int gradientHeight)
+        public static void RenderGradient (Texture2D texture, SVGGradient gradient, int x, int y, int gradientWidth, int gradientHeight)
         {
             if (texture == null || gradient == null || !gradient.initialised)
                 return;
 
-            List<CCGradientStop> stops = LimitStops(gradient.GetStops(), Mathf.Min(maxStops, gradientWidth / 2));
+            List<SVGGradientStop> stops = LimitStops(gradient.GetStops(), Mathf.Min(maxStops, gradientWidth / 2));
             Color[] pixels = new Color[gradientWidth * gradientHeight];
             for (int i = 0; i < stops.Count; i++)
             {
@@ -639,17 +614,17 @@ namespace SVGImporter
         }
 
         // Gradients with more stops than a slot holds are resampled evenly.
-        static List<CCGradientStop> LimitStops(List<CCGradientStop> stops, int limit)
+        static List<SVGGradientStop> LimitStops(List<SVGGradientStop> stops, int limit)
         {
             if (stops.Count == 0)
-                stops.Add(new CCGradientStop(0f, Color.black));
+                stops.Add(new SVGGradientStop(0f, Color.black));
             if (stops.Count <= limit)
                 return stops;
-            var resampled = new List<CCGradientStop>(limit);
+            var resampled = new List<SVGGradientStop>(limit);
             for (int i = 0; i < limit; i++)
             {
                 float t = i / (float)(limit - 1);
-                resampled.Add(new CCGradientStop(t, CCGradient.Evaluate(stops, t)));
+                resampled.Add(new SVGGradientStop(t, SVGGradient.Evaluate(stops, t)));
             }
             return resampled;
         }
@@ -711,7 +686,7 @@ namespace SVGImporter
 			return texture;
 		}
 
-        public CCGradient AddGradient(CCGradient gradient)
+        public SVGGradient AddGradient(SVGGradient gradient)
         {
             if (gradient == null || !gradient.initialised)
                 return null;
@@ -722,7 +697,7 @@ namespace SVGImporter
                 _atlasData.Init(slotCount);
             }
             bool gradientExist;
-            CCGradient added = _atlasData.AddGradient(gradient, out gradientExist);
+            SVGGradient added = _atlasData.AddGradient(gradient, out gradientExist);
             if (added == null)
             {
                 if (atlasTextureHeight * 2 > Mathf.Min(maxAtlasTextureHeight, SystemInfo.maxTextureSize))
@@ -766,7 +741,7 @@ namespace SVGImporter
             _atlasHasChanged = true;
         }
 
-        public bool RemoveGradient(CCGradient gradient)
+        public bool RemoveGradient(SVGGradient gradient)
         {
             if (gradient == null || !gradient.initialised)
                 return false;
@@ -781,7 +756,7 @@ namespace SVGImporter
             return  true;
         }
 
-        public CCGradient GetGradient(CCGradient gradient)
+        public SVGGradient GetGradient(SVGGradient gradient)
         {
             if (gradient == null || !gradient.initialised)
                 return null;
@@ -790,7 +765,7 @@ namespace SVGImporter
             return _atlasData.GetGradient(gradient);
         }
 
-        public bool HasGradient(CCGradient gradient)
+        public bool HasGradient(SVGGradient gradient)
         {
             if (gradient == null || !gradient.initialised)
                 return false;
@@ -809,7 +784,7 @@ namespace SVGImporter
                 Debug.LogWarning("atlasData is null!", this);
                 return;
             }
-            CCGradient[] gradients = _atlasData.gradients;
+            SVGGradient[] gradients = _atlasData.gradients;
             if(gradients == null) return;
 
             int x, y, gradientsLength = gradients.Length;
@@ -830,7 +805,7 @@ namespace SVGImporter
             //Debug.Log("RebuildAtlas took: "+System.TimeSpan.FromTicks(System.DateTime.Now.Ticks - timeStart).Milliseconds+" ms");
         }
 
-		public static Texture2D GenerateGradientAtlasTexture(CCGradient[] gradients, int gradientWidth, int gradientHeight)
+		public static Texture2D GenerateGradientAtlasTexture(SVGGradient[] gradients, int gradientWidth, int gradientHeight)
 		{
 			if(gradients == null || gradients.Length == 0)
 				return null;
@@ -851,49 +826,6 @@ namespace SVGImporter
 		}
 
         const float PI2 = Mathf.PI * 2f;
-        [System.Obsolete("Gradient shaders compute gradient positions; there is no gradient shape texture any more.")]
-        public static Texture2D GenerateGradientShapeTexture (int textureSize)
-        {
-            // Holds gradient positions, not colors, so it must not be sRGB-decoded in Linear color space.
-            Texture2D texture = new Texture2D (textureSize, textureSize, TextureFormat.ARGB32, false, true);
-            texture.hideFlags = HideFlags.DontSave;
-            texture.name = "Gradient Shape Texture";
-            texture.anisoLevel = 0;
-            texture.filterMode = FilterMode.Trilinear;
-            texture.wrapMode = TextureWrapMode.Clamp;
-            
-            int totalPixels = textureSize * textureSize;
-            Color32[] texturePixels = new Color32[totalPixels];
-            float angle;
-            
-            float x = 0, y = 0, halfSize = textureSize * 0.5f, sizeMinusOne = textureSize - 1;
-            for (int i = 0; i < totalPixels; i++) {
-                x = i % textureSize;
-                y = Mathf.Floor ((float)i / (float)textureSize);
-                
-                // linear
-                texturePixels [i].r = (byte)Mathf.RoundToInt (x / sizeMinusOne * 255);
-                
-                // radial
-                texturePixels [i].g = (byte)Mathf.RoundToInt (Mathf.Clamp01 (Mathf.Sqrt (Mathf.Pow (halfSize - x, 2f) + Mathf.Pow (halfSize - y, 2f)) / (halfSize - 1f)) * 255);
-                
-                // conical
-                angle = Mathf.Atan2(-halfSize + y, -halfSize + x);
-                if(angle < 0)
-                {
-                    angle = PI2 + angle;
-                }
-
-                texturePixels [i].b = (byte)Mathf.RoundToInt(Mathf.Clamp01((angle / PI2)) * 255);
-
-                // solid
-                texturePixels [i].a = (byte)255;
-            }
-            
-            texture.SetPixels32 (texturePixels);
-            texture.Apply (true);
-            return texture;
-        }
 
 		public static Texture2D GenerateWhiteTexture ()
 		{
@@ -913,13 +845,13 @@ namespace SVGImporter
             Material output = null;
             switch (fill.fillType)
             {
-                case FILL_TYPE.SOLID:
+                case SVGFillType.Solid:
                     output = GetColorMaterial(fill);
                     break;
-                case FILL_TYPE.GRADIENT:
+                case SVGFillType.Gradient:
                     output = GetGradientMaterial(fill);
                     break;
-                case FILL_TYPE.TEXTURE:
+                case SVGFillType.Texture:
                     break;
             }
             return output;
@@ -930,10 +862,10 @@ namespace SVGImporter
             Material output = null;
             Shader shader = null;
             switch (fill.blend) {
-                case FILL_BLEND.OPAQUE:
+                case SVGFillBlend.Opaque:
                     shader = SVGShader.GradientColorOpaque;
                     break;
-                case FILL_BLEND.ALPHA_BLENDED:
+                case SVGFillBlend.Transparent:
                     shader = SVGShader.GradientColorAlphaBlended;
                     break;
                 default:
@@ -976,10 +908,10 @@ namespace SVGImporter
             Material output = null;
             Shader shader = null;
             switch (fill.blend) {
-                case FILL_BLEND.OPAQUE:
+                case SVGFillBlend.Opaque:
                     shader = SVGShader.SolidColorOpaque;
                     break;
-                case FILL_BLEND.ALPHA_BLENDED:
+                case SVGFillBlend.Transparent:
                     shader = SVGShader.SolidColorAlphaBlended;
                     break;
                 default:

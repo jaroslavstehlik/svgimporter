@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -20,7 +20,7 @@ namespace SVGImporter
         public float frameIndex;
         float lastFrameIndex;
 
-        protected SVGRenderer _svgRenderer;
+        private SVGRenderer _svgRenderer;
         public SVGRenderer svgRenderer
         {
             get {
@@ -29,7 +29,7 @@ namespace SVGImporter
             }
         }
 
-        protected SVGImage _svgImage;
+        private SVGImage _svgImage;
         public SVGImage svgImage
         {
             get {
@@ -38,12 +38,12 @@ namespace SVGImporter
             }
         }
 
-        protected virtual void OnEnable()
+        private void OnEnable()
         {
             UpdateMesh();
         }
 
-        protected virtual void UpdateMesh()
+        private void UpdateMesh()
         {
             if(frames == null || frames.Length == 0)
                 return;

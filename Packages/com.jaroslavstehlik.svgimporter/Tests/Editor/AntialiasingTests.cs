@@ -45,44 +45,42 @@ public static class AntialiasingTests
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Shader.SetGlobalFloat("SVG_ANTIALIASING_WIDTH", 2f);
-            foreach (SVGImportEngine engine in new[] { SVGImportEngine.Native })
             {
-                string e = engine + ": ";
 
-                float[] square = Render(Square, engine, Quaternion.identity, Vector3.one, output, e + "square");
+                float[] square = Render(Square, Quaternion.identity, Vector3.one, output, "square");
                 float total = square.Sum();
-                Check(e + "a square keeps its size", Mathf.Abs(total - 10000f) < 30f, "coverage " + total.ToString("F0") + " of 10000 pixels");
+                Check("a square keeps its size", Mathf.Abs(total - 10000f) < 30f, "coverage " + total.ToString("F0") + " of 10000 pixels");
 
                 // Across the left edge, at pixel x = 68.25: pixels 67, 68 and 69 are 0, 0.75 and 1 covered.
                 int row = 130;
                 float[] profile = { square[row * Size + 67], square[row * Size + 68], square[row * Size + 69] };
-                Check(e + "edge profile is a one-pixel box filter", profile[0] < 0.03f && Mathf.Abs(profile[1] - 0.75f) < 0.05f && profile[2] > 0.97f,
+                Check("edge profile is a one-pixel box filter", profile[0] < 0.03f && Mathf.Abs(profile[1] - 0.75f) < 0.05f && profile[2] > 0.97f,
                     string.Join(", ", profile.Select(p => p.ToString("F3"))));
 
-                float[] half = Render(HalfSquare, engine, Quaternion.identity, Vector3.one, output, e + "half");
+                float[] half = Render(HalfSquare, Quaternion.identity, Vector3.one, output, "half");
                 float brightest = half.Max();
-                Check(e + "no double blending where fill and fringe meet", brightest < 0.5f + 3f / 255f && Mathf.Abs(half[row * Size + 69] - 0.5f) < 3f / 255f,
+                Check("no double blending where fill and fringe meet", brightest < 0.5f + 3f / 255f && Mathf.Abs(half[row * Size + 69] - 0.5f) < 3f / 255f,
                     "brightest " + brightest.ToString("F3") + ", next to the edge " + half[row * Size + 69].ToString("F3"));
 
-                float[] spike = Render(SpikeSvg, engine, Quaternion.identity, Vector3.one, output, e + "spike");
+                float[] spike = Render(SpikeSvg, Quaternion.identity, Vector3.one, output, "spike");
                 float farthest = 0f;
                 for (int y = 0; y < Size; y++)
                     for (int x = 0; x < Size; x++)
                         if (spike[y * Size + x] > 2f / 255f)
                             farthest = Mathf.Max(farthest, DistanceOutside(Spike, new Vector2(x + 0.5f - 28f, 228f - (y + 0.5f))));
-                Check(e + "no spikes at sharp corners", farthest <= 0.75f, "lit pixels reach " + farthest.ToString("F2") + " pixels outside the shape");
+                Check("no spikes at sharp corners", farthest <= 0.75f, "lit pixels reach " + farthest.ToString("F2") + " pixels outside the shape");
 
-                float[] frame = Render(Frame, engine, Quaternion.identity, Vector3.one, output, e + "frame");
+                float[] frame = Render(Frame, Quaternion.identity, Vector3.one, output, "frame");
                 float frameTotal = frame.Sum();
-                Check(e + "holes keep their size", Mathf.Abs(frameTotal - 8400f) < 40f, "coverage " + frameTotal.ToString("F0") + " of 8400 pixels");
+                Check("holes keep their size", Mathf.Abs(frameTotal - 8400f) < 40f, "coverage " + frameTotal.ToString("F0") + " of 8400 pixels");
 
                 // Rotated and stretched: the area scales with the determinant, and edges stay one pixel soft.
-                float[] stretched = Render(Square, engine, Quaternion.Euler(0f, 0f, 30f), new Vector3(1.4f, 0.7f, 1f), output, e + "transformed");
+                float[] stretched = Render(Square, Quaternion.Euler(0f, 0f, 30f), new Vector3(1.4f, 0.7f, 1f), output, "transformed");
                 float stretchedTotal = stretched.Sum();
-                Check(e + "rotated and stretched squares keep their size", Mathf.Abs(stretchedTotal - 9800f) < 50f,
+                Check("rotated and stretched squares keep their size", Mathf.Abs(stretchedTotal - 9800f) < 50f,
                     "coverage " + stretchedTotal.ToString("F0") + " of 9800 pixels");
                 int soft = stretched.Count(v => v > 0.02f && v < 0.98f);
-                Check(e + "rotated and stretched edges stay one pixel soft", soft < 4.6f * 100f * (1.4f + 0.7f), soft + " partly covered pixels");
+                Check("rotated and stretched edges stay one pixel soft", soft < 4.6f * 100f * (1.4f + 0.7f), soft + " partly covered pixels");
             }
         }
         catch (Exception exception)
@@ -98,11 +96,10 @@ public static class AntialiasingTests
 
     // Renders the SVG, white on black at one SVG unit per pixel, centred, and returns each pixel's
     // value (its coverage), bottom row first. The SVG point (x, y) lands at pixel (28 + x, 228 - y).
-    static float[] Render(string svg, SVGImportEngine engine, Quaternion rotation, Vector3 scale, string output, string name)
+    static float[] Render(string svg, Quaternion rotation, Vector3 scale, string output, string name)
     {
         SVGImportOptions options = SVGImportOptions.Default;
-        options.engine = engine;
-        options.antialiasing = true;
+        options.softEdges = true;
         options.ignoreSVGCanvas = false;
         SVGAsset asset = SVGAsset.Load(svg, options);
         if (asset == null) throw new Exception("couldn't import " + name);

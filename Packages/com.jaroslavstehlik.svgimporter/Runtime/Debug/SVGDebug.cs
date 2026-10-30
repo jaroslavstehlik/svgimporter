@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -7,7 +7,7 @@ using System;
 
 namespace SVGImporter.Utils
 {        
-    public static class SVGDebug
+    internal static class SVGDebug
     {
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("Window/SVG Importer/Debug/SVG Atlas", false, 10)]

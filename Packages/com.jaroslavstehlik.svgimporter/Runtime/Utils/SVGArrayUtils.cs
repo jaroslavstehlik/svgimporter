@@ -1,11 +1,11 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
 
 namespace SVGImporter.Utils
 {
-    public class SVGArrayUtils {
+    internal class SVGArrayUtils {
 
         public static T[] CreatePreinitializedArray<T>(T value, int length)
         {

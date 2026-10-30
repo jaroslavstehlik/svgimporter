@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 namespace SVGImporter.Utils
 {        
-    public class SVGDebugLayers : MonoBehaviour {
+    internal class SVGDebugLayers : MonoBehaviour {
 
     	// Use this for initialization
     	void Start () {

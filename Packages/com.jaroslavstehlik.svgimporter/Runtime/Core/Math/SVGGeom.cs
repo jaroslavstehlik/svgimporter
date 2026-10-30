@@ -9,7 +9,7 @@ namespace SVGImporter.Utils
     using Rendering;
     using ClipperLib;
 
-    public class SVGGeom
+    internal class SVGGeom
     {
         const int decimalPointInt = 1000;
         //const int decimalPointInt = 1000;

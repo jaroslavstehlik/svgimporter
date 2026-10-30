@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2019 Jaroslav Stehlik
+// Copyright (C) 2019 Jaroslav Stehlik
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 // The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -10,7 +10,6 @@ using System.Collections.Generic;
 namespace SVGImporter 
 {    
     [ExecuteInEditMode]
-    [RequireComponent(typeof(ISVGRenderer))]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Bone Modifier", 22)]
     public class SVGBoneModifier : SVGModifier
@@ -42,7 +41,7 @@ namespace SVGImporter
         public Properties properties = new Properties(-Vector2.right, Vector2.right, 1f, 0.25f, 1f, 0.25f);
         public Transform target;
 
-        protected override void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force) 
+        protected override void ModifyLayers(SVGLayer[] layers, SVGAsset svgAsset) 
         {
             if (!active) return;
             if (layers == null) return;
@@ -156,7 +155,7 @@ namespace SVGImporter
         }
 #endif
 
-        public static Vector2 GetClosestPointOnLineSegment(Vector2 A, Vector2 B, Vector2 P)
+        static Vector2 GetClosestPointOnLineSegment(Vector2 A, Vector2 B, Vector2 P)
         {
             Vector2 AP = P - A;       //Vector from A to P   
             Vector2 AB = B - A;       //Vector from A to B  

@@ -10,18 +10,16 @@ namespace SVGImporter
     using Rendering;
 
     /// <summary>Everything an import produced, before it becomes an SVG Asset.</summary>
-    public class SVGImportResult
+    internal class SVGImportResult
     {
         /// <summary>Whether the document was imported. False: only errors and messages are set.</summary>
         public bool succeeded;
-        /// <summary>The engine that imported the document.</summary>
-        public SVGImportEngine engine;
         /// <summary>The mesh; null when importing layers (options.useLayers) or when the import failed.</summary>
         public Mesh mesh;
         /// <summary>The shader of each submesh, by name.</summary>
         public string[] shaders;
         /// <summary>The gradients the mesh refers to by index; null without gradients.</summary>
-        public CCGradient[] gradients;
+        public SVGGradient[] gradients;
         /// <summary>The layers, with options.useLayers.</summary>
         public SVGLayer[] layers;
         /// <summary>The outline for a 2D collider, with options.generateCollider.</summary>

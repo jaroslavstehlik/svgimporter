@@ -13,7 +13,7 @@ namespace SVGImporter
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SVGFrameAnimator))]
-	public class SVGFrameAnimatorEditor : Editor
+	internal class SVGFrameAnimatorEditor : Editor
     {
 		SerializedProperty frames;
 		SerializedProperty frameIndex;

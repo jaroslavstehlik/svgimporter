@@ -14,12 +14,22 @@ namespace SVGImporter
     using Utils;
     using Data;
 
+    /// <summary>What a shape of a layer is: a fill, a stroke or the soft edge around them.</summary>
     public enum SVGShapeType
     {
-        NONE,
-        FILL,
-        STROKE,
-        ANTIALIASING
+        None,
+        Fill,
+        Stroke,
+        SoftEdge,
+    }
+
+    /// <summary>How SVG Renderers and SVG Images fit an SVG Asset to their size, as sprites do.</summary>
+    public enum SVGDrawMode
+    {
+        /// <summary>The asset as it is.</summary>
+        Simple,
+        /// <summary>Stretched between the asset's border, which keeps its size.</summary>
+        Sliced,
     }
 
     [System.Serializable]
@@ -63,7 +73,7 @@ namespace SVGImporter
 
         public SVGShape(Vector2[] vertices, int[] triangles, Color32[] colors, Vector2[] angles, int depth, Rect bounds, SVGFill fill)
         {
-            this.type = SVGShapeType.NONE;
+            this.type = SVGShapeType.None;
             this.vertices = vertices;
             this.triangles = triangles;
             this.colors = colors;
@@ -99,15 +109,7 @@ namespace SVGImporter
             }
         }
 
-        public SVGShape Clone()
-        {
-            SVGShape output = new SVGShape();
-            output.angles = this.angles;
-            output.bounds = this.bounds;
-            return output;
-        }
-
-        public static SVGShape MergeShapes(IList<SVGShape> svgShapes)
+        internal static SVGShape MergeShapes(IList<SVGShape> svgShapes)
         {
             SVGShape output = new SVGShape();
             
@@ -229,27 +231,27 @@ namespace SVGImporter
     {
         /// <summary>Opaque shapes are drawn as opaque geometry with depth; transparent shapes and soft edges on top.</summary>
         [InspectorName("Opaque + Transparent")]
-        Opaque = 0,
+        OpaqueAndTransparent = 0,
         /// <summary>Every shape is drawn with transparency, in drawing order.</summary>
         Transparent = 1,
         /// <summary>For SVG Image on a Canvas.</summary>
         [InspectorName("UI (Canvas)")]
-        uGUI = 2
+        Canvas = 2
     }
 
-    public class SVGAsset : ScriptableObject
+    public sealed class SVGAsset : ScriptableObject
     {
         [FormerlySerializedAs("lastTimeModified")]
         [SerializeField]
-        protected long _lastTimeModified; // The import hash (SVGImportResult.importHash); the old name is kept for serialization.
+        private long _lastTimeModified; // The import hash (SVGImportResult.importHash); the old name is kept for serialization.
 
         [FormerlySerializedAs("documentAsset")]
         [SerializeField]
-        protected SVGDocumentAsset _documentAsset;
+        private SVGDocumentAsset _documentAsset;
 
         [FormerlySerializedAs("sharedMesh")]
         [SerializeField]
-        protected Mesh _sharedMesh;
+        private Mesh _sharedMesh;
 
         /// <summary>
         /// Returns the shared mesh of the SVG Asset. (Read Only)
@@ -261,10 +263,10 @@ namespace SVGImporter
             }
         }
 
-        public bool isOpaque
+        internal bool isOpaque
         {
             get {
-                if(_format == SVGAssetFormat.Transparent || _format == SVGAssetFormat.uGUI) return false;
+                if(_format == SVGAssetFormat.Transparent || _format == SVGAssetFormat.Canvas) return false;
                 if(_sharedShaders == null || _sharedShaders.Length == 0) return true;
                 for(int i = 0; i < _sharedShaders.Length; i++)
                 {
@@ -279,7 +281,7 @@ namespace SVGImporter
         /// <summary>
         /// Returns the instanced mesh of the SVG Asset. (Read Only)
         /// </summary>
-        public Mesh mesh
+        internal Mesh mesh
         {
             get {
                 Mesh sharedMeshReference = sharedMesh;
@@ -292,19 +294,6 @@ namespace SVGImporter
                 }
                 return clonedMesh;
             }
-        }
-
-        /// <summary>
-        /// Kept for compatibility: gradients are registered with the atlas when a mesh using them
-        /// is built (see runtimeMesh), and stay registered while the atlas exists.
-        /// </summary>
-        public void AddReference(ISVGReference reference)
-        {
-        }
-
-        /// <summary>Kept for compatibility; see AddReference.</summary>
-        public void RemoveReference(ISVGReference reference)
-        {
         }
 
         // The atlas slot of each of the asset's gradients, by the gradient's index in the asset.
@@ -330,10 +319,10 @@ namespace SVGImporter
                     _atlasSlotsImport = _lastTimeModified;
                     _atlasSlots = new Dictionary<int, int>();
                     if (_sharedGradients == null) break;
-                    foreach (CCGradient local in _sharedGradients)
+                    foreach (SVGGradient local in _sharedGradients)
                     {
                         if (local == null) continue;
-                        CCGradient registered = SVGAtlas.Instance.AddGradient(local.Clone());
+                        SVGGradient registered = SVGAtlas.Instance.AddGradient(local.Clone());
                         if (registered != null) _atlasSlots[local.index] = registered.index;
                     }
                 } while (_atlasSlotsGeneration != SVGAtlas.generation);
@@ -341,7 +330,7 @@ namespace SVGImporter
             }
         }
 
-        protected Mesh _runtimeMesh;
+        private Mesh _runtimeMesh;
         [System.NonSerialized] int _runtimeMeshGeneration;
         [System.NonSerialized] Mesh _runtimeMeshSource;
         [System.NonSerialized] long _runtimeMeshImport;
@@ -350,7 +339,7 @@ namespace SVGImporter
         /// The mesh to draw: the imported mesh, with its gradient indices replaced by atlas slots
         /// if it has gradients. Rebuilt when the atlas or the imported mesh changes.
         /// </summary>
-        protected Mesh runtimeMesh
+        private Mesh runtimeMesh
         {
             get {
                 Mesh source = sourceMesh;
@@ -390,7 +379,7 @@ namespace SVGImporter
         /// The imported mesh or, for assets imported with Use Layers, which keep layers instead,
         /// the layers combined into one mesh: what SVG Image, bounds and sliced renderers draw from.
         /// </summary>
-        protected Mesh sourceMesh
+        private Mesh sourceMesh
         {
             get {
                 if(_sharedMesh != null || _layers == null || _layers.Length == 0)
@@ -404,7 +393,7 @@ namespace SVGImporter
                 _layersMesh.hideFlags = HideFlags.DontSave;
                 Shader[] shaders;
                 // Asset-local gradient indices: runtimeMesh maps them to atlas slots, once.
-                SVGMesh.CombineMeshes(CloneLayers(false), _layersMesh, out shaders, useGradients, format, compressDepth, antialiasing, depthOffset);
+                SVGMesh.CombineMeshes(CloneLayers(false), _layersMesh, out shaders, useGradients, format, compressDepth, softEdges, depthOffset);
                 _layersMeshImport = _lastTimeModified;
                 return _layersMesh;
             }
@@ -417,10 +406,10 @@ namespace SVGImporter
             if(Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh);
         }
 
-        protected Mesh _runtimeLegacyUIMesh;
+        private Mesh _runtimeLegacyUIMesh;
         [System.NonSerialized] Mesh _runtimeLegacyUIMeshSource;
         [System.NonSerialized] long _runtimeLegacyUIMeshImport;
-        protected Mesh runtimeLegacyUIMesh
+        private Mesh runtimeLegacyUIMesh
         {
             get {
                 Mesh source = sharedMesh;
@@ -439,7 +428,7 @@ namespace SVGImporter
         /// <summary>
         /// Returns the shared UI Mesh of the SVG Asset. (Read Only)
         /// </summary>
-        public Mesh sharedLegacyUIMesh
+        internal Mesh sharedLegacyUIMesh
         {
             get {
                 return runtimeLegacyUIMesh;
@@ -449,7 +438,7 @@ namespace SVGImporter
         /// <summary>
         /// Returns the shared UI Material of the SVG Asset. (Read Only)
         /// </summary>
-        public Material sharedUIMaterial
+        internal Material sharedUIMaterial
         {
             get {
                 if(_antialiasing)
@@ -464,7 +453,7 @@ namespace SVGImporter
         /// <summary>
         /// Returns the instanced UI Material of the SVG Asset. (Read Only)
         /// </summary>
-        public Material uiMaterial
+        internal Material uiMaterial
         {
             get {
                 if(_antialiasing)
@@ -489,7 +478,7 @@ namespace SVGImporter
         /// <summary>
         /// Returns the instanced materials of the SVG Asset. (Read Only)
         /// </summary>
-        public Material[] materials
+        internal Material[] materials
         {
             get {
                 if(sharedMaterials == null)
@@ -505,8 +494,8 @@ namespace SVGImporter
             }
         }
 
-        protected Material[] _runtimeMaterials;
-        public Material[] runtimeMaterials
+        private Material[] _runtimeMaterials;
+        internal Material[] runtimeMaterials
         {
             get {
                 bool regenerateRuntimeMaterials = false;
@@ -564,11 +553,9 @@ namespace SVGImporter
 
         [FormerlySerializedAs("antialiasing")]
         [SerializeField]
-        protected bool _antialiasing = false;
-        /// <summary>
-        /// Use antialiasing (Read Only)
-        /// </summary>
-        public bool antialiasing
+        private bool _antialiasing = false;
+        /// <summary>Whether shapes have soft edges. (Read Only)</summary>
+        internal bool softEdges
         {
             get {
                 return _antialiasing;
@@ -577,11 +564,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("generateCollider")]
         [SerializeField]
-        protected bool _generateCollider = false;        
+        private bool _generateCollider = false;        
         /// <summary>
         /// Returns if the asset has generated collider shape. (Read Only)
         /// </summary>
-        public bool generateCollider
+        internal bool generateCollider
         {
             get {
                 return _generateCollider;
@@ -590,11 +577,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("keepSVGFile")]
         [SerializeField]
-        protected bool _keepSVGFile = true;
+        private bool _keepSVGFile = true;
         /// <summary>
         /// Keep the SVG file in the final build (Read Only)
         /// </summary>
-        public bool keepSVGFile
+        internal bool keepSVGFile
         {
             get {
                 return _keepSVGFile;
@@ -603,11 +590,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("ignoreSVGCanvas")]
         [SerializeField]
-        protected bool _ignoreSVGCanvas = true;
+        private bool _ignoreSVGCanvas = true;
         /// <summary>
         /// Trim the document canvas to object bounding box (Read Only)
         /// </summary>
-        public bool ignoreSVGCanvas
+        internal bool ignoreSVGCanvas
         {
             get {
                 return _ignoreSVGCanvas;
@@ -615,9 +602,9 @@ namespace SVGImporter
         }
 
         [SerializeField]
-        protected bool _exactGroupOpacity = false;
+        private bool _exactGroupOpacity = false;
         /// <summary>Whether group opacity was drawn as browsers do where children are opaque (Read Only).</summary>
-        public bool exactGroupOpacity
+        internal bool exactGroupOpacity
         {
             get {
                 return _exactGroupOpacity;
@@ -626,7 +613,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("colliderShape")]
         [SerializeField]
-        protected SVGPath[] _colliderShape;
+        private SVGPath[] _colliderShape;
         /// <summary>
         /// Returns the collider shape. (Read Only)
         /// </summary>
@@ -639,7 +626,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("format")]
         [SerializeField]
-        protected SVGAssetFormat _format = SVGAssetFormat.Transparent;
+        private SVGAssetFormat _format = SVGAssetFormat.Transparent;
         /// <summary>
         /// Returns the rendering format of the SVG Asset. (Read Only)
         /// </summary>
@@ -652,11 +639,11 @@ namespace SVGImporter
         
         [FormerlySerializedAs("useGradients")]
         [SerializeField]
-        protected SVGUseGradients _useGradients = SVGUseGradients.Always;
+        private SVGUseGradients _useGradients = SVGUseGradients.Always;
         /// <summary>
         /// Returns if the mesh was compressed. (Read Only)
         /// </summary>
-        public SVGUseGradients useGradients
+        internal SVGUseGradients useGradients
         {
             get {
                 return _useGradients;
@@ -665,11 +652,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("meshCompression")]
         [SerializeField]
-        protected SVGMeshCompression _meshCompression = SVGMeshCompression.Off;
+        private SVGMeshCompression _meshCompression = SVGMeshCompression.Off;
         /// <summary>
         /// Returns if the mesh was compressed. (Read Only)
         /// </summary>
-        public SVGMeshCompression meshCompression
+        internal SVGMeshCompression meshCompression
         {
             get {
                 return _meshCompression;
@@ -678,11 +665,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("optimizeMesh")]
         [SerializeField]
-        protected bool _optimizeMesh = true;        
+        private bool _optimizeMesh = true;        
         /// <summary>
         /// Returns if the mesh is optimised for GPU. (Read Only)
         /// </summary>
-        public bool optimizeMesh
+        internal bool optimizeMesh
         {
             get {
                 return _optimizeMesh;
@@ -691,11 +678,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("generateNormals")]
         [SerializeField]
-        protected bool _generateNormals = false;
+        private bool _generateNormals = false;
         /// <summary>
         /// Returns if the mesh contains normals. (Read Only)
         /// </summary>
-        public bool generateNormals
+        internal bool generateNormals
         {
             get {
                 return _generateNormals;
@@ -704,11 +691,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("generateTangents")]
         [SerializeField]
-        protected bool _generateTangents = false;        
+        private bool _generateTangents = false;        
         /// <summary>
         /// Returns if the mesh contains tangents. (Read Only)
         /// </summary>
-        public bool generateTangents
+        internal bool generateTangents
         {
             get {
                 return _generateTangents;
@@ -717,11 +704,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("scale")]
         [SerializeField]
-        protected float _scale = 0.01f;
+        private float _scale = 0.01f;
         /// <summary>
         /// Returns the scale of the mesh relative to the SVG Asset. (Read Only)
         /// </summary>
-        public float scale {
+        internal float scale {
             get {
                 return _scale;
             }
@@ -729,11 +716,9 @@ namespace SVGImporter
 
         [FormerlySerializedAs("vpm")]
         [SerializeField]
-        protected float _vpm = 1000f;
-        /// <summary>
-        /// Returns the number of vertices in the SVG Asset that correspond to one unit in world space. (Read Only)
-        /// </summary>
-        public float vpm
+        private float _vpm = 1000f;
+        /// <summary>The import's quality: vertices per world unit. (Read Only)</summary>
+        internal float verticesPerMeter
         {
             get {
                 return _vpm;
@@ -742,11 +727,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("depthOffset")]
         [SerializeField]
-        protected float _depthOffset = 0.01f;
+        private float _depthOffset = 0.01f;
         /// <summary>
         /// Returns the minimal z-offset in WorldSpace for Opaque Rendering. (Read Only)
         /// </summary>
-        public float depthOffset
+        internal float depthOffset
         {
             get {
                 return _depthOffset;
@@ -755,11 +740,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("compressDepth")]
         [SerializeField]
-        protected bool _compressDepth = true;
+        private bool _compressDepth = true;
         /// <summary>
         /// Returns the compress overlapping objects to reduce z-offset requirements. (Read Only)
         /// </summary>
-        public bool compressDepth
+        internal bool compressDepth
         {
             get {
                 return _compressDepth;
@@ -768,7 +753,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("pivotPoint")]
         [SerializeField]
-        protected Vector2 _pivotPoint = new Vector2(0.5f, 0.5f);
+        private Vector2 _pivotPoint = new Vector2(0.5f, 0.5f);
         /// <summary>
         /// Returns the location of the SVG Asset center point in the original Rect, specified in percents. (Read Only)
         /// </summary>
@@ -781,11 +766,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("customPivotPoint")]
         [SerializeField]
-        protected bool _customPivotPoint = false;
+        private bool _customPivotPoint = false;
         /// <summary>
         /// Returns the use of predefined pivot point or custom pivot point. (Read Only)
         /// </summary>
-        public bool customPivotPoint
+        internal bool customPivotPoint
         {
             get {
                 return _customPivotPoint;
@@ -794,7 +779,7 @@ namespace SVGImporter
 
 		[FormerlySerializedAs("border")]
 		[SerializeField]
-		protected Vector4 _border = new Vector4(0f, 0f, 0f, 0f);		
+		private Vector4 _border = new Vector4(0f, 0f, 0f, 0f);		
 		/// <summary>
 		/// Returns the 9-slice border. (Read Only)
         /// LEFT, BOTTOM, RIGHT, TOP
@@ -808,18 +793,18 @@ namespace SVGImporter
 
         [FormerlySerializedAs("sliceMesh")]
         [SerializeField]
-        protected bool _sliceMesh = false;        
+        private bool _sliceMesh = false;        
         /// <summary>
         /// Returns if the mesh is sliced. (Read Only)
         /// </summary>
-        public bool sliceMesh
+        internal bool sliceMesh
         {
             get {
                 return _sliceMesh;
             }
         }
 
-        protected string _svgFile;
+        private string _svgFile;
         /// <summary>
         /// Returns the original SVG text content available only in the Editor. (Read Only)
         /// </summary>
@@ -842,11 +827,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("sharedGradients")]
         [SerializeField]
-        protected CCGradient[] _sharedGradients;
+        private SVGGradient[] _sharedGradients;
         /// <summary>
         /// Returns all the used gradients in the SVG Asset. (Read Only)
         /// </summary>
-        public CCGradient[] sharedGradients {
+        internal SVGGradient[] sharedGradients {
             get {
                 return _sharedGradients;
             }
@@ -854,11 +839,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("sharedShaders")]
         [SerializeField]
-        protected string[] _sharedShaders;
+        private string[] _sharedShaders;
         /// <summary>
         /// Returns all the used shader names in the SVG Asset. (Read Only)
         /// </summary>
-        public string[] sharedShaders {
+        internal string[] sharedShaders {
             get {
                 return _sharedShaders;
             }
@@ -880,7 +865,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("canvasRectangle")]
         [SerializeField]
-        protected Rect _canvasRectangle;
+        private Rect _canvasRectangle;
         /// <summary>
         /// Returns the Original Canvas rectangle of the SVG Asset. (Read Only)
         /// </summary>
@@ -893,11 +878,11 @@ namespace SVGImporter
 
         [FormerlySerializedAs("useLayers")]
         [SerializeField]
-        protected bool _useLayers = false;
+        private bool _useLayers = false;
         /// <summary>
         /// Store individual SVG Layers for further modification. (Read Only)
         /// </summary>
-        public bool useLayers
+        internal bool useLayers
         {
             get {
                 return _useLayers;
@@ -906,7 +891,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("layers")]
         [SerializeField]
-        protected SVGLayer[] _layers;
+        private SVGLayer[] _layers;
         /// <summary>
         /// Returns individual SVG layers. (Read Only)
         /// </summary>
@@ -917,9 +902,10 @@ namespace SVGImporter
             }
         }
 
-        public SVGLayer[] layersClone
+        /// <summary>A copy of the layers that scripts and modifiers can change, with its gradients in the shared atlas.</summary>
+        public SVGLayer[] CloneLayers()
         {
-            get { return CloneLayers(true); }
+            return CloneLayers(true);
         }
 
         // A copy of the layers; with toAtlasSlots, their gradients refer to atlas slots, as meshes
@@ -972,9 +958,9 @@ namespace SVGImporter
             }
         }
         [System.NonSerialized] bool _hasGradients;
-        [System.NonSerialized] CCGradient[] _hasGradientsFor;
+        [System.NonSerialized] SVGGradient[] _hasGradientsFor;
 
-        protected Material CloneMaterial(Material original)
+        private Material CloneMaterial(Material original)
         {
             if(original == null)
                 return null;
@@ -987,7 +973,7 @@ namespace SVGImporter
         /// <summary>
         /// Returns the number of vertices in the mesh of the SVG Asset. (Read Only)
         /// </summary>
-        public int uiVertexCount
+        internal int uiVertexCount
         {
             get {
                 if(_sharedMesh == null || _sharedMesh.triangles == null)
@@ -998,7 +984,7 @@ namespace SVGImporter
             }
         }
 
-        protected static Mesh CreateLegacyUIMesh(Mesh inputMesh)
+        private static Mesh CreateLegacyUIMesh(Mesh inputMesh)
         {
             if(inputMesh == null) return null;
 
@@ -1129,37 +1115,50 @@ namespace SVGImporter
         }
 
         /// <summary>
-        /// Imports SVG text at runtime (also in the Editor), with the defaults of settings, or of
-        /// SVGImportOptions.Default without them. Returns null if the document couldn't be imported.
+        /// Imports SVG text, at runtime or in the Editor, with the settings a new SVG file gets
+        /// (SVGImportOptions.Default). Returns null if the text couldn't be imported; TryLoad says why.
+        /// Destroy the asset when it's no longer used.
         /// </summary>
-        public static SVGAsset Load(string svgText, SVGImporterSettings settings = null)
+        public static SVGAsset Load(string svgText)
         {
-            SVGImportOptions options = settings != null ? SVGImportOptions.FromSettings(settings) : SVGImportOptions.Default;
-            return Load(svgText, options);
+            return Load(svgText, SVGImportOptions.Default);
         }
 
-        /// <summary>Imports SVG text with these options. Returns null if the document couldn't be imported.</summary>
+        /// <summary>Imports SVG text with these options. Returns null if the text couldn't be imported.</summary>
         public static SVGAsset Load(string svgText, SVGImportOptions options)
         {
-            if(string.IsNullOrEmpty(svgText)) return null;
-            SVGImportResult result = SVGImport.Import(svgText, options);
-            foreach(string message in result.messages)
-            {
-                if(result.succeeded) Debug.LogWarning("SVG Importer: " + message);
-                else Debug.LogError("SVG Importer: " + message);
-            }
-            if(!result.succeeded) return null;
+            SVGAsset asset;
+            string[] messages;
+            TryLoad(svgText, options, out asset, out messages);
+            return asset;
+        }
 
-            SVGAsset asset = ScriptableObject.CreateInstance<SVGAsset>();
+        /// <summary>
+        /// Imports SVG text with these options. Returns false if it couldn't be imported. messages
+        /// explains errors, and also what was imported only partly, such as unsupported features.
+        /// </summary>
+        public static bool TryLoad(string svgText, SVGImportOptions options, out SVGAsset asset, out string[] messages)
+        {
+            asset = null;
+            if(string.IsNullOrEmpty(svgText))
+            {
+                messages = new[] { "The SVG text is empty." };
+                return false;
+            }
+            SVGImportResult result = SVGImport.Import(svgText, options);
+            messages = result.messages.ToArray();
+            if(!result.succeeded) return false;
+
+            asset = ScriptableObject.CreateInstance<SVGAsset>();
             asset.Apply(result, options, SVGDocumentAsset.CreateInstance(options.keepSVGFile ? svgText : null, result.errors.ToArray()));
             asset._ownsMesh = true;
-            return asset;
+            return true;
         }
 
         // Assets made by Load own their mesh; imported assets' meshes belong to the asset file.
         [System.NonSerialized] bool _ownsMesh;
 
-        protected void OnDestroy()
+        private void OnDestroy()
         {
             if(_ownsMesh) DestroyDerived(_sharedMesh);
             DestroyDerived(_layersMesh);
@@ -1172,8 +1171,7 @@ namespace SVGImporter
         {
             get {
                 return new SVGImportOptions {
-                    engine = _importEngine,
-                    format = _format, useGradients = _useGradients, antialiasing = _antialiasing,
+                    format = _format, useGradients = _useGradients, softEdges = _antialiasing,
                     verticesPerMeter = _vpm, scale = _scale, depthOffset = _depthOffset, compressDepth = _compressDepth,
                     customPivotPoint = _customPivotPoint, pivotPoint = _pivotPoint, border = _border, sliceMesh = _sliceMesh,
                     ignoreSVGCanvas = _ignoreSVGCanvas, exactGroupOpacity = _exactGroupOpacity, generateCollider = _generateCollider, useLayers = _useLayers,
@@ -1183,27 +1181,18 @@ namespace SVGImporter
             }
         }
 
-        [SerializeField]
-        protected SVGImportEngine _importEngine = SVGImportEngine.Native;
         /// <summary>Identifies the import: equal for the same SVG text and settings.</summary>
         public long importHash
         {
             get { return _lastTimeModified; }
         }
 
-        /// <summary>The engine that imported the asset.</summary>
-        public SVGImportEngine importEngine
-        {
-            get { return _importEngine; }
-        }
-
         /// <summary>Makes this asset hold an import's result.</summary>
         internal void Apply(SVGImportResult result, SVGImportOptions options, SVGDocumentAsset document)
         {
-            _importEngine = result.engine;
             _format = options.format;
             _useGradients = options.useGradients;
-            _antialiasing = options.antialiasing;
+            _antialiasing = options.softEdges;
             _meshCompression = options.meshCompression;
             _optimizeMesh = options.optimizeMesh;
             _scale = options.scale;

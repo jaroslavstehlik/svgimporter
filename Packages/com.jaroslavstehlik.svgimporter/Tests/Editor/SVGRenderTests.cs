@@ -79,23 +79,23 @@ public static class SVGRenderTests
         public Variant(string name, string svg, SVGAssetFormat format, bool antialiasing = false, bool normals = false)
         {
             this.name = name; this.svg = svg; this.format = format;
-            this.antialiasing = antialiasing; this.normals = normals;
+            this.softEdges = antialiasing; this.normals = normals;
         }
     }
 
     static readonly Variant[] Variants =
     {
-        new Variant("gray_opaque", GraySvg, SVGAssetFormat.Opaque),
+        new Variant("gray_opaque", GraySvg, SVGAssetFormat.OpaqueAndTransparent),
         new Variant("gray_transparent", GraySvg, SVGAssetFormat.Transparent),
         new Variant("gray_antialiased", GraySvg, SVGAssetFormat.Transparent, antialiasing: true),
-        new Variant("gray_lit", GraySvg, SVGAssetFormat.Opaque, normals: true),
+        new Variant("gray_lit", GraySvg, SVGAssetFormat.OpaqueAndTransparent, normals: true),
         new Variant("gradient_transparent", GradientSvg, SVGAssetFormat.Transparent),
         new Variant("shapes_transparent", ShapesSvg, SVGAssetFormat.Transparent, antialiasing: true),
         new Variant("gradient_bounding_box", GradientBoundingBoxSvg, SVGAssetFormat.Transparent),
         new Variant("gradient_user_space", GradientUserSpaceSvg, SVGAssetFormat.Transparent),
         new Variant("radial_offset", RadialOffsetSvg, SVGAssetFormat.Transparent),
-        new Variant("gray_ui", GraySvg, SVGAssetFormat.uGUI),
-        new Variant("gradient_ui", GradientSvg, SVGAssetFormat.uGUI),
+        new Variant("gray_ui", GraySvg, SVGAssetFormat.Canvas),
+        new Variant("gradient_ui", GradientSvg, SVGAssetFormat.Canvas),
     };
 
     public static void Run()
@@ -153,13 +153,13 @@ public static class SVGRenderTests
 
             var settings = new SerializedObject(importer);
             settings.FindProperty("_format").enumValueIndex = (int)v.format;
-            settings.FindProperty("_antialiasing").boolValue = v.antialiasing;
+            settings.FindProperty("_antialiasing").boolValue = v.softEdges;
             settings.FindProperty("_generateNormals").boolValue = v.normals;
             settings.ApplyModifiedPropertiesWithoutUndo();
             importer.SaveAndReimport();
 
             var asset = AssetDatabase.LoadAssetAtPath<SVGAsset>(svgPath);
-            if (asset == null || asset.sharedMesh == null && v.format != SVGAssetFormat.uGUI)
+            if (asset == null || asset.sharedMesh == null && v.format != SVGAssetFormat.Canvas)
                 throw new Exception("SVG Importer did not import " + svgPath);
             assets[v.name] = asset;
         }

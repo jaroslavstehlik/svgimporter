@@ -11,7 +11,7 @@ namespace SVGImporter
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SVGRenderer))]
-    public class SVGRendererEditor : Editor
+    internal class SVGRendererEditor : Editor
     {
         SVGRenderer renderer;
         const string SVG_IMPORTER_SVGRENDERER_MATERIALSFOLDOUTKEY = "SVG_IMPORTER_SVGRENDERER_MATERIALSFOLDOUTKEY";
@@ -98,14 +98,14 @@ namespace SVGImporter
                 for(int i = 0; i < renderers.Length; i++)
                 {
                     renderer = renderers [i] as SVGRenderer;
-                    if(renderer.vectorGraphics != null && renderer.vectorGraphics.format != SVGAssetFormat.Opaque)
+                    if(renderer.vectorGraphics != null && renderer.vectorGraphics.format != SVGAssetFormat.OpaqueAndTransparent)
                     {
                         return true;
                     }
                 }
             } else {
                 SVGRenderer renderer = target as SVGRenderer;
-                if(renderer.vectorGraphics != null && renderer.vectorGraphics.format != SVGAssetFormat.Opaque)
+                if(renderer.vectorGraphics != null && renderer.vectorGraphics.format != SVGAssetFormat.OpaqueAndTransparent)
                 {
                     return true;
                 }
@@ -157,7 +157,7 @@ namespace SVGImporter
             }
             
             EditorGUILayout.PropertyField(type, new GUIContent("Image Type"));
-            if(type.hasMultipleDifferentValues || (SVGRenderer.Type)type.enumValueIndex == SVGRenderer.Type.Sliced)
+            if(type.hasMultipleDifferentValues || (SVGDrawMode)type.enumValueIndex == SVGDrawMode.Sliced)
             {
                 RectTransform rectTransform = ((SVGRenderer)target).GetComponent<RectTransform>();
                 if(rectTransform == null)

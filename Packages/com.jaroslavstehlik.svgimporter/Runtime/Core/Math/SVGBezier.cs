@@ -8,7 +8,7 @@ namespace SVGImporter.Rendering
 {
     using Utils;
 
-    public class SVGBezier
+    internal class SVGBezier
     {
         const int maxAdaptiveBezierIteration = 200;
         static int currentAdaptiveBezierIteration;

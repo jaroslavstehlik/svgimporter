@@ -1,9 +1,9 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
 
-public class SVGDebugMesh : MonoBehaviour {
+internal class SVGDebugMesh : MonoBehaviour {
 
 	
 

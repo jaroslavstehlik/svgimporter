@@ -23,7 +23,7 @@ namespace SVGImporter
     /// choose the shaders and gather the gradients and collider.
     /// Nothing is written to an asset: SVGAsset.Apply does that with the result.
     /// </summary>
-    public static class SVGImport
+    internal static class SVGImport
     {
         // Changing what an import produces changes this, and so every import hash.
         const string pipelineVersion = "9";
@@ -40,7 +40,6 @@ namespace SVGImporter
             }
 
             var context = new SVGImportContext(result.errors, result.messages);
-            result.engine = SVGImportEngine.Native;
             Mesh mesh = null;
             try
             {
@@ -56,7 +55,7 @@ namespace SVGImporter
 
                 mesh = new Mesh();
                 string[] shaders;
-                SVGMesh.CombineMeshes(layers, mesh, out shaders, options.useGradients, options.format, options.compressDepth, options.antialiasing, options.depthOffset);
+                SVGMesh.CombineMeshes(layers, mesh, out shaders, options.useGradients, options.format, options.compressDepth, options.softEdges, options.depthOffset);
                 bool hasGradients = ChooseShaders(shaders, options.useGradients);
                 result.shaders = shaders;
                 if (options.generateNormals)
@@ -67,7 +66,7 @@ namespace SVGImporter
                     result.colliderShape = ColliderShape(context.paths, options.scale, offset);
                 if (hasGradients)
                 {
-                    CCGradient[] gradients = context.atlasData.registeredGradients;
+                    SVGGradient[] gradients = context.atlasData.registeredGradients;
                     if (gradients.Length > 0) result.gradients = gradients;
                 }
                 if (options.useLayers)
@@ -92,13 +91,6 @@ namespace SVGImporter
                 result.colliderShape = null;
             }
             return result;
-        }
-
-        /// <summary>There is one import engine, the native core; kept for compatibility.</summary>
-        [Obsolete("SVG Importer has one import engine, the native core.")]
-        public static SVGImportEngine EffectiveEngine(SVGImportEngine engine, string svgText)
-        {
-            return SVGImportEngine.Native;
         }
 
         static bool ParseDocument(string svgText, SVGImportOptions options, SVGImportContext context, SVGImportResult result, out Rect viewport)
@@ -151,7 +143,7 @@ namespace SVGImporter
         {
             int vertexCount = mesh.vertexCount;
             if (vertexCount == 0) return;
-            if (!options.antialiasing)
+            if (!options.softEdges)
                 mesh.normals = Enumerable.Repeat(-Vector3.forward, vertexCount).ToArray();
             if (options.generateTangents)
                 mesh.tangents = Enumerable.Repeat(new Vector4(-1f, 0f, 0f, -1f), vertexCount).ToArray();

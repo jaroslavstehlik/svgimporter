@@ -9,7 +9,7 @@ namespace SVGImporter.Data
     using Geometry;
     using Utils;
 
-    public class SVGDepthTree : System.Object {
+    internal class SVGDepthTree : System.Object {
 
         protected QuadTree<int> quadTree;
 

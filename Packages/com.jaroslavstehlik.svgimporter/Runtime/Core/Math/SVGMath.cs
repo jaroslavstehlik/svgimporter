@@ -7,7 +7,7 @@ using System;
  
 namespace SVGImporter.Utils
 {
-    public class SVGMath {
+    internal class SVGMath {
 
     	//increase or decrease the length of vector by size
      

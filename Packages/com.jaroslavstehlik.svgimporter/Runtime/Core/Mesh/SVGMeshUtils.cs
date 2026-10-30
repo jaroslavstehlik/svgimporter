@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace SVGImporter.Utils
 {    
-    public class Edge
+    internal class Edge
     {
         // The indiex to each vertex
         public int[] vertexIndex = new int[2];
@@ -15,7 +15,7 @@ namespace SVGImporter.Utils
         public int[] faceIndex = new int[2];
     }
 
-    public class SVGMeshUtils {
+    internal class SVGMeshUtils {
     	
     	public enum ColorChannel
     	{

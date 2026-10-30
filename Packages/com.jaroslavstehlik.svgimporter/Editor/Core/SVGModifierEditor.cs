@@ -14,7 +14,7 @@ namespace SVGImporter
 
 	[CustomEditor(typeof(SVGModifier), true)]
 	[CanEditMultipleObjects]
-	public class SVGModifierEditor : Editor 
+	internal class SVGModifierEditor : Editor 
 	{		
 		SerializedProperty useSelection;
 		SerializedProperty manualUpdate;

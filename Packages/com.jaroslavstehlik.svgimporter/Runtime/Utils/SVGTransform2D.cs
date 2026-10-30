@@ -11,7 +11,7 @@ namespace SVGImporter.Rendering
     using Utils;
 
     [System.Serializable]
-    public class SVGTransform2D : System.Object, ICloneable {
+    internal class SVGTransform2D : System.Object, ICloneable {
         
         [SerializeField]
         protected Vector2 _position;

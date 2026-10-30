@@ -10,7 +10,7 @@ Version 2.0 (the `modern` branch) already made the plugin a UPM package for Unit
 
 1. **Parse SVG robustly.** Real-world files from Illustrator, Inkscape, Figma, Affinity and browsers should import correctly, including CSS, `<use>`/`<symbol>`, nested transforms, gradients in both unit systems, clip paths and text.
 2. **Tessellate robustly and fast.** Correct fills for any path (self-intersections, holes, both fill rules), proper strokes (joins, caps, miter limits, dashes), no cracks, no crashes.
-3. **Keep everything Unity-specific in C#.** The Inspector, the render formats (Opaque, Transparent, uGUI), depth handling, the gradient atlas, layers for modifiers, colliders and serialization stay as they are, so existing projects and APIs keep working.
+3. **Keep everything Unity-specific in C#.** The Inspector, the render formats (Opaque + Transparent, Transparent, Canvas), depth handling, the gradient atlas, layers for modifiers, colliders and serialization stay as they are, so existing projects and APIs keep working.
 4. **Measure quality.** A conformance corpus with reference images gives a support percentage that we track over time, instead of discovering failures from user reports.
 5. **Ship samples as Unity samples and documentation as package documentation.**
 6. **Make every cost visible and optional.** By default an SVG costs one mesh, one shared material, one batched draw call and no render targets. Anything that creates a render target, adds a material or draw call, or adds a render pass is an explicit opt-in setting on the asset or the component, and the setting states its cost. Where the cheap default is an approximation, the Inspector says so. Each SVG Asset shows a cost summary: vertices, triangles, materials, draw calls, render targets and texture memory.
@@ -97,8 +97,8 @@ The cost is a Rust toolchain for contributors who change the core. Contributors 
  └──────────────────────────────────────── C ABI ────────────────────────────────────────────┘
  ┌──────────────────────── C#: SVGImporter.Runtime (+ Editor for the importer) ───────────────┐
  │  SVGNativeCore (P/Invoke, blittable structs) ─► SVGLayer[] / SVGShape[] / SVGFill          │
- │  ─► existing pipeline: SVGMesh.CombineMeshes (Opaque depth / Transparent order / uGUI),    │
- │     gradient atlas (CCGradient), collider shape, layers for modifiers                     │
+ │  ─► existing pipeline: SVGMesh.CombineMeshes (Opaque depth / Transparent order / Canvas),  │
+ │     gradient atlas (SVGGradient), collider shape, layers for modifiers                     │
  │  ─► SVGFileImporter ─► SVGAsset                                                            │
  └────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -121,7 +121,7 @@ The cost is a Rust toolchain for contributors who change the core. Contributors 
 ### 6.2 What stays in C#
 
 - `SVGFileImporter` and the Inspector, with the same settings and field names.
-- Render formats: Opaque (per-layer depth offsets, *Compress Depth*), Transparent (painter's order), uGUI.
+- Render formats: Opaque (per-layer depth offsets, *Compress Depth*), Transparent (painter's order), Canvas.
 - Gradient atlas and gradient UV encoding, shaders, materials and the URP/Built-in support.
 - Layers for modifiers (*Use Layers*), collider generation, pivot, 9-slice border, mesh compression, normals and tangents.
 
@@ -295,7 +295,7 @@ Fringes are always drawn with blending. In the *Opaque* format, they go into the
 `SVGAsset.Load(string)` imports an SVG in a player build. It uses the same native core as the Editor, so runtime and Editor imports give the same result.
 
 - **Supported** on the five targets in section 3: Windows, Linux and macOS standalone players, iOS and Android.
-- **Not supported** on other platforms (WebGL, consoles, 32-bit Android). There, `SVGAsset.Load` throws `PlatformNotSupportedException`, and `SVGAsset.isRuntimeImportSupported` lets games check first.
+- **Not supported** on other platforms (WebGL, consoles, 32-bit Android). There, `SVGAsset.Load` returns null, and `SVGAsset.TryLoad` says why.
 - **The legacy C# parser is removed** together with the legacy import engine (phase 4). That removes a second implementation with different results.
 - **Mobile limits:** runtime import uses the same input limits as the Editor (6.6), plus a configurable vertex budget, so a large file can't stall a phone.
 
@@ -317,7 +317,7 @@ Fringes are always drawn with blending. In the *Opaque* format, they go into the
 
 1. **Conformance corpus:** the resvg test suite (SVG files with reference PNGs, same license as resvg). A Unity test renders each file through the importer and compares it against the reference with a perceptual threshold. The result is published as a support table on the website, and CI fails on regressions.
 2. **Real-world corpus:** exports from Illustrator, Inkscape, Figma and Affinity, plus the sample SVGs. They must import without errors.
-3. **Existing render tests** (`Assets/Tests/Editor/SVGRenderTests.cs`): Built-in, URP and URP 2D, in Gamma and Linear. These must stay green.
+3. **Existing render tests** (`Tests/Editor/SVGRenderTests.cs` in the package): Built-in, URP and URP 2D, in Gamma and Linear. These must stay green.
 4. **Samples:** every sample scene must render the same as with the legacy engine, within a small threshold for different triangulation.
 5. **Benchmarks:** import time and peak memory for the sample set and the corpus, legacy vs native, tracked in CI.
 6. **Layer parity:** for each corpus file, compare layer count, order and names against the legacy engine, to protect modifiers.
@@ -330,12 +330,12 @@ Samples ship in `Samples~` and are listed in `package.json`, so users import the
 |---|---|
 | Getting Started | Import an SVG, drop it in the scene, the import settings |
 | User Interface | SVG Image in a Canvas, 9-slice, layout |
-| Rendering Formats | Opaque vs Transparent vs uGUI, depth, overdraw |
+| Rendering Formats | Opaque + Transparent vs Transparent vs Canvas, depth, overdraw |
 | Gradients and Strokes | Linear and radial gradients, dashes, joins |
 | Modifiers | Recolor layers, transform, bones, blur |
 | Animation | Frame-by-frame with SVG Frame Animator |
 | Physics | Generated 2D colliders |
-| Runtime Import | `SVGAsset.Load` on device, `isRuntimeImportSupported` |
+| Runtime Import | `SVGAsset.Load` and `TryLoad` on device |
 | Showcase | Curves, Hologram and Infinite Scene from 1.x |
 
 The existing samples are kept as the Showcase until the focused ones exist.

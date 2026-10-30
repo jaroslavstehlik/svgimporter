@@ -10,50 +10,21 @@ using UnityEngine;
 
 namespace SVGImporter
 {
-    /// <summary>Import settings given to SVG files when SVG Importer takes them over.</summary>
-    [Serializable]
-    public class SVGImportDefaults
-    {
-        public SVGAssetFormat format = SVGAssetFormat.Transparent;
-        public SVGUseGradients useGradients = SVGUseGradients.Auto;
-        public bool antialiasing = true;
-        public SVGMeshCompression meshCompression = SVGMeshCompression.Off;
-        public bool optimizeMesh = true;
-        public float scale = 0.01f;
-        public int verticesPerMeter = 1000;
-        public float depthOffset = 0.01f;
-        public bool compressDepth = true;
-        public bool customPivotPoint = false;
-        public Vector2 pivotPoint = new Vector2(0.5f, 0.5f);
-        public bool generateCollider = false;
-        public bool generateNormals = false;
-        public bool generateTangents = false;
-        public bool keepSVGFile = false;
-        public bool useLayers = false;
-        public bool ignoreSVGCanvas = true;
-        public bool exactGroupOpacity = false;
-    }
-
     /// <summary>
     /// SVG Importer's project settings, in ProjectSettings/SVGImporterSettings.asset (Edit > Project
     /// Settings > SVG Importer). Editor only: the one value players need, the antialiasing width,
     /// goes into builds through SVGImporterBuildSettings.
     ///
     /// The file is read here and nowhere else. Changes, including ones made outside Unity (a version
-    /// control update), are picked up when the Editor regains focus, and update the import
-    /// dependency so that SVG files reimport when the import engine changes.
+    /// control update), are picked up when the Editor regains focus.
     /// </summary>
-    public sealed class SVGImporterProjectSettings : ScriptableObject
+    internal sealed class SVGImporterProjectSettings : ScriptableObject
     {
         internal const string path = "ProjectSettings/SVGImporterSettings.asset";
 
         [SerializeField] bool _importNewSVGFiles = true;
-        // Settings files of 2.0 previews have an engine; there is one engine now.
-#pragma warning disable CS0414
-        [SerializeField, HideInInspector] SVGImportEngine _importEngine = SVGImportEngine.Native;
-#pragma warning restore CS0414
         [SerializeField] float _antialiasingWidth = 2f;
-        [SerializeField] SVGImportDefaults _defaults = new SVGImportDefaults();
+        [SerializeField] SVGImportOptions _defaults = SVGImportOptions.Default;
 
         /// <summary>
         /// Import SVG files added to the project with SVG Importer. Off: they keep Unity's own SVG
@@ -72,10 +43,11 @@ namespace SVGImporter
             set { _antialiasingWidth = value; Save(); }
         }
 
-        /// <summary>Settings for SVG files that SVG Importer takes over. Call Save() after changing them.</summary>
-        public SVGImportDefaults defaults
+        /// <summary>Settings for SVG files that SVG Importer takes over.</summary>
+        public SVGImportOptions defaults
         {
             get { return _defaults; }
+            set { _defaults = value; Save(); }
         }
 
         static SVGImporterProjectSettings s_Instance;
@@ -138,7 +110,6 @@ namespace SVGImporter
         /// </summary>
         static bool MigrateFromAsset()
         {
-#pragma warning disable 618 // importNewSVGFiles is obsolete.
             string assetPath = AssetDatabase.FindAssets("t:SVGImporterSettings", new[] { "Assets" })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .FirstOrDefault(p => p != SVGImporterBuildSettings.assetPath);
@@ -146,16 +117,15 @@ namespace SVGImporter
             if (old == null) return false;
 
             s_Instance._importNewSVGFiles = old.importNewSVGFiles;
-            s_Instance._antialiasingWidth = old.defaultAntialiasingWidth;
-            s_Instance._defaults = new SVGImportDefaults {
-                format = old.defaultSVGFormat, useGradients = old.defaultUseGradients, antialiasing = old.defaultAntialiasing,
+            s_Instance._antialiasingWidth = old.softEdgeWidth;
+            s_Instance._defaults = new SVGImportOptions {
+                format = old.defaultSVGFormat, useGradients = old.defaultUseGradients, softEdges = old.defaultAntialiasing,
                 meshCompression = old.defaultMeshCompression, optimizeMesh = old.defaultOptimizeMesh, scale = old.defaultScale,
                 verticesPerMeter = old.defaultVerticesPerMeter, depthOffset = old.defaultDepthOffset, compressDepth = old.defaultCompressDepth,
                 customPivotPoint = old.defaultCustomPivotPoint, pivotPoint = old.defaultPivotPoint, generateCollider = old.defaultGenerateCollider,
                 generateNormals = old.defaultGenerateNormals, generateTangents = old.defaultGenerateTangents, keepSVGFile = old.defaultKeepSVGFile,
                 useLayers = old.defaultUseLayers, ignoreSVGCanvas = old.defaultIgnoreSVGCanvas,
             };
-#pragma warning restore 618
             InternalEditorUtility.SaveToSerializedFileAndForget(new UnityEngine.Object[] { s_Instance }, path, true);
             s_FileTime = File.GetLastWriteTimeUtc(path);
             Debug.Log("SVG Importer: the settings in " + assetPath + " now live in Project Settings > SVG Importer ("
@@ -165,8 +135,8 @@ namespace SVGImporter
 
         static void Apply()
         {
-            SVGImportEngineDependency.Register();
-            SVGImporterSettings.Get.defaultAntialiasingWidth = s_Instance._antialiasingWidth;
+            SVGNativeLibraryDependency.Register();
+            SVGImporterSettings.Get.softEdgeWidth = s_Instance._antialiasingWidth;
             if (changed != null) changed();
         }
 

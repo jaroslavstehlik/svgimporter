@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -6,7 +6,7 @@ using System.Collections;
 namespace SVGImporter.Utils
 {
     [System.Serializable]
-    public struct SVGBounds
+    internal struct SVGBounds
     {
         [HideInInspector]
         [SerializeField]

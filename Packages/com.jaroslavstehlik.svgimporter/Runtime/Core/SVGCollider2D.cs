@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -18,7 +18,7 @@ namespace SVGImporter
     {
         [Range(0f, 1f)]
         [SerializeField]
-        protected float _quality = 0.9f;
+        private float _quality = 0.9f;
         public float quality
         {
             get {
@@ -28,13 +28,13 @@ namespace SVGImporter
                 if(_quality != value)
                 {
                     _quality = value;
-                    UpdateCollider();;
+                    UpdateCollider();
                 }
             }
         }
 
         [SerializeField]
-        protected float _offset = 0f;
+        private float _offset = 0f;
         public float offset
         {
             get {
@@ -44,13 +44,13 @@ namespace SVGImporter
                 if(_offset != value)
                 {
                     _offset = value;
-                    UpdateCollider();;
+                    UpdateCollider();
                 }
             }
         }
 
-        protected SVGRenderer svgRenderer;
-        protected PolygonCollider2D polygonCollider2D;
+        private SVGRenderer svgRenderer;
+        private PolygonCollider2D polygonCollider2D;
 
         void OnValidate()
         {
@@ -58,7 +58,8 @@ namespace SVGImporter
         }
 
         float precision;
-        protected virtual void UpdateCollider()
+        /// <summary>Rebuilds the collider from the renderer's SVG Asset; happens by itself when the asset changes.</summary>
+        public void UpdateCollider()
         {
             if(svgRenderer == null)
                 svgRenderer = GetComponent<SVGRenderer>();
@@ -126,7 +127,7 @@ namespace SVGImporter
             if(svgRenderer == null)
                 svgRenderer = GetComponent<SVGRenderer>();
 
-            svgRenderer.onVectorGraphicsChanged += OnVectorGraphicsChanged;
+            svgRenderer.vectorGraphicsChanged += OnVectorGraphicsChanged;
             UpdateCollider();
         }
 
@@ -135,10 +136,10 @@ namespace SVGImporter
             if(svgRenderer == null)
                 svgRenderer = GetComponent<SVGRenderer>();
 
-            svgRenderer.onVectorGraphicsChanged -= OnVectorGraphicsChanged;
+            svgRenderer.vectorGraphicsChanged -= OnVectorGraphicsChanged;
         }
 
-        protected virtual void OnVectorGraphicsChanged(SVGAsset svgAsset)
+        private void OnVectorGraphicsChanged(SVGAsset svgAsset)
         {
             UpdateCollider();
         }

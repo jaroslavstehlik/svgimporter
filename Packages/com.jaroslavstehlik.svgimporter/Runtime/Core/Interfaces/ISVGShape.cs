@@ -1,8 +1,8 @@
-﻿
+
 
 namespace SVGImporter
 {
-    public interface ISVGShape
+    internal interface ISVGShape
     {
         SVGPath[] shape { get; }
     }

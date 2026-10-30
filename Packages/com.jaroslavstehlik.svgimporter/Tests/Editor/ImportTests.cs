@@ -34,7 +34,7 @@ public static class ImportTests
         try
         {
             SVGImportOptions options = SVGImportOptions.Default;
-            options.antialiasing = true;
+            options.softEdges = true;
             options.generateCollider = true;
 
             // Deterministic: the same text and options give the same hash and mesh.
@@ -52,7 +52,7 @@ public static class ImportTests
             SVGImportResult conical = SVGImport.Import("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
                 + "<conicalGradient id=\"c\" cx=\"50\" cy=\"50\" r=\"50\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></conicalGradient>"
                 + "<circle cx=\"50\" cy=\"50\" r=\"50\" fill=\"url(#c)\"/></svg>", layered);
-            bool isConical = conical.succeeded && conical.layers.SelectMany(l => l.shapes).Any(shape => shape.fill != null && shape.fill.gradientType == GRADIENT_TYPE.CONICAL);
+            bool isConical = conical.succeeded && conical.layers.SelectMany(l => l.shapes).Any(shape => shape.fill != null && shape.fill.gradientType == SVGGradientType.Conical);
             Check("conicalGradient imports as a conical gradient", isConical, string.Join(" | ", conical.messages));
 
             // Exact Group Opacity: what a later opaque child covers is removed from the lower one.

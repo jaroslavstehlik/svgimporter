@@ -7,7 +7,7 @@ namespace SVGImporter.Utils
 {
 	using Rendering;
 
-	public class SVGGUI
+	internal class SVGGUI
 	{		
 		public static GUIStyle helpBox
 		{
@@ -71,7 +71,7 @@ namespace SVGImporter.Utils
 		}
 	}
 
-	public class SVGLayerList
+	internal class SVGLayerList
 	{
 		public int maxVisibleItems = 10;
 		public int scrollIndex;

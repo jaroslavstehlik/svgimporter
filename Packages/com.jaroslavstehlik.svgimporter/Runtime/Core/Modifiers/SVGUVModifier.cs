@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -10,7 +10,6 @@ namespace SVGImporter
     using Utils;
 
     [ExecuteInEditMode]
-    [RequireComponent(typeof(ISVGShape), typeof(ISVGRenderer))]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/UV Modifier", 22)]
     public class SVGUVModifier : SVGModifier {
@@ -32,7 +31,7 @@ namespace SVGImporter
         public bool preprocess = true;
         public TransformOrder transformOrder = TransformOrder.TRS;
 
-        protected override void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force) 
+        protected override void ModifyLayers(SVGLayer[] layers, SVGAsset svgAsset) 
         {
             if (!active) return;
 
@@ -81,7 +80,7 @@ namespace SVGImporter
                         int vertexCount = layers[i].shapes[j].vertexCount;
                         for(int k = 0; k < vertexCount; k++)
                         {
-                            layers[i].shapes[j].fill.fillType = FILL_TYPE.TEXTURE;
+                            layers[i].shapes[j].fill.fillType = SVGFillType.Texture;
                             layers[i].shapes[j].fill.transform = tempMatrix;
                         }
                     }
@@ -100,7 +99,7 @@ namespace SVGImporter
                         for (int j = 0; j < shapesLength; j++)
                         {
                             int vertexCount = layers[layerIndex].shapes[j].vertexCount;
-                            layers[layerIndex].shapes[j].fill.fillType = FILL_TYPE.TEXTURE;
+                            layers[layerIndex].shapes[j].fill.fillType = SVGFillType.Texture;
                             layers[layerIndex].shapes[j].fill.transform = tempMatrix;
                         }
                     }

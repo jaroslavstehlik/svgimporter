@@ -19,7 +19,12 @@ public class RealtimeImportDemo : MonoBehaviour {
             Destroy(svgAsset);
         }
 
-        svgAsset = SVGAsset.Load(svgInput.text);
+        // SVG Images draw assets imported for a Canvas.
+        SVGImportOptions options = SVGImportOptions.Default;
+        options.format = SVGAssetFormat.Canvas;
+        string[] messages;
+        if(!SVGAsset.TryLoad(svgInput.text, options, out svgAsset, out messages))
+            Debug.LogWarning("Couldn't import the SVG: " + string.Join(" ", messages));
         preview.vectorGraphics = svgAsset;
     }
 

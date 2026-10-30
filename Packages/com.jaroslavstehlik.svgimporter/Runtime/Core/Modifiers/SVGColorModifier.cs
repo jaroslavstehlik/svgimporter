@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -7,14 +7,13 @@ using System.Collections.Generic;
 namespace SVGImporter 
 {
     [ExecuteInEditMode]
-    [RequireComponent(typeof(ISVGRenderer))]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Color Modifier", 22)]
     public class SVGColorModifier : SVGModifier {
 
         public Color color;
 
-        protected override void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force) 
+        protected override void ModifyLayers(SVGLayer[] layers, SVGAsset svgAsset) 
         {
             if (!active) return;
             if (layers == null) return;

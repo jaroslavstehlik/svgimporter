@@ -30,7 +30,6 @@ using Debug = UnityEngine.Debug;
 
 public static class ConformanceTests
 {
-    static SVGImportEngine engine;
 
     public static void Run()
     {
@@ -38,8 +37,8 @@ public static class ConformanceTests
         string output = Arg("-out") ?? "Temp/ConformanceTests";
         string filter = Arg("-filter");
         bool saveRenders = Environment.GetCommandLineArgs().Contains("-saveRenders");
-        engine = SVGImportEngine.Native;
-        string engineName = engine.ToString();
+        // Output files are named after the engine, as when there were two.
+        const string engineName = "Native";
         Directory.CreateDirectory(output);
         string renders = Path.Combine(output, "renders-" + engineName);
         if (saveRenders) Directory.CreateDirectory(renders);
@@ -138,9 +137,8 @@ public static class ConformanceTests
         if (size.status != SVGNativeCore.Status.Ok) return "not an SVG document (" + size.status + ")";
 
         SVGImportOptions options = SVGImportOptions.Default;
-        options.engine = engine;
         options.ignoreSVGCanvas = false;
-        options.antialiasing = false;
+        options.softEdges = false;
         options.format = SVGAssetFormat.Transparent;
         options.exactGroupOpacity = Environment.GetCommandLineArgs().Contains("-exactGroupOpacity");
         // Quality 10,000 vertices per meter: curves within 0.1 user units, so the test measures

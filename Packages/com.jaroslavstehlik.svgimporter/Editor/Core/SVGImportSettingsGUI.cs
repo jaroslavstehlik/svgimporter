@@ -21,7 +21,7 @@ namespace SVGImporter
 
             public static readonly GUIContent format = EditorGUIUtility.TrTextContent("Rendering", "Transparent: every shape is drawn with transparency, in drawing order; the asset sorts as one transparent object.\nOpaque + Transparent: opaque shapes are drawn as opaque geometry with depth, so hidden pixels are skipped; transparent shapes and soft edges are drawn on top. Shapes are spread slightly along z.\nUI (Canvas): for SVG Image on a Canvas.");
             public static readonly GUIContent useGradients = EditorGUIUtility.TrTextContent("Gradients", "Whether the mesh and shaders support gradients. Auto: only when the SVG has gradients.");
-            public static readonly GUIContent antialiasing = EditorGUIUtility.TrTextContent("Soft Edges", "Adds a soft one-pixel edge to every shape in the mesh. For MSAA instead, turn this off and enable MSAA on the camera.");
+            public static readonly GUIContent softEdges = EditorGUIUtility.TrTextContent("Soft Edges", "Adds a soft one-pixel edge to every shape in the mesh. For MSAA instead, turn this off and enable MSAA on the camera.");
             public static readonly GUIContent sharpEdgesHint = EditorGUIUtility.TrTextContent("Edges are sharp unless the camera uses MSAA.");
             public static readonly GUIContent antialiasingWidth = EditorGUIUtility.TrTextContent("Soft Edge Width", "Width of the soft edge, in screen pixels.");
             public static readonly GUIContent exactGroupOpacity = EditorGUIUtility.TrTextContent("Exact Group Opacity", "Stops shapes in a semi-transparent group from showing through each other. Adds vertices.");
@@ -57,7 +57,7 @@ namespace SVGImporter
             EditorGUILayout.LabelField(Styles.rendering, EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(format, Styles.format);
             EditorGUILayout.PropertyField(find("useGradients"), Styles.useGradients);
-            EditorGUILayout.PropertyField(antialiasing, Styles.antialiasing);
+            EditorGUILayout.PropertyField(antialiasing, Styles.softEdges);
             if (!antialiasing.hasMultipleDifferentValues && !antialiasing.boolValue)
                 EditorGUILayout.LabelField(GUIContent.none, Styles.sharpEdgesHint, EditorStyles.miniLabel);
             SerializedProperty exactGroupOpacity = find("exactGroupOpacity");
@@ -72,7 +72,7 @@ namespace SVGImporter
             EditorGUILayout.PropertyField(find("optimizeMesh"), Styles.optimizeMesh);
             EditorGUILayout.PropertyField(find("scale"), Styles.scale);
             EditorGUILayout.PropertyField(find("vpm"), Styles.quality);
-            if (format.hasMultipleDifferentValues || format.enumValueIndex == (int)SVGAssetFormat.Opaque)
+            if (format.hasMultipleDifferentValues || format.enumValueIndex == (int)SVGAssetFormat.OpaqueAndTransparent)
             {
                 EditorGUILayout.PropertyField(find("depthOffset"), Styles.depthOffset);
                 EditorGUILayout.PropertyField(find("compressDepth"), Styles.compressDepth);

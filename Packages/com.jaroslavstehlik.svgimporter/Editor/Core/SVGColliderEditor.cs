@@ -12,7 +12,7 @@ namespace SVGImporter
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SVGCollider2D))]
-    public class SVGColliderEditor : Editor
+    internal class SVGColliderEditor : Editor
     {
         SerializedProperty quality;
         SerializedProperty offset;

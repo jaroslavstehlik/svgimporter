@@ -1,4 +1,4 @@
-﻿
+
 
 using UnityEngine;
 using System.Collections;
@@ -10,7 +10,6 @@ namespace SVGImporter
     using Utils;
     
     [ExecuteInEditMode]
-    [RequireComponent(typeof(ISVGRenderer))]
     [HelpURL(SVGDocumentation.url)]
     [AddComponentMenu("Rendering/SVG Modifiers/Blur Modifier", 22)]
     public class SVGBlurModifier : SVGModifier 
@@ -27,8 +26,8 @@ namespace SVGImporter
         public bool manualMotionBlur = true;
         public float direction = 0f;
 
-        protected Vector3 lastPosition;
-        protected Vector2 transformVelocity;
+        Vector3 lastPosition;
+        Vector2 transformVelocity;
 
         protected Camera mainCamera
         {
@@ -78,7 +77,7 @@ namespace SVGImporter
             }
         }
 
-        protected override void PrepareForRendering (SVGLayer[] layers, SVGAsset svgAsset, bool force) 
+        protected override void ModifyLayers(SVGLayer[] layers, SVGAsset svgAsset) 
         {
             if (!active) return;
             if (layers == null) return;
@@ -152,7 +151,7 @@ namespace SVGImporter
                     int shapesLength = layers[i].shapes.Length;
                     for(int j = 0; j < shapesLength; j++)
                     {
-                        if(layers[i].shapes[j].type != SVGShapeType.ANTIALIASING) continue;
+                        if(layers[i].shapes[j].type != SVGShapeType.SoftEdge) continue;
                         Spread(layers[i].shapes[j], matrix);
                     }
                 }
@@ -169,7 +168,7 @@ namespace SVGImporter
                         int shapesLength = layers[layerIndex].shapes.Length;
                         for (int j = 0; j < shapesLength; j++)
                         {
-                            if (layers[layerIndex].shapes[j].type != SVGShapeType.ANTIALIASING) continue;
+                            if (layers[layerIndex].shapes[j].type != SVGShapeType.SoftEdge) continue;
                             Spread(layers[layerIndex].shapes[j], matrix);
                         }
                     }

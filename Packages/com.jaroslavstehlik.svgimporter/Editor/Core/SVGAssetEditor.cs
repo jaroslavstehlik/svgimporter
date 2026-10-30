@@ -14,7 +14,7 @@ namespace SVGImporter
     /// </summary>
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SVGAsset))]
-    public class SVGAssetEditor : Editor
+    internal class SVGAssetEditor : Editor
     {
         static class Styles
         {

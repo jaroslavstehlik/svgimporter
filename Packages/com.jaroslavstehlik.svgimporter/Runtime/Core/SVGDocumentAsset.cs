@@ -12,8 +12,7 @@ namespace SVGImporter
         None = 0,
         Syntax = 1,
         CorruptedFile = 2,
-        ClipPath = 3,
-        Symbol = 4,
+        // 3 and 4 were clip paths and symbols, which are now imported.
         Image = 5,
         Mask = 6,
         Unknown = 7,
@@ -25,11 +24,11 @@ namespace SVGImporter
         TextSkipped = 12,
     }
 
-    public class SVGDocumentAsset : ScriptableObject {
+    public sealed class SVGDocumentAsset : ScriptableObject {
 
         [FormerlySerializedAs("errors")]
         [SerializeField]
-        protected SVGError[] _errors;
+        private SVGError[] _errors;
         public SVGError[] errors
         {
             get {
@@ -42,7 +41,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("svgFile")]
         [SerializeField]
-        protected string _svgFile;
+        private string _svgFile;
         public string svgFile
         {
             get {
@@ -66,7 +65,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("title")]
         [SerializeField]
-        protected string _title;
+        private string _title;
         public string title
         {
             get {
@@ -79,7 +78,7 @@ namespace SVGImporter
 
         [FormerlySerializedAs("description")]
         [SerializeField]
-        protected string _description;
+        private string _description;
         public string description
         {
             get {
@@ -90,7 +89,7 @@ namespace SVGImporter
             }
         }
 
-        public static SVGDocumentAsset CreateInstance(string svgFile, SVGError[] errors = null, string title = null, string description = null)
+        internal static SVGDocumentAsset CreateInstance(string svgFile, SVGError[] errors = null, string title = null, string description = null)
         {
             SVGDocumentAsset svgDocumentAsset = ScriptableObject.CreateInstance<SVGDocumentAsset>();
             svgDocumentAsset._description = description;

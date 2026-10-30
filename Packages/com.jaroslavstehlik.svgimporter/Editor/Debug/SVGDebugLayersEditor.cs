@@ -6,7 +6,7 @@ using SVGImporter;
 namespace SVGImporter.Utils
 {        
 	[CustomEditor(typeof(SVGDebugLayers))]
-	public class SVGDebugLayersEditor : Editor {
+	internal class SVGDebugLayersEditor : Editor {
 
 		SVGAsset currentAsset;
 		SVGLayer hilightedLayer;

@@ -1,21 +1,11 @@
-﻿
-
-using UnityEngine;
-using System.Collections.Generic;
-using System.Collections;
+// Copyright (C) 2015 Jaroslav Stehlik
+// Released under the license found in the LICENSE file.
 
 namespace SVGImporter
 {
-    public interface ISVGRenderer
+    // SVG Renderer and SVG Image: components that draw an SVG Asset.
+    internal interface ISVGRenderer
     {
-        System.Action<SVGLayer[], SVGAsset, bool> OnPrepareForRendering { get; set; }
-        void UpdateRenderer();
         SVGAsset vectorGraphics { get; }
-
-        int lastFrameChanged { get; }
-
-        void AddModifier(ISVGModify modifier);
-        void RemoveModifier(ISVGModify modifier);
-        List<ISVGModify> modifiers { get; }
     }
 }
