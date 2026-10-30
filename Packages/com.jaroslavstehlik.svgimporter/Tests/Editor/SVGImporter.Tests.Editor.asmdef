@@ -1,0 +1,31 @@
+{
+    "name": "SVGImporter.Tests.Editor",
+    "rootNamespace": "",
+    "references": [
+        "SVGImporter.Runtime",
+        "SVGImporter.Editor",
+        "UnityEngine.UI",
+        "Unity.2D.Sprite.Editor",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "",
+            "define": "SVGIMPORTER_URP"
+        }
+    ],
+    "noEngineReferences": false
+}

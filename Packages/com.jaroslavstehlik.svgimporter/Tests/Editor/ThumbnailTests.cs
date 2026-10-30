@@ -2,7 +2,7 @@
 // import worker process (PreviewImporter), where the gradient atlas has to be built and bound by
 // the preview itself; they used to come out white there.
 //
-// Assets/Tests/ThumbnailTests/Fresh.svg (the same SVG, assigned to SVG Importer by its .meta) also
+// Tests/Editor/Data/Fresh.svg (the same SVG, assigned to SVG Importer by its .meta) also
 // tests a project's first import when the project is opened with an empty Library: SVG files can
 // import before the package's shaders, and used to be saved without shaders and draw nothing.
 //
@@ -19,7 +19,7 @@ using UnityEngine;
 public static class ThumbnailTests
 {
     const string Path = "Assets/ThumbnailTests.svg";
-    const string FreshPath = "Assets/Tests/ThumbnailTests/Fresh.svg";
+    const string FreshPath = "Packages/com.jaroslavstehlik.svgimporter/Tests/Editor/Data/Fresh.svg";
     // A radial gradient from red in the middle to blue at the edge.
     public const string Svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
         + "<radialGradient id=\"g\"><stop offset=\"0\" stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></radialGradient>"

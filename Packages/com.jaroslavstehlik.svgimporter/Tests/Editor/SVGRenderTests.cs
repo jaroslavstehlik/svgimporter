@@ -9,6 +9,7 @@
 //   Unity -batchmode -projectPath . -executeMethod SVGRenderTests.Run -svgTestOutput <dir>
 // Exits with code 0 when every check passes.
 
+#if SVGIMPORTER_URP
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,7 @@ using UnityEngine.Rendering.Universal;
 
 public static class SVGRenderTests
 {
-    const string Root = "Assets/Tests/Generated";
+    const string Root = "Assets/SVGRenderTests";
     const int Width = 1280;
     const int Height = 720;
     const int Tolerance = 8;
@@ -400,3 +401,4 @@ public static class SVGRenderTests
         return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
     }
 }
+#endif

@@ -4,3 +4,4 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SVGImporter.Editor")]
+[assembly: InternalsVisibleTo("SVGImporter.Tests.Editor")]
