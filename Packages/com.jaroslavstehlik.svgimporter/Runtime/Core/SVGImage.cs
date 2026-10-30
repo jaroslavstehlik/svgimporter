@@ -366,17 +366,49 @@ namespace SVGImporter
 
         const float epsilon = 0.0000001f;
 
+        // The mesh's data, read when the mesh changes; each rebuild places and tints its vertices.
+        [System.NonSerialized] Mesh _streamMesh;
+        [System.NonSerialized] long _streamImport;
         int tempVBOLength;
         UIVertex[] vertexStream;
-        Vector3[] vertices;
-        int[] triangles;
-        Vector2[] uv;
-        Vector2[] uv2;
-        Vector2[] uv3;
-        Color32[] colors;
-        Vector3[] normals;
-        
+        readonly List<Vector3> vertices = new List<Vector3>();
+        readonly List<int> triangles = new List<int>();
+        readonly List<Vector2> uv = new List<Vector2>();
+        readonly List<Vector2> uv2 = new List<Vector2>();
+        readonly List<Color32> colors = new List<Color32>();
+        readonly List<Vector3> normals = new List<Vector3>();
+        readonly List<UIVertex> vertexList = new List<UIVertex>();
+        static readonly List<int> s_SubMeshTriangles = new List<int>();
+
+        void ReadMesh(Mesh mesh)
+        {
+            _streamMesh = mesh;
+            _streamImport = _vectorGraphics.importHash;
+            tempVBOLength = mesh.vertexCount;
+            mesh.GetVertices(vertices);
+            mesh.GetUVs(0, uv);
+            mesh.GetUVs(1, uv2);
+            mesh.GetColors(colors);
+            mesh.GetNormals(normals);
+            triangles.Clear();
+            for(int i = 0; i < mesh.subMeshCount; i++)
+            {
+                mesh.GetTriangles(s_SubMeshTriangles, i);
+                triangles.AddRange(s_SubMeshTriangles);
+            }
+            if(vertexStream == null || vertexStream.Length != tempVBOLength) vertexStream = new UIVertex[tempVBOLength];
+            else System.Array.Clear(vertexStream, 0, tempVBOLength);
+        }
+
+
         protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            SVGAtlas.BeginRebuild();
+            try { PopulateMesh(vh); }
+            finally { SVGAtlas.EndRebuild(); }
+        }
+
+        void PopulateMesh(VertexHelper vh)
         {
             if (canvas == null) return;
             // Without an asset, a white rectangle as uGUI's Image draws; an asset with nothing to draw draws nothing.
@@ -384,16 +416,9 @@ namespace SVGImporter
             if (sharedMesh == null) { vh.Clear(); return; }
             vh.Clear();
             Mesh mesh = sharedMesh;
-            tempVBOLength = mesh.vertexCount;
-
-            vertices = mesh.vertices;
-            triangles = mesh.triangles;
-            uv = mesh.uv;
-            uv2 = mesh.uv2;
-            colors = mesh.colors32;
-            normals = mesh.normals;
-            
-            if(vertexStream == null || vertexStream.Length != tempVBOLength) vertexStream = new UIVertex[tempVBOLength];
+            if(mesh != _streamMesh || _vectorGraphics.importHash != _streamImport || mesh.vertexCount != tempVBOLength)
+                ReadMesh(mesh);
+            if(colors.Count != tempVBOLength) { vh.Clear(); return; }
             
             // Add the channels SVG meshes need; other graphics on the canvas (TextMeshPro, for
             // example) need theirs.
@@ -500,7 +525,7 @@ namespace SVGImporter
             
             if (_vectorGraphics.hasGradients || _vectorGraphics.useGradients == SVGUseGradients.Always)
             {
-                if(uv != null && uv2 != null && tempVBOLength == uv.Length && tempVBOLength == uv2.Length)
+                if(tempVBOLength == uv.Count && tempVBOLength == uv2.Count)
                 {
                     for(int i = 0; i < tempVBOLength; i++)
                     {
@@ -514,7 +539,7 @@ namespace SVGImporter
             {
                 if(_vectorGraphics.antialiasing)
                 {
-                    if(normals != null && tempVBOLength == normals.Length)
+                    if(tempVBOLength == normals.Count)
                     {
                         for(int i = 0; i < tempVBOLength; i++)
                         {
@@ -526,7 +551,7 @@ namespace SVGImporter
             } else {
                 if(_vectorGraphics.generateNormals)
                 {
-                    if(normals != null && normals.Length == tempVBOLength)
+                    if(normals.Count == tempVBOLength)
                     {
                         for(int i = 0; i < tempVBOLength; i++)
                         {
@@ -536,7 +561,9 @@ namespace SVGImporter
                 }
             }
             
-            vh.AddUIVertexStream(new List<UIVertex>(vertexStream), new List<int>(triangles));
+            vertexList.Clear();
+            vertexList.AddRange(vertexStream);
+            vh.AddUIVertexStream(vertexList, triangles);
 
             _lastFrameChanged = Time.frameCount;
         }

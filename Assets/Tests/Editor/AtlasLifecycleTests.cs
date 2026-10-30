@@ -267,13 +267,16 @@ public static class AtlasLifecycleTests
             return;
         }
         byte[] baseline = File.ReadAllBytes(baselinePath);
-        int differing = 0;
+        int differing = 0, worst = 0, worstAt = 0;
         for (int i = 0; i < current.Length; i++)
         {
             int d = Math.Abs(current[i].r - baseline[i * 4]) + Math.Abs(current[i].g - baseline[i * 4 + 1]) + Math.Abs(current[i].b - baseline[i * 4 + 2]);
             if (d > 6) differing++;
+            if (d > worst) { worst = d; worstAt = i; }
         }
-        File.AppendAllText(ResultsPath, string.Format("{0} {1}: {2} pixels differ from the baseline\n", differing == 0 ? "PASS" : "FAIL", Steps[step], differing));
+        string where = worst == 0 ? "" : string.Format(" (largest difference {0} at pixel {1}: {2} instead of {3}, {4}, {5})", worst, worstAt, current[worstAt],
+            baseline[worstAt * 4], baseline[worstAt * 4 + 1], baseline[worstAt * 4 + 2]);
+        File.AppendAllText(ResultsPath, string.Format("{0} {1}: {2} pixels differ from the baseline{3}\n", differing == 0 ? "PASS" : "FAIL", Steps[step], differing, where));
     }
 
     // The renderers are 1 unit (100 px at 0.01) wide; at orthographic size 2 on 360 px, 90 px per unit.

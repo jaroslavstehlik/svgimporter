@@ -196,6 +196,32 @@ namespace SVGImporter
         internal static void Unregister(ISVGAtlasClient client) { clients.Remove(client); }
         internal static void Own(UnityEngine.Object obj) { ownedObjects.Add(obj); }
 
+        // A reset while renderers rebuild (a gradient that doesn't fit) notifies the renderers once
+        // the rebuilds are done, not in the middle of one; graphics on a canvas that is being
+        // rebuilt, which can't ask for another rebuild, after it.
+        static int s_Rebuilding;
+        static bool s_ResetPending;
+        static readonly List<ISVGAtlasClient> s_AfterCanvasRebuild = new List<ISVGAtlasClient>();
+
+        internal static void BeginRebuild() { s_Rebuilding++; }
+
+        internal static void EndRebuild()
+        {
+            if (--s_Rebuilding > 0 || !s_ResetPending) return;
+            s_ResetPending = false;
+            NotifyReset();
+        }
+
+        static void NotifyReset()
+        {
+            bool canvasRebuilding = UnityEngine.UI.CanvasUpdateRegistry.IsRebuildingGraphics();
+            foreach (ISVGAtlasClient client in clients.ToArray())
+            {
+                if (canvasRebuilding && client is UnityEngine.UI.Graphic) s_AfterCanvasRebuild.Add(client);
+                else client.OnAtlasReset();
+            }
+        }
+
         /// <summary>Rebuilds the renderers that draw any of these assets, for example after a reimport.</summary>
         public static void RefreshRenderers(ICollection<SVGAsset> assets)
         {
@@ -431,12 +457,22 @@ namespace SVGImporter
 
         void OnWillRenderCanvases()
         {
+            if (s_AfterCanvasRebuild.Count > 0 && !UnityEngine.UI.CanvasUpdateRegistry.IsRebuildingGraphics())
+            {
+                ISVGAtlasClient[] late = s_AfterCanvasRebuild.ToArray();
+                s_AfterCanvasRebuild.Clear();
+                foreach (ISVGAtlasClient client in late)
+                    if (clients.Contains(client)) client.OnAtlasReset();
+            }
             OnAtlasPreRender();
         }
 
         protected void OnDestroy()
         {
             _beingDestroyed = true;
+            // However the atlas goes, what it made goes with it.
+            if (_Instance == this) _Instance = null;
+            Release();
             Camera.onPreRender -= OnAtlasPreRender;
             UnityEngine.Rendering.RenderPipelineManager.beginContextRendering -= OnBeginContextRendering;
             Canvas.willRenderCanvases -= OnWillRenderCanvases;
@@ -509,8 +545,8 @@ namespace SVGImporter
         public static void ResetAtlas()
         {
             if (_Instance != null) _Instance.DestroyAtlas();
-            foreach (ISVGAtlasClient client in clients.ToArray())
-                client.OnAtlasReset();
+            if (s_Rebuilding > 0) s_ResetPending = true;
+            else NotifyReset();
         }
 
         [System.Obsolete("Use SVGAtlas.ResetAtlas().")]
@@ -523,6 +559,14 @@ namespace SVGImporter
         void DestroyAtlas()
         {
             if (_Instance == this) _Instance = null;
+            Release();
+            DestroyObjectInternal(gameObject);
+        }
+
+        // Destroys the atlas's textures and materials and, unless a newer atlas exists, the meshes
+        // built from it. Safe to call again.
+        void Release()
+        {
             Material[] own = { _ui, _uiAntialiased, _opaqueSolid, _transparentSolid, _transparentSolidAntialiased, _opaqueGradient, _transparentGradient, _transparentGradientAntialiased };
             foreach (Material material in own)
                 if (material != null) DestroyObjectInternal(material);
@@ -535,7 +579,6 @@ namespace SVGImporter
                     if (obj != null) DestroyObjectInternal(obj);
                 ownedObjects.Clear();
             }
-            DestroyObjectInternal(gameObject);
         }
 
 #if UNITY_EDITOR

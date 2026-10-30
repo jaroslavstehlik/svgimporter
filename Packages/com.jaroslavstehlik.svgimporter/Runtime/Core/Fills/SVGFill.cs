@@ -100,6 +100,20 @@ namespace SVGImporter.Rendering
             if(gradientColors != null) fill.gradientColors = gradientColors.Clone();
             return fill;
         }
+
+        // Takes another fill's values, keeping this fill's gradient: what renderers reset after
+        // modifiers and tints changed a copy of the asset's fills.
+        internal void CopyFrom(SVGFill other)
+        {
+            fillType = other.fillType;
+            blend = other.blend;
+            gradientType = other.gradientType;
+            color = other.color;
+            opacity = other.opacity;
+            viewport = other.viewport;
+            transform = other.transform;
+            gradientId = other.gradientId;
+        }
     }
 }
 

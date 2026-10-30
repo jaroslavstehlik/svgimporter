@@ -62,6 +62,17 @@
 - Scenes update when an SVG file changes on disk; before, only after **Apply** in the Inspector.
 - Gradients are dithered, as in browsers: up to half an 8-bit step of noise per pixel, so subtle gradients don't show bands. Flat colours are unchanged.
 - Fixed meshes placed one canvas height too low when **Ignore SVG Canvas** is off. Reimport affected assets; their pivot now matches the canvas.
+- Modifiers no longer rebuild the renderer from scratch every frame. One rebuild per frame applies all of a renderer's modifiers. It reuses the renderer's mesh and buffers instead of allocating new ones. It also leaves materials and SVG Collider 2D alone, where every frame used to rebuild the collider's physics shape.
+- SVG Image reuses its vertex buffers when the Canvas rebuilds it instead of allocating new ones every time; reading `SVGAsset.sharedMesh` and `hasGradients` no longer allocates; SVG Renderers set their materials only when they change.
+- The gradient atlas releases its textures, materials and meshes however it is destroyed. When it fills up during a renderer's rebuild, it is replaced without rebuilding that renderer halfway through, and SVG Images rebuild after the Canvas update instead of logging errors.
+- Fixed `SVGRenderer.meshFilter` and `meshRenderer` returning null on objects that were never enabled.
+- Fixed gradients drawn with the wrong colours in SVG Image and sliced renderers for assets imported with Use Layers.
+- Fixed tinted, sliced or gradient copies of meshes over 65,535 vertices.
+- Fixed SVG Sorter counting the sorting order up on every sort, and marking the scene modified every frame.
+- Fixed `SVGPath` bounds using the horizontal extent for the vertical one.
+- Modifiers on an SVG Image have no effect (they work with SVG Renderer); they now say so in the Inspector and the console.
+- SVG Image's **Apply** button changes an imported `.svg` file's format setting and reimports it, instead of rewriting the imported asset.
+- Selecting an SVG file no longer marks its import settings as modified.
 
 ## Legacy releases
 

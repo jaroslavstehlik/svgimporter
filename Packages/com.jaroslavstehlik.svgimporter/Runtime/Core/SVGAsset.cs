@@ -269,7 +269,7 @@ namespace SVGImporter
                 for(int i = 0; i < _sharedShaders.Length; i++)
                 {
                     if(string.IsNullOrEmpty(_sharedShaders[i])) continue;
-                    if(_sharedShaders[i].ToLower().Contains("opaque")) return true;
+                    if(_sharedShaders[i].IndexOf("opaque", System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
                 }
 
                 return false;
@@ -961,13 +961,18 @@ namespace SVGImporter
         {
             get {
                 if(_sharedGradients == null || _sharedGradients.Length == 0) return false;
-                if(_sharedGradients.Length == 1)
+                if(_sharedGradients.Length > 1) return true;
+                // Comparing with the default gradient allocates: done once per import.
+                if(!ReferenceEquals(_hasGradientsFor, _sharedGradients))
                 {
-                    if(SVGAtlasData.IsDefaultGradient(_sharedGradients[0])) return false;
+                    _hasGradients = !SVGAtlasData.IsDefaultGradient(_sharedGradients[0]);
+                    _hasGradientsFor = _sharedGradients;
                 }
-                return true;
+                return _hasGradients;
             }
         }
+        [System.NonSerialized] bool _hasGradients;
+        [System.NonSerialized] CCGradient[] _hasGradientsFor;
 
         protected Material CloneMaterial(Material original)
         {

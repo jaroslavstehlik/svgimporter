@@ -10,8 +10,41 @@ namespace SVGImporter.Geometry
     using Data;
     using Utils;
     
+    /// <summary>
+    /// Arrays SVGMesh.CombineMeshes reuses between builds of the same mesh, so that renderers
+    /// rebuilding their mesh every frame for modifiers don't allocate.
+    /// </summary>
+    internal sealed class SVGMeshBuffers
+    {
+        internal Vector3[] vertices, normals;
+        internal Color32[] colors;
+        internal Vector2[] uv, uv2;
+        internal int[] opaqueTriangles, transparentTriangles;
+        internal float[] depths;
+        internal readonly List<string> shaderNames = new List<string>(2);
+        internal string[] shaders;
+
+        // An array of at least length elements, the first length of them cleared if asked.
+        internal static T[] Ensure<T>(ref T[] array, int length, bool clear)
+        {
+            if(array == null || array.Length < length) array = new T[length];
+            else if(clear) System.Array.Clear(array, 0, length);
+            return array;
+        }
+
+        // The shader names as an array, the previous one while they are the same.
+        internal string[] Shaders()
+        {
+            if(shaders == null || shaders.Length != shaderNames.Count) return shaders = shaderNames.ToArray();
+            for(int i = 0; i < shaders.Length; i++)
+                if(shaders[i] != shaderNames[i]) return shaders = shaderNames.ToArray();
+            return shaders;
+        }
+    }
+
     public class SVGMesh
     {
+        static readonly string[] s_NoShaders = new string[0];
         public static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out Shader[] shaders, SVGUseGradients useGradients = SVGUseGradients.Always, SVGAssetFormat format = SVGAssetFormat.Transparent, bool compressDepth = true, bool antialiased = false, float depthOffset = 0.01f)
         {
             string[] shaderNames;
@@ -20,14 +53,17 @@ namespace SVGImporter.Geometry
             return combined;
         }
 
-        /// <summary>As above, with the shader of each submesh by name (SVGShader's name constants).</summary>
-        internal static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out string[] shaders, SVGUseGradients useGradients, SVGAssetFormat format, bool compressDepth, bool antialiased, float depthOffset)
+        /// <summary>
+        /// As above, with the shader of each submesh by name (SVGShader's name constants). Buffers
+        /// kept from a previous build of the mesh are reused; the shader names array then too.
+        /// </summary>
+        internal static bool CombineMeshes(SVGLayer[] layers, Mesh mesh, out string[] shaders, SVGUseGradients useGradients, SVGAssetFormat format, bool compressDepth, bool antialiased, float depthOffset, SVGMeshBuffers buffers = null)
         {
             #if DEBUG_IMPORT
             long timeStart = System.DateTime.Now.Ticks;
             #endif
             
-            shaders = new string[0];
+            shaders = s_NoShaders;
             
             
             SVGFill fill;
@@ -43,7 +79,8 @@ namespace SVGImporter.Geometry
             // here: the layers belong to the caller and are drawn again later.
             int shapeCount = 0;
             for(int i = 0; i < totalLayers; i++) shapeCount += layers[i].shapes.Length;
-            float[] depths = new float[shapeCount];
+            SVGMeshBuffers b = buffers ?? new SVGMeshBuffers();
+            float[] depths = SVGMeshBuffers.Ensure(ref b.depths, shapeCount, false);
             if(format == SVGAssetFormat.Opaque)
             {
                 if(compressDepth)
@@ -141,20 +178,22 @@ namespace SVGImporter.Geometry
                 useTransparentShader = true;
             }
             
-            Vector3[] vertices = new Vector3[totalVertices];
-            Color32[] colors32 = new Color32[totalVertices];
+            // Every vertex gets a position and a colour; UVs and normals only some, the rest zero.
+            Vector3[] vertices = SVGMeshBuffers.Ensure(ref b.vertices, totalVertices, false);
+            Color32[] colors32 = SVGMeshBuffers.Ensure(ref b.colors, totalVertices, false);
             Vector2[] uv = null;
             Vector2[] uv2 = null;
             Vector3[] normals = null;
-            int[][] triangles = null;
-            List<string> outputShaders = new List<string>();
+            int[] opaqueIndices, transparentIndices = null;
+            List<string> outputShaders = b.shaderNames;
+            outputShaders.Clear();
 
-            if(antialiased) normals = new Vector3[totalVertices];
+            if(antialiased) normals = SVGMeshBuffers.Ensure(ref b.normals, totalVertices, true);
 
             if(hasGradients)
             {
-                uv = new Vector2[totalVertices];
-                uv2 = new Vector2[totalVertices];
+                uv = SVGMeshBuffers.Ensure(ref b.uv, totalVertices, true);
+                uv2 = SVGMeshBuffers.Ensure(ref b.uv2, totalVertices, true);
                 
                 if(useOpaqueShader)
                 {
@@ -309,7 +348,8 @@ namespace SVGImporter.Geometry
             // Submesh Order
             if(useOpaqueShader && useTransparentShader)
             {
-                triangles = new int[2][]{new int[opaqueTriangles], new int[transparentTriangles]};
+                opaqueIndices = SVGMeshBuffers.Ensure(ref b.opaqueTriangles, opaqueTriangles, false);
+                transparentIndices = SVGMeshBuffers.Ensure(ref b.transparentTriangles, transparentTriangles, false);
                 
                 int lastVertexIndex = 0;
                 int triangleCount;
@@ -326,12 +366,12 @@ namespace SVGImporter.Geometry
                         {
                             for(int k = 0; k < triangleCount; k++)
                             {
-                                triangles[0][lastOpauqeTriangleIndex++] = lastVertexIndex + layers[i].shapes[j].triangles[k];
+                                opaqueIndices[lastOpauqeTriangleIndex++] = lastVertexIndex + layers[i].shapes[j].triangles[k];
                             }
                         } else {
                             for(int k = 0; k < triangleCount; k++)
                             {
-                                triangles[1][lastTransparentTriangleIndex++] = lastVertexIndex + layers[i].shapes[j].triangles[k];
+                                transparentIndices[lastTransparentTriangleIndex++] = lastVertexIndex + layers[i].shapes[j].triangles[k];
                             }
                         }
                         
@@ -339,7 +379,7 @@ namespace SVGImporter.Geometry
                     }
                 }
             } else {
-                triangles = new int[1][]{new int[totalTriangles]};
+                opaqueIndices = SVGMeshBuffers.Ensure(ref b.opaqueTriangles, totalTriangles, false);
                 
                 int lastVertexIndex = 0;
                 int triangleCount;
@@ -353,14 +393,14 @@ namespace SVGImporter.Geometry
                         triangleCount = layers[i].shapes[j].triangles.Length;
                         for(int k = 0; k < triangleCount; k++)
                         {
-                            triangles[0][lastTriangleIndex++] = lastVertexIndex + layers[i].shapes[j].triangles[k];
+                            opaqueIndices[lastTriangleIndex++] = lastVertexIndex + layers[i].shapes[j].triangles[k];
                         }
                         lastVertexIndex += layers[i].shapes[j].vertices.Length;
                     }
                 }
             }
             
-            if(outputShaders.Count != 0) shaders = outputShaders.ToArray();
+            shaders = buffers != null ? b.Shaders() : outputShaders.ToArray();
             
             /* * * * * * * * * * * * * * * * * * * * * * * * 
              *                                             *
@@ -371,34 +411,20 @@ namespace SVGImporter.Geometry
             mesh.Clear();
             mesh.MarkDynamic();
             // 16-bit indices address 65,535 vertices; larger meshes need 32-bit indices.
-            mesh.indexFormat = vertices.Length > 65535 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
-            mesh.vertices = vertices;
-            mesh.colors32 = colors32;
-            
-            if(uv != null)
-            {
-                mesh.uv = uv;
-            }
+            mesh.indexFormat = totalVertices > 65535 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+            mesh.SetVertices(vertices, 0, totalVertices);
+            mesh.SetColors(colors32, 0, totalVertices);
+            if(uv != null) mesh.SetUVs(0, uv, 0, totalVertices);
+            if(uv2 != null) mesh.SetUVs(1, uv2, 0, totalVertices);
+            if(normals != null) mesh.SetNormals(normals, 0, totalVertices);
 
-            if(uv2 != null)
+            if(transparentIndices == null)
             {
-                mesh.uv2 = uv2;
-            }
-
-            if(normals != null)
-            {
-                mesh.normals = normals;
-            }
-
-            if(triangles.Length == 1)
-            {
-                mesh.triangles = triangles[0];
+                mesh.SetTriangles(opaqueIndices, 0, totalTriangles, 0);
             } else {
-                mesh.subMeshCount = triangles.Length;
-                for(int i = 0; i < triangles.Length; i++)
-                {
-                    mesh.SetTriangles(triangles[i], i);
-                }
+                mesh.subMeshCount = 2;
+                mesh.SetTriangles(opaqueIndices, 0, opaqueTriangles, 0);
+                mesh.SetTriangles(transparentIndices, 0, transparentTriangles, 1);
             }
             
             #if DEBUG_IMPORT

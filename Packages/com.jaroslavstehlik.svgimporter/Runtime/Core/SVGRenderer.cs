@@ -186,6 +186,8 @@ namespace SVGImporter
 
         // Cached SVG Layers
         protected SVGLayer[] _layers;
+        // The asset's layers as the renderer draws them, before modifiers and tints change _layers.
+        [System.NonSerialized] SVGLayer[] _layersSource;
         // Shared mesh for better gpu instancing
         protected Mesh _sharedMesh;
         // Instanced mesh for custom coloring
@@ -410,7 +412,14 @@ namespace SVGImporter
         
         // This is the main rendering method
         protected void PrepareForRendering(bool force = false)
-        {           
+        {
+            SVGAtlas.BeginRebuild();
+            try { Rebuild(force); }
+            finally { SVGAtlas.EndRebuild(); }
+        }
+
+        void Rebuild(bool force)
+        {
 #if UNITY_EDITOR
             if(_lastSortingOrder != _sortingOrder){ 
                 sortingOrder = _sortingOrder;
@@ -441,16 +450,17 @@ namespace SVGImporter
                 bool colorChanged = force || _lastColor != _color;
                 bool materialChanged = force || _lastOpaqueMaterial != _opaqueMaterial || _lastTransparentMaterial != _transparentMaterial;
 #if UNITY_EDITOR
-                for(int i = 0; i < meshRenderer.sharedMaterials.Length; i++)
+                // Materials go missing in the editor, for example when the atlas is recreated.
+                meshRenderer.GetSharedMaterials(s_Materials);
+                for(int i = 0; i < s_Materials.Count; i++)
                 {
-                    if(meshRenderer.sharedMaterials[i] != null) continue;
+                    if(s_Materials[i] != null) continue;
                     materialChanged = true;
                     break;
                 }
 #endif
 
-                // A different asset, or the same one reimported; not a forced rebuild (modifiers
-                // force one every frame).
+                // A different asset, or the same one reimported; not every forced rebuild.
                 bool assetChanged = _lastVectorGraphics != _vectorGraphics || _vectorGraphics.importHash != _lastImportHash;
                 _lastImportHash = _vectorGraphics.importHash;
                 if(_lastVectorGraphics != _vectorGraphics)
@@ -488,7 +498,7 @@ namespace SVGImporter
 
                 if(useLayers)
                 {
-                    if(_layers == null) _layers = _vectorGraphics.layersClone;                    
+                    if(_layers == null) InitLayers();
                     if(meshChanged || colorChanged)
                     {
                         InitMesh();
@@ -559,10 +569,72 @@ namespace SVGImporter
             }
         }
 
+        void InitLayers()
+        {
+            _layersSource = _vectorGraphics.layersClone;
+            _layers = _vectorGraphics.layersClone;
+        }
+
+        /// <summary>
+        /// Rebuilds the mesh with the modifiers applied, as they animate: the layers are reset to
+        /// the asset's in place and only the mesh is rebuilt. Anything else that changed, such as
+        /// the asset, gets a full rebuild.
+        /// </summary>
+        internal void RebuildModifiedMesh()
+        {
+            if(_vectorGraphics == null || meshRenderer.isPartOfStaticBatch) return;
+            if(!useLayers || _layers == null || _layersSource == null || _mesh == null || meshFilter.sharedMesh != _mesh
+                || _lastVectorGraphics != _vectorGraphics || _vectorGraphics.importHash != _lastImportHash
+                || _lastType != _type || _lastColor != _color)
+            {
+                PrepareForRendering(true);
+                return;
+            }
+
+            ResetLayers(_layersSource, _layers);
+            if(_type == Type.Sliced) UpdateSlicedMesh();
+            UpdateColors();
+            _lastFrameChanged = Time.frameCount;
+            if(_OnPrepareForRendering != null)
+                _OnPrepareForRendering(_layers, _vectorGraphics, false);
+            GenerateMesh();
+        }
+
+        // Copies the source layers' values into the target's arrays, which have the same lengths.
+        static void ResetLayers(SVGLayer[] source, SVGLayer[] target)
+        {
+            for(int i = 0; i < source.Length; i++)
+            {
+                SVGShape[] from = source[i].shapes, to = target[i].shapes;
+                if(from == null) continue;
+                for(int j = 0; j < from.Length; j++)
+                {
+                    SVGShape shape = from[j];
+                    shape.vertices = CopyInto(from[j].vertices, to[j].vertices);
+                    shape.triangles = CopyInto(from[j].triangles, to[j].triangles);
+                    shape.colors = CopyInto(from[j].colors, to[j].colors);
+                    shape.angles = CopyInto(from[j].angles, to[j].angles);
+                    shape.fill = to[j].fill;
+                    if(shape.fill != null && from[j].fill != null) shape.fill.CopyFrom(from[j].fill);
+                    to[j] = shape;
+                }
+            }
+        }
+
+        static T[] CopyInto<T>(T[] from, T[] to)
+        {
+            if(from == null) return null;
+            if(to == null || to.Length != from.Length) return (T[])from.Clone();
+            System.Array.Copy(from, to, from.Length);
+            return to;
+        }
+
+        [System.NonSerialized] SVGMeshBuffers _meshBuffers;
         protected void GenerateMesh()
         {
-            Shader[] outputShaders;
-            SVGMesh.CombineMeshes(_layers, _mesh, out outputShaders, _vectorGraphics.useGradients, _vectorGraphics.format, _vectorGraphics.compressDepth, _vectorGraphics.antialiasing, _vectorGraphics.depthOffset);
+            if(_meshBuffers == null) _meshBuffers = new SVGMeshBuffers();
+            string[] shaders;
+            SVGMesh.CombineMeshes(_layers, _mesh, out shaders, _vectorGraphics.useGradients, _vectorGraphics.format, _vectorGraphics.compressDepth, _vectorGraphics.antialiasing, _vectorGraphics.depthOffset, _meshBuffers);
         }
 
 #if UNITY_EDITOR
@@ -892,15 +964,19 @@ namespace SVGImporter
             }
         }
 
+        // Scratch list for reading and setting the renderer's materials without allocating.
+        static readonly List<Material> s_Materials = new List<Material>(2);
+
         void SetSharedMaterials(int subMeshCount, Material firstMaterial, Material secondMaterial)
         {
-            if(subMeshCount < 2)
-            {
-                meshRenderer.sharedMaterials = new Material[]{ firstMaterial };
-            } else {
-                meshRenderer.sharedMaterials = new Material[]{ firstMaterial, secondMaterial };
-            }
-//            Debug.Log("SetSharedMaterials, subMeshCount: "+subMeshCount+", a: "+firstMaterial+", b: "+secondMaterial);
+            meshRenderer.GetSharedMaterials(s_Materials);
+            int count = subMeshCount < 2 ? 1 : 2;
+            if(s_Materials.Count == count && s_Materials[0] == firstMaterial && (count == 1 || s_Materials[1] == secondMaterial))
+                return;
+            s_Materials.Clear();
+            s_Materials.Add(firstMaterial);
+            if(count == 2) s_Materials.Add(secondMaterial);
+            meshRenderer.SetSharedMaterials(s_Materials);
         }
 
         public void UpdateMaterials()
@@ -972,7 +1048,7 @@ namespace SVGImporter
             } else {
                 if(useLayers)
                 {
-                    _layers = _vectorGraphics.layersClone;
+                    InitLayers();
 
                     if(_mesh == null)
                     {
@@ -1051,7 +1127,8 @@ namespace SVGImporter
         void CleanMaterials()
         {
 //            Debug.Log("CleanMaterials");
-            meshRenderer.sharedMaterials = new Material[0];
+            s_Materials.Clear();
+            meshRenderer.SetSharedMaterials(s_Materials);
         }
         
         void CleanMesh()
@@ -1061,7 +1138,8 @@ namespace SVGImporter
 
         void CleanLayers()
         {
-            if(_layers != null) _layers = null;
+            _layers = null;
+            _layersSource = null;
         }
 
         void CleanCache()

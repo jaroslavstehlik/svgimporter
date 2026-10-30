@@ -135,12 +135,26 @@ namespace SVGImporter
             if(svgRenderer != null) svgRenderer.UpdateRenderer();
         }
 
-        // This method is invoked by Unity when rendering to Camera
+        // Invoked by Unity before a camera renders the object: the mesh is rebuilt with the
+        // modifiers once a frame, by the first modifier that updates automatically (the rebuild
+        // applies all of them).
         protected virtual void OnWillRenderObject()
         {
-            if(svgRenderer == null || manualUpdate) return;
-            if(Application.isPlaying) if(svgRenderer.lastFrameChanged == Time.frameCount) return;
-            svgRenderer.UpdateRenderer();
+            var renderer = svgRenderer as SVGRenderer;
+            if(renderer == null || manualUpdate || !RebuildsForAll(renderer)) return;
+            if(Application.isPlaying && renderer.lastFrameChanged == Time.frameCount) return;
+            renderer.RebuildModifiedMesh();
+        }
+
+        bool RebuildsForAll(SVGRenderer renderer)
+        {
+            List<ISVGModify> modifiers = renderer.modifiers;
+            for(int i = 0; i < modifiers.Count; i++)
+            {
+                var modifier = modifiers[i] as SVGModifier;
+                if(modifier != null && !modifier.manualUpdate) return modifier == this;
+            }
+            return false;
         }
 
         public virtual bool active

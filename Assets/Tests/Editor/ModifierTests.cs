@@ -99,6 +99,43 @@ public static class ModifierTests
                 Check(e + "colour modifier tints", Mathf.Abs(after.r - before.r * 0.5f) < 3f / 255f && Mathf.Abs(after.g - before.g) < 2f / 255f,
                     before + " -> " + after);
             }
+
+            // Modifiers rebuild the mesh every frame: each rebuild starts from the asset's layers,
+            // so the effect doesn't add up, and reuses its buffers. A grid of 2,500 circles makes
+            // the per-vertex arrays large enough to measure.
+            {
+                var grid = new System.Text.StringBuilder("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"500\" height=\"500\">");
+                for (int y = 0; y < 50; y++)
+                    for (int x = 0; x < 50; x++)
+                        grid.Append("<circle cx=\"" + (x * 10 + 5) + "\" cy=\"" + (y * 10 + 5) + "\" r=\"4\" fill=\"#45B86F\"/>");
+                grid.Append("</svg>");
+                SVGImportOptions options = SVGImportOptions.Default;
+                options.antialiasing = true;
+                options.useLayers = true;
+                SVGAsset asset = SVGAsset.Load(grid.ToString(), options);
+                var go = new GameObject("animated");
+                var renderer = go.AddComponent<SVGRenderer>();
+                renderer.vectorGraphics = asset;
+                go.AddComponent<SVGTransformModifier>().properties.positon = new Vector3(1f, 0f, 0f);
+                go.AddComponent<SVGColorModifier>().color = new Color(0.5f, 1f, 1f, 1f);
+                var rebuild = (Action)Delegate.CreateDelegate(typeof(Action), renderer,
+                    typeof(SVGRenderer).GetMethod("RebuildModifiedMesh", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic));
+                Mesh mesh = go.GetComponent<MeshFilter>().sharedMesh;
+                rebuild();
+                Vector3 once = mesh.bounds.center;
+                Color32 onceColor = mesh.colors32[0];
+                rebuild();
+                rebuild();
+                Check("modifier rebuilds don't add up", Vector3.Distance(mesh.bounds.center, once) < 1e-4f && mesh.colors32[0].Equals(onceColor) && go.GetComponent<MeshFilter>().sharedMesh == mesh,
+                    "centre " + once.ToString("F3") + " -> " + mesh.bounds.center.ToString("F3") + ", colour " + onceColor + " -> " + mesh.colors32[0]);
+                long allocated = Allocated(() => { for (int i = 0; i < 10; i++) rebuild(); });
+                // For comparison, the full rebuild modifiers used to run every frame.
+                long full = Allocated(() => { for (int i = 0; i < 10; i++) renderer.UpdateRenderer(); });
+                Check("modifier rebuilds reuse their buffers", allocated < 64 * 1024 && full > 1 << 20,
+                    allocated + " bytes in 10 rebuilds of " + mesh.vertexCount + " vertices (full rebuilds: " + full + ")");
+                UnityEngine.Object.DestroyImmediate(go);
+                UnityEngine.Object.DestroyImmediate(asset);
+            }
         }
         catch (Exception exception)
         {
@@ -109,6 +146,23 @@ public static class ModifierTests
         results.Insert(0, "Unity " + Application.unityVersion + ", result: " + (passed ? "PASS" : "FAIL"));
         File.WriteAllLines(Path.Combine(output, "modifiers.txt"), results);
         EditorApplication.Exit(passed ? 0 : 1);
+    }
+
+    // The managed memory an action allocates: the heap's growth, measured again if a garbage
+    // collection ran meanwhile. Unity's Mono doesn't count allocations per thread, and small
+    // allocations may not show until the next collection.
+    static long Allocated(Action action)
+    {
+        action();
+        for (int attempt = 0; ; attempt++)
+        {
+            GC.Collect();
+            int collections = GC.CollectionCount(0);
+            long before = GC.GetTotalMemory(false);
+            action();
+            long grown = GC.GetTotalMemory(false) - before;
+            if (GC.CollectionCount(0) == collections || attempt == 4) return grown;
+        }
     }
 
     static Color At(Color[] pixels, int x, int y) { return pixels[(Size - y) * Size + x]; }
@@ -155,6 +209,9 @@ public static class ModifierTests
             foreach (var blur in go.GetComponents<SVGBlurModifier>()) blur.camera = camera;
             renderer.UpdateRenderer();
         }
+        // Each render rebuilds the mesh with the modifiers; the last one is read back.
+        camera.Render();
+        camera.Render();
         camera.Render();
 
         var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false, false);
