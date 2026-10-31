@@ -30,6 +30,8 @@ public static class SVGRenderTests
     const int Tolerance = 8;
 
     static readonly Color32 Gray = new Color32(128, 128, 128, 255);
+    // The camera's background, (0.2, 0.2, 0.2).
+    static readonly Color32 Background = new Color32(51, 51, 51, 255);
 
     const string GraySvg =
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"200\">" +
@@ -233,6 +235,32 @@ public static class SVGRenderTests
         renderers["gray_lit_transparent"] = CreateRenderer(assets["gray_transparent"], new Vector3(6f, 0f));
         renderers["gray_lit_transparent"].transparentMaterial = new Material(Shader.Find("SVG Importer/SolidColor/SolidColorDiffuseAlphaBlended"));
 
+        // Sprite Masks over the left half of two smaller renderers: one visible only inside masks,
+        // under two overlapping masks as nested ones are, and one only outside them.
+        var maskTexture = new Texture2D(4, 4);
+        maskTexture.SetPixels32(Enumerable.Repeat(new Color32(255, 255, 255, 255), 16).ToArray());
+        maskTexture.Apply();
+        var maskSprite = Sprite.Create(maskTexture, new Rect(0f, 0f, 4f, 4f), new Vector2(0.5f, 0.5f), 4f);
+        void AddMask(Vector3 position)
+        {
+            var mask = new GameObject("Sprite Mask");
+            mask.transform.position = position;
+            mask.transform.localScale = new Vector3(0.8f, 1.6f, 1f);
+            mask.AddComponent<SpriteMask>().sprite = maskSprite;
+        }
+        renderers["masked_inside"] = CreateRenderer(assets["gray_transparent"], new Vector3(-1.5f, -2.5f));
+        renderers["masked_outside"] = CreateRenderer(assets["gray_opaque"], new Vector3(0.8f, -2.5f));
+        foreach (string name in new[] { "masked_inside", "masked_outside" })
+        {
+            renderers[name].transform.localScale = new Vector3(0.8f, 0.8f, 1f);
+            renderers[name].sortingOrder = 1;
+        }
+        renderers["masked_inside"].maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+        renderers["masked_outside"].maskInteraction = SpriteMaskInteraction.VisibleOutsideMask;
+        AddMask(new Vector3(-1.9f, -2.5f));
+        AddMask(new Vector3(-1.9f, -2.5f));
+        AddMask(new Vector3(0.4f, -2.5f));
+
         var canvas = new GameObject("Canvas").AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
         canvas.worldCamera = camera;
@@ -309,6 +337,17 @@ public static class SVGRenderTests
         Check("radial_offset", radialCenter.r > 230 && radialCenter.g > 200 && radialCenter.b < 60
             && radialEdge.r > 230 && radialEdge.g < 60 && radialEdge.b > 180,
             "expected yellow center and magenta edge, got " + radialCenter + " / " + radialEdge);
+
+        foreach (string name in new[] { "masked_inside", "masked_outside" })
+        {
+            Vector3 center = renderers[name].GetComponent<Renderer>().bounds.center;
+            Color32 inside = Sample(pixels, camera, center - new Vector3(0.4f, 0f));
+            Color32 outside = Sample(pixels, camera, center + new Vector3(0.4f, 0f));
+            bool insideVisible = name == "masked_inside";
+            Check(name, Near(inside, insideVisible ? Gray : Background) && Near(outside, insideVisible ? Background : Gray),
+                "expected " + (insideVisible ? "gray inside the mask and background outside" : "background inside the mask and gray outside")
+                + ", got " + inside + " / " + outside);
+        }
 
         Color32 grayUi = SampleUI(pixels, camera, images["gray_ui"], 0f);
         Check("gray_ui", Near(grayUi, Gray), "expected " + Gray + ", got " + grayUi);

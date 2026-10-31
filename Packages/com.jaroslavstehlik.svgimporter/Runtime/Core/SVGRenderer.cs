@@ -166,6 +166,28 @@ namespace SVGImporter
             }
         }
 
+        [SerializeField]
+        private SpriteMaskInteraction _maskInteraction = SpriteMaskInteraction.None;
+        private SpriteMaskInteraction _lastMaskInteraction = SpriteMaskInteraction.None;
+        /// <summary>
+        /// How the renderer interacts with Sprite Masks, as a sprite's does: visible only inside
+        /// masks, only outside them, or regardless of them. A masked renderer draws all of its
+        /// asset with the transparent material, after the masks. Override materials ignore this.
+        /// </summary>
+        public SpriteMaskInteraction maskInteraction
+        {
+            get {
+                return _maskInteraction;
+            }
+            set {
+                if(_maskInteraction != value)
+                {
+                    _maskInteraction = value;
+                    UpdateMaterials();
+                }
+            }
+        }
+
         private MeshFilter _meshFilter;
         public MeshFilter meshFilter {
             get
@@ -490,7 +512,7 @@ namespace SVGImporter
                 }
                 bool meshChanged = force || _lastType != _type || meshFilter.sharedMesh == null;
                 bool colorChanged = force || _lastColor != _color;
-                bool materialChanged = force || _lastOpaqueMaterial != _opaqueMaterial || _lastTransparentMaterial != _transparentMaterial || _lastReceive2DLights != _receive2DLights;
+                bool materialChanged = force || _lastOpaqueMaterial != _opaqueMaterial || _lastTransparentMaterial != _transparentMaterial || _lastReceive2DLights != _receive2DLights || _lastMaskInteraction != _maskInteraction;
 #if UNITY_EDITOR
                 // Materials go missing in the editor, for example when the atlas is recreated.
                 meshRenderer.GetSharedMaterials(s_Materials);
@@ -599,6 +621,7 @@ namespace SVGImporter
                 _lastOpaqueMaterial = _opaqueMaterial;
                 _lastTransparentMaterial = _transparentMaterial;
                 _lastReceive2DLights = _receive2DLights;
+                _lastMaskInteraction = _maskInteraction;
                 _lastVectorGraphics = _vectorGraphics;
                 _lastColor = _color;
                 _lastType = _type;
@@ -955,8 +978,8 @@ namespace SVGImporter
                 return;
             }
             bool hasGradients = _vectorGraphics.hasGradients || _vectorGraphics.useGradients == SVGUseGradients.Always;
-            Material sharedOpaqueMaterial = SVGAtlas.Instance.GetOpaqueMaterial(hasGradients, _receive2DLights);
-            Material sharedTransparentMaterial = SVGAtlas.Instance.GetTransparentMaterial(_vectorGraphics.softEdges, hasGradients, _receive2DLights);
+            Material sharedOpaqueMaterial = SVGAtlas.Instance.GetOpaqueMaterial(hasGradients, _receive2DLights, _maskInteraction);
+            Material sharedTransparentMaterial = SVGAtlas.Instance.GetTransparentMaterial(_vectorGraphics.softEdges, hasGradients, _receive2DLights, _maskInteraction);
 
             int subMeshCount = 0;
             if(useLayers)
@@ -1020,7 +1043,9 @@ namespace SVGImporter
         {
             if(_opaqueMaterial != null) SVGAtlas.Instance.UpdateMaterialProperties(_opaqueMaterial);
             if(_transparentMaterial != null) SVGAtlas.Instance.UpdateMaterialProperties(_transparentMaterial);
-            SwapMaterials(_color.a != 1);
+            // Sprite Masks are transparent, so masked renderers draw in the transparent queue, after
+            // them, as sprites do.
+            SwapMaterials(_color.a != 1 || _maskInteraction != SpriteMaskInteraction.None);
         }
 
         /// <summary>Rebuilds the renderer's mesh and materials, for example after changing the asset's layers from a script.</summary>

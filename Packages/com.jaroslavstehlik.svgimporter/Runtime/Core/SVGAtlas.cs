@@ -1,6 +1,7 @@
 
 
 using UnityEngine;
+using UnityEngine.Rendering;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -545,10 +546,10 @@ namespace SVGImporter
             Material[] own = { _ui, _uiAntialiased, _opaqueSolid, _transparentSolid, _transparentSolidAntialiased, _opaqueGradient, _transparentGradient, _transparentGradientAntialiased };
             foreach (Material material in own)
                 if (material != null) DestroyObjectInternal(material);
-            for (int i = 0; i < _unlit2D.Length; i++)
+            for (int i = 0; i < _variants.Length; i++)
             {
-                if (_unlit2D[i] != null) DestroyObjectInternal(_unlit2D[i]);
-                _unlit2D[i] = null;
+                if (_variants[i] != null) DestroyObjectInternal(_variants[i]);
+                _variants[i] = null;
             }
             ClearMaterials();
             ClearAtlasTextures();
@@ -1008,53 +1009,73 @@ namespace SVGImporter
         public const string _GradientShapeKey = "_GradientShape";
         public const string _ParamsKey = "_Params";
 
-        /// <summary>The shared transparent material for SVG Renderers; see SVGRenderer.receive2DLights.</summary>
-        public Material GetTransparentMaterial(bool antialiasing, bool hasGradients, bool receive2DLights = true)
+        /// <summary>
+        /// The shared transparent material for SVG Renderers; see SVGRenderer.receive2DLights and
+        /// SVGRenderer.maskInteraction.
+        /// </summary>
+        public Material GetTransparentMaterial(bool antialiasing, bool hasGradients, bool receive2DLights = true,
+            SpriteMaskInteraction maskInteraction = SpriteMaskInteraction.None)
         {
             if(antialiasing)
             {
                 if(hasGradients)
                 {
-                    return receive2DLights ? transparentGradientAntialiased : Unlit2D(5, transparentGradientAntialiased);
+                    return Variant(5, transparentGradientAntialiased, receive2DLights, maskInteraction);
                 } else {
-                    return receive2DLights ? transparentSolidAntialiased : Unlit2D(4, transparentSolidAntialiased);
+                    return Variant(4, transparentSolidAntialiased, receive2DLights, maskInteraction);
                 }
             } else {
                 if(hasGradients)
                 {
-                    return receive2DLights ? transparentGradient : Unlit2D(3, transparentGradient);
+                    return Variant(3, transparentGradient, receive2DLights, maskInteraction);
                 } else {
-                    return receive2DLights ? transparentSolid : Unlit2D(2, transparentSolid);
+                    return Variant(2, transparentSolid, receive2DLights, maskInteraction);
                 }
             }
         }
 
-        /// <summary>The shared opaque material for SVG Renderers; see SVGRenderer.receive2DLights.</summary>
-        public Material GetOpaqueMaterial(bool hasGradients, bool receive2DLights = true)
+        /// <summary>
+        /// The shared opaque material for SVG Renderers; see SVGRenderer.receive2DLights and
+        /// SVGRenderer.maskInteraction.
+        /// </summary>
+        public Material GetOpaqueMaterial(bool hasGradients, bool receive2DLights = true,
+            SpriteMaskInteraction maskInteraction = SpriteMaskInteraction.None)
         {
             if(hasGradients)
             {
-                return receive2DLights ? opaqueGradient : Unlit2D(1, opaqueGradient);
+                return Variant(1, opaqueGradient, receive2DLights, maskInteraction);
             } else {
-                return receive2DLights ? opaqueSolid : Unlit2D(0, opaqueSolid);
+                return Variant(0, opaqueSolid, receive2DLights, maskInteraction);
             }
         }
 
-        // Copies of the SVG Renderer materials that the URP 2D Renderer draws unlit, for renderers
-        // with receive2DLights off. Made when first used.
-        readonly Material[] _unlit2D = new Material[6];
+        // Copies of the six SVG Renderer materials for the other combinations of 2D lighting and
+        // Sprite Mask interaction, made when first used: drawn unlit by the URP 2D Renderer
+        // (SVG_UNLIT_2D), or with the stencil test of a sprite's mask interaction. Sprite Masks
+        // count up the stencil buffer where they are, so inside a mask the value is 1 or more.
+        readonly Material[] _variants = new Material[6 * 2 * 3];
+        static readonly int s_StencilRefID = Shader.PropertyToID("_SVGStencilRef");
+        static readonly int s_StencilCompID = Shader.PropertyToID("_SVGStencilComp");
 
-        Material Unlit2D(int index, Material lit)
+        Material Variant(int index, Material material, bool receive2DLights, SpriteMaskInteraction maskInteraction)
         {
-            Material material = _unlit2D[index];
-            if(material == null)
+            if(receive2DLights && maskInteraction == SpriteMaskInteraction.None) return material;
+            int slot = (index * 2 + (receive2DLights ? 0 : 1)) * 3 + (int)maskInteraction;
+            Material variant = _variants[slot];
+            if(variant == null)
             {
-                material = new Material(lit);
-                material.hideFlags = HideFlags.DontSave;
-                material.EnableKeyword("SVG_UNLIT_2D");
-                _unlit2D[index] = material;
+                variant = new Material(material);
+                variant.hideFlags = HideFlags.DontSave;
+                if(!receive2DLights) variant.EnableKeyword("SVG_UNLIT_2D");
+                if(maskInteraction != SpriteMaskInteraction.None)
+                {
+                    variant.SetFloat(s_StencilRefID, 1f);
+                    variant.SetFloat(s_StencilCompID, (float)(maskInteraction == SpriteMaskInteraction.VisibleInsideMask
+                        ? CompareFunction.LessEqual : CompareFunction.Greater));
+                }
+                _variants[slot] = variant;
             }
-            return material;
+            return variant;
         }
     }
 }

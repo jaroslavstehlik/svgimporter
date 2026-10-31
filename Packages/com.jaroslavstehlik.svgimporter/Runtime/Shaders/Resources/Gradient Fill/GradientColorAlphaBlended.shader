@@ -5,6 +5,13 @@ Shader "SVG Importer/GradientColor/GradientColorAlphaBlended" {
 	// texcoord1.x : Image Index Integer
 	// texcoord1.y : Gradient Type Integer
 
+	// Sprite Mask interaction: SVGAtlas sets these on copies of the material (see
+	// SVGRenderer.maskInteraction). Sprite Masks count up the stencil buffer where they are.
+	Properties {
+		[HideInInspector] _SVGStencilRef ("Stencil Ref", Float) = 1
+		[HideInInspector] _SVGStencilComp ("Stencil Comparison", Float) = 8
+	}
+
 	// Universal Render Pipeline: lit by 2D lights in the 2D Renderer, unlit in the Universal
 	// Renderer. Ignored by the Built-in Render Pipeline, which uses the SubShader below.
 	SubShader
@@ -14,6 +21,10 @@ Shader "SVG Importer/GradientColor/GradientColorAlphaBlended" {
 		Blend SrcAlpha OneMinusSrcAlpha
 		ZWrite Off
 		Cull Off
+		Stencil {
+			Ref [_SVGStencilRef]
+			Comp [_SVGStencilComp]
+		}
 
 		Pass
 		{
@@ -54,6 +65,10 @@ Shader "SVG Importer/GradientColor/GradientColorAlphaBlended" {
 		Blend SrcAlpha OneMinusSrcAlpha
 		ZWrite Off
 		Cull Off
+		Stencil {
+			Ref [_SVGStencilRef]
+			Comp [_SVGStencilComp]
+		}
 		Fog { Mode Off }
 
 		Pass
