@@ -5,7 +5,7 @@ members = ["svgimporter-core", "svgimporter-cli"]
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-license = "BSD-3-Clause"
+license = "MIT"
 
 [profile.release]
 opt-level = "s"
