@@ -261,6 +261,19 @@ public static class SVGRenderTests
         AddMask(new Vector3(-1.9f, -2.5f));
         AddMask(new Vector3(0.4f, -2.5f));
 
+        // Sorting Group: a red renderer in a group with Order in Layer 10 draws over a blue one with
+        // Order in Layer 5, though its own Order in Layer is 0.
+        var sortingGroup = new GameObject("Sorting Group").AddComponent<SortingGroup>();
+        sortingGroup.sortingOrder = 10;
+        renderers["grouped"] = CreateRenderer(assets["gray_transparent"], new Vector3(-6f, 4.3f));
+        renderers["grouped"].transform.SetParent(sortingGroup.transform, true);
+        renderers["grouped"].color = Color.red;
+        renderers["ungrouped"] = CreateRenderer(assets["gray_transparent"], new Vector3(-5.5f, 4.3f));
+        renderers["ungrouped"].color = Color.blue;
+        renderers["ungrouped"].sortingOrder = 5;
+        foreach (string name in new[] { "grouped", "ungrouped" })
+            renderers[name].transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+
         var canvas = new GameObject("Canvas").AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
         canvas.worldCamera = camera;
@@ -270,6 +283,9 @@ public static class SVGRenderTests
             { "gray_ui", CreateImage(canvas, assets["gray_ui"], new Vector2(800f, -540f)) },
             { "gradient_ui", CreateImage(canvas, assets["gradient_ui"], new Vector2(1050f, -540f)) },
         };
+
+        // Sorting Groups are updated by the player loop, which doesn't run during this method.
+        SortingGroup.UpdateAllSortingGroups();
 
         var target = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
         camera.targetTexture = target;
@@ -348,6 +364,9 @@ public static class SVGRenderTests
                 "expected " + (insideVisible ? "gray inside the mask and background outside" : "background inside the mask and gray outside")
                 + ", got " + inside + " / " + outside);
         }
+
+        Color32 sorted = Sample(pixels, camera, new Vector3(-5.75f, 4.3f));
+        Check("Sorting Group", sorted.r > 100 && sorted.b < 20, "expected the grouped renderer's red over blue, got " + sorted);
 
         Color32 grayUi = SampleUI(pixels, camera, images["gray_ui"], 0f);
         Check("gray_ui", Near(grayUi, Gray), "expected " + Gray + ", got " + grayUi);
