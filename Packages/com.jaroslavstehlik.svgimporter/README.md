@@ -26,6 +26,18 @@ Drop an `.svg` file into your project. It is imported as an SVG Asset, just like
 - Unity 6 has its own SVG importer, used by UI Toolkit. SVG Importer takes over SVG files *added* to the project. To keep using Unity's importer for a file, pick it in the importer dropdown at the top of the file's Inspector. To keep Unity's importer for all new files, turn off **Import New SVG Files** in the settings.
 - SVG files that were already in the project: select them and use **Assets > SVG Importer > Import with SVG Importer**.
 
+## Unity's 2D tools
+
+SVG Renderer draws a mesh, not a sprite. It works with the 2D tools that work with any renderer:
+
+- Sorting Layers, Order in Layer and Sorting Group.
+- 2D lights in the URP 2D Renderer, as they light sprites. Turn off **Receive 2D Lights** on an SVG Renderer to draw it unlit.
+- Sprite Masks: set **Mask Interaction** on the SVG Renderer, as on a sprite.
+- 2D physics: **SVG Collider 2D** fills a Polygon Collider 2D with the shape's outline, holes included.
+- The Sprite Editor, to set the pivot and the slicing border.
+
+Tools that need a `Sprite` asset, such as 2D Animation (Sprite Skin and bones), Sprite Shape, Tilemap, Sprite Atlas and the sliced or tiled draw modes of a Sprite Renderer, don't work with SVG Assets. For those files, use Unity's own SVG importer, which imports SVG files as sprites: pick it in the importer dropdown at the top of the file's Inspector. Use SVG Importer where you want resolution-independent vector meshes, exact gradients, soft edges at any zoom and the SVG modifiers.
+
 ## Upgrading from SVG Importer 1.x
 
 Version 1 converted every SVG file into an `.asset` file and deleted the original. Those SVG Assets still work. To convert them back to `.svg` files, use **Window > SVG Importer > Convert SVG Assets to SVG Files...**: each asset keeps its import settings and its references in scenes and prefabs. Commit or back up your project first; the project must use text serialization (Project Settings > Editor > Asset Serialization: Force Text).
