@@ -37,6 +37,7 @@ namespace SVGImporter
             public static readonly GUIContent receiveShadows = EditorGUIUtility.TrTextContent("Receive Shadows");
             public static readonly GUIContent lightProbes = EditorGUIUtility.TrTextContent("Light Probes");
             public static readonly GUIContent renderingLayerMask = EditorGUIUtility.TrTextContent("Rendering Layer Mask", "The rendering layers the renderer is on, for lights and effects that filter by them.");
+            public static readonly GUIContent receive2DLights = EditorGUIUtility.TrTextContent("Receive 2D Lights", "Whether the URP 2D Renderer's 2D lights light the renderer, as they light sprites. Off draws it unlit. Other renderers always draw SVGs unlit.");
         }
 
         static bool s_AdditionalSettings;
@@ -53,6 +54,7 @@ namespace SVGImporter
         SerializedProperty receiveShadows;
         SerializedProperty lightProbeUsage;
         SerializedProperty renderingLayerMask;
+        SerializedProperty receive2DLights;
 
         void OnEnable()
         {
@@ -67,6 +69,7 @@ namespace SVGImporter
             receiveShadows = serializedObject.FindProperty("_receiveShadows");
             lightProbeUsage = serializedObject.FindProperty("_lightProbeUsage");
             renderingLayerMask = serializedObject.FindProperty("_renderingLayerMask");
+            receive2DLights = serializedObject.FindProperty("_receive2DLights");
 
             if (serializedObject.isEditingMultipleObjects)
             {
@@ -193,6 +196,7 @@ namespace SVGImporter
             EditorGUILayout.PropertyField(sortingOrder, Styles.orderInLayer);
             if(HasSelectedOpaqueAsset())
                 EditorGUILayout.HelpBox(Styles.opaqueSorting, MessageType.Info);
+            EditorGUILayout.PropertyField(receive2DLights, Styles.receive2DLights);
 
             s_AdditionalSettings = EditorGUILayout.Foldout(s_AdditionalSettings, Styles.additionalSettings, true);
             if (s_AdditionalSettings)

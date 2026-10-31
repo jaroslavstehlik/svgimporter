@@ -23,7 +23,7 @@ Shader "SVG Importer/SolidColor/SolidColorDiffuseOpaque"
 			ENDCG
 		}
 
-		// The URP 2D Renderer has no directional light, so draw the vertex colors unlit.
+		// The URP 2D Renderer has no directional light: 2D lights light the vertex colors instead.
 		Pass
 		{
 			Tags {"LightMode"="Universal2D"}
@@ -34,7 +34,12 @@ Shader "SVG Importer/SolidColor/SolidColorDiffuseOpaque"
 			CGPROGRAM
 			#pragma vertex vertexColor
 			#pragma fragment fragmentColor
+			#pragma multi_compile USE_SHAPE_LIGHT_TYPE_0 __
+			#pragma multi_compile USE_SHAPE_LIGHT_TYPE_1 __
+			#pragma multi_compile USE_SHAPE_LIGHT_TYPE_2 __
+			#pragma multi_compile USE_SHAPE_LIGHT_TYPE_3 __
 			#include "UnityCG.cginc"
+			#include "../SVGImporterLight2D.cginc"
 			#include "../SVGImporterSolidCG.cginc"
 			ENDCG
 		}

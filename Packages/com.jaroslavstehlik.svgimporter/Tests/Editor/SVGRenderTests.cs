@@ -106,6 +106,8 @@ public static class SVGRenderTests
         string colorSpace = Arg("-svgTestColorSpace");
         if (colorSpace != null)
             PlayerSettings.colorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), colorSpace);
+        // Compile shader variants when first drawn, rather than skip them while they compile.
+        ShaderUtil.allowAsyncCompilation = false;
         var results = new List<string>();
         bool passed;
         try
@@ -225,7 +227,11 @@ public static class SVGRenderTests
             { "gradient_bounding_box", CreateRenderer(assets["gradient_bounding_box"], new Vector3(-6f, 0f)) },
             { "gradient_user_space", CreateRenderer(assets["gradient_user_space"], new Vector3(-3f, 0f)) },
             { "radial_offset", CreateRenderer(assets["radial_offset"], new Vector3(0f, 0f)) },
+            { "gray_unlit_2d", CreateRenderer(assets["gray_transparent"], new Vector3(3f, 0f)) },
         };
+        renderers["gray_unlit_2d"].receive2DLights = false;
+        renderers["gray_lit_transparent"] = CreateRenderer(assets["gray_transparent"], new Vector3(6f, 0f));
+        renderers["gray_lit_transparent"].transparentMaterial = new Material(Shader.Find("SVG Importer/SolidColor/SolidColorDiffuseAlphaBlended"));
 
         var canvas = new GameObject("Canvas").AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
@@ -248,15 +254,20 @@ public static class SVGRenderTests
             .SetValue(SVGAtlas.Instance, true);
         camera.Render();
         bool atlasDirtyAfter = SVGAtlas.Instance.atlasHasChanged;
-        // Render again so the frame we read back uses the rebuilt atlas.
-        camera.Render();
 
-        var pixels = new Texture2D(Width, Height, TextureFormat.RGBA32, false, false);
-        RenderTexture.active = target;
-        pixels.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
-        pixels.Apply();
-        RenderTexture.active = null;
-        File.WriteAllBytes(Path.Combine(output, pipeline + "-" + PlayerSettings.colorSpace + ".png"), pixels.EncodeToPNG());
+        // Renders again, so the frame read back uses the rebuilt atlas, and saves it.
+        Texture2D RenderFrame(string name)
+        {
+            camera.Render();
+            var frame = new Texture2D(Width, Height, TextureFormat.RGBA32, false, false);
+            RenderTexture.active = target;
+            frame.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
+            frame.Apply();
+            RenderTexture.active = null;
+            File.WriteAllBytes(Path.Combine(output, name + "-" + PlayerSettings.colorSpace + ".png"), frame.EncodeToPNG());
+            return frame;
+        }
+        var pixels = RenderFrame(pipeline);
 
         bool ok = true;
         void Check(string name, bool condition, string detail)
@@ -267,7 +278,7 @@ public static class SVGRenderTests
 
         Check("atlas rebuilt by render", !atlasDirtyAfter, "atlas still dirty after render: " + atlasDirtyAfter);
 
-        foreach (string name in new[] { "gray_opaque", "gray_transparent", "gray_antialiased" })
+        foreach (string name in new[] { "gray_opaque", "gray_transparent", "gray_antialiased", "gray_unlit_2d" })
         {
             Color32 c = Sample(pixels, camera, renderers[name].GetComponent<Renderer>().bounds.center);
             Check(name, Near(c, Gray), "expected " + Gray + ", got " + c);
@@ -306,6 +317,36 @@ public static class SVGRenderTests
             SampleUI(pixels, camera, images["gradient_ui"], 0f),
             SampleUI(pixels, camera, images["gradient_ui"], 0.4f));
 
+        // The 2D Renderer lights SVG Renderers with 2D lights, as it lights sprites: an orange
+        // global light keeps red and darkens green, and blue more.
+        if (pipeline == "urp2d")
+        {
+            CreateGlobalLight2D(new Color(1f, 0.5f, 0.25f));
+            Texture2D litPixels = RenderFrame(pipeline + "-light2d");
+            var points = new List<KeyValuePair<string, Vector3>>();
+            foreach (string name in new[] { "gray_opaque", "gray_transparent", "gray_antialiased", "gray_lit", "gray_lit_transparent", "gray_unlit_2d" })
+                points.Add(new KeyValuePair<string, Vector3>(name, renderers[name].GetComponent<Renderer>().bounds.center));
+            points.Add(new KeyValuePair<string, Vector3>("gradient_transparent", gradientBounds.center));
+            points.Add(new KeyValuePair<string, Vector3>("radial_offset", radial.center));
+
+            foreach (var point in points)
+            {
+                Color32 unlit = Sample(pixels, camera, point.Value);
+                Color32 litColor = Sample(litPixels, camera, point.Value);
+                if (point.Key == "gray_unlit_2d")
+                {
+                    Check("2D lights: receive2DLights off", Near(litColor, unlit), "expected " + unlit + " unchanged, got " + litColor);
+                    continue;
+                }
+                Check("2D lights: " + point.Key, Math.Abs(litColor.r - unlit.r) <= Tolerance
+                    && (unlit.g < 40 || litColor.g < unlit.g - 15) && (unlit.b < 40 || litColor.b < unlit.b - 15),
+                    "expected " + unlit + " tinted orange, got " + litColor);
+            }
+            Color32 uiUnlit = SampleUI(pixels, camera, images["gray_ui"], 0f);
+            Color32 uiLit = SampleUI(litPixels, camera, images["gray_ui"], 0f);
+            Check("2D lights: Canvas unlit", Near(uiLit, uiUnlit), "expected " + uiUnlit + " unchanged, got " + uiLit);
+        }
+
         camera.targetTexture = null;
         UnityEngine.Object.DestroyImmediate(target);
         return ok;
@@ -318,6 +359,18 @@ public static class SVGRenderTests
         // SVG gradients interpolate in sRGB, like browsers do: the midpoint of red to blue is about (128, 0, 128).
         check(name + " midpoint", Math.Abs(middle.r - 128) <= 20 && Math.Abs(middle.b - 128) <= 20 && middle.g <= 20,
             "expected about (128, 0, 128), got " + middle);
+    }
+
+    // A global Light2D, found by name: URP moved it to its own assembly after Unity 6.0.
+    static void CreateGlobalLight2D(Color color)
+    {
+        Type type = TypeCache.GetTypesDerivedFrom<Behaviour>()
+            .First(t => t.FullName == "UnityEngine.Rendering.Universal.Light2D");
+        var light = (Component)new GameObject("Light 2D").AddComponent(type);
+        PropertyInfo lightType = type.GetProperty("lightType");
+        lightType.SetValue(light, Enum.Parse(lightType.PropertyType, "Global"));
+        type.GetProperty("color").SetValue(light, color);
+        type.GetProperty("intensity").SetValue(light, 1f);
     }
 
     static SVGRenderer CreateRenderer(SVGAsset asset, Vector3 position, Material opaqueMaterial = null)

@@ -545,6 +545,11 @@ namespace SVGImporter
             Material[] own = { _ui, _uiAntialiased, _opaqueSolid, _transparentSolid, _transparentSolidAntialiased, _opaqueGradient, _transparentGradient, _transparentGradientAntialiased };
             foreach (Material material in own)
                 if (material != null) DestroyObjectInternal(material);
+            for (int i = 0; i < _unlit2D.Length; i++)
+            {
+                if (_unlit2D[i] != null) DestroyObjectInternal(_unlit2D[i]);
+                _unlit2D[i] = null;
+            }
             ClearMaterials();
             ClearAtlasTextures();
             if (_atlasData != null) _atlasData.Clear();
@@ -1003,34 +1008,53 @@ namespace SVGImporter
         public const string _GradientShapeKey = "_GradientShape";
         public const string _ParamsKey = "_Params";
 
-        public Material GetTransparentMaterial(bool antialiasing, bool hasGradients)
+        /// <summary>The shared transparent material for SVG Renderers; see SVGRenderer.receive2DLights.</summary>
+        public Material GetTransparentMaterial(bool antialiasing, bool hasGradients, bool receive2DLights = true)
         {
             if(antialiasing)
             {
                 if(hasGradients)
                 {
-                    return transparentGradientAntialiased;
+                    return receive2DLights ? transparentGradientAntialiased : Unlit2D(5, transparentGradientAntialiased);
                 } else {
-                    return transparentSolidAntialiased;
+                    return receive2DLights ? transparentSolidAntialiased : Unlit2D(4, transparentSolidAntialiased);
                 }
             } else {
                 if(hasGradients)
                 {
-                    return transparentGradient;
+                    return receive2DLights ? transparentGradient : Unlit2D(3, transparentGradient);
                 } else {
-                    return transparentSolid;
+                    return receive2DLights ? transparentSolid : Unlit2D(2, transparentSolid);
                 }
             }
         }
 
-        public Material GetOpaqueMaterial(bool hasGradients)
+        /// <summary>The shared opaque material for SVG Renderers; see SVGRenderer.receive2DLights.</summary>
+        public Material GetOpaqueMaterial(bool hasGradients, bool receive2DLights = true)
         {
             if(hasGradients)
             {
-                return opaqueGradient;
+                return receive2DLights ? opaqueGradient : Unlit2D(1, opaqueGradient);
             } else {
-                return opaqueSolid;
+                return receive2DLights ? opaqueSolid : Unlit2D(0, opaqueSolid);
             }
+        }
+
+        // Copies of the SVG Renderer materials that the URP 2D Renderer draws unlit, for renderers
+        // with receive2DLights off. Made when first used.
+        readonly Material[] _unlit2D = new Material[6];
+
+        Material Unlit2D(int index, Material lit)
+        {
+            Material material = _unlit2D[index];
+            if(material == null)
+            {
+                material = new Material(lit);
+                material.hideFlags = HideFlags.DontSave;
+                material.EnableKeyword("SVG_UNLIT_2D");
+                _unlit2D[index] = material;
+            }
+            return material;
         }
     }
 }

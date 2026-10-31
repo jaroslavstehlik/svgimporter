@@ -1,4 +1,9 @@
-
+// Universal2D passes include SVGImporterLight2D.cginc first for 2D lights; every other pass is unlit.
+#ifndef SVG_LIGHT_2D
+#define SVG_LIGHTING_COORDS(n)
+#define SVG_TRANSFER_LIGHTING(o)
+#define SVG_APPLY_LIGHTING(color, i)
+#endif
 
 // SVG colors are authored in sRGB and stored as vertex colors. In a Linear color space
 // project they must be converted, or they render washed out. (UI shaders do not need

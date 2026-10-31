@@ -144,6 +144,28 @@ namespace SVGImporter
             }
         }
 
+        [SerializeField]
+        private bool _receive2DLights = true;
+        private bool _lastReceive2DLights = true;
+        /// <summary>
+        /// Whether the URP 2D Renderer's 2D lights light the renderer, as they light sprites with the
+        /// default lit material. Off draws it unlit, like the Sprite-Unlit material. Other render
+        /// pipelines and renderers always draw SVGs unlit. Override materials ignore this.
+        /// </summary>
+        public bool receive2DLights
+        {
+            get {
+                return _receive2DLights;
+            }
+            set {
+                if(_receive2DLights != value)
+                {
+                    _receive2DLights = value;
+                    UpdateMaterials();
+                }
+            }
+        }
+
         private MeshFilter _meshFilter;
         public MeshFilter meshFilter {
             get
@@ -468,7 +490,7 @@ namespace SVGImporter
                 }
                 bool meshChanged = force || _lastType != _type || meshFilter.sharedMesh == null;
                 bool colorChanged = force || _lastColor != _color;
-                bool materialChanged = force || _lastOpaqueMaterial != _opaqueMaterial || _lastTransparentMaterial != _transparentMaterial;
+                bool materialChanged = force || _lastOpaqueMaterial != _opaqueMaterial || _lastTransparentMaterial != _transparentMaterial || _lastReceive2DLights != _receive2DLights;
 #if UNITY_EDITOR
                 // Materials go missing in the editor, for example when the atlas is recreated.
                 meshRenderer.GetSharedMaterials(s_Materials);
@@ -576,6 +598,7 @@ namespace SVGImporter
 
                 _lastOpaqueMaterial = _opaqueMaterial;
                 _lastTransparentMaterial = _transparentMaterial;
+                _lastReceive2DLights = _receive2DLights;
                 _lastVectorGraphics = _vectorGraphics;
                 _lastColor = _color;
                 _lastType = _type;
@@ -932,8 +955,8 @@ namespace SVGImporter
                 return;
             }
             bool hasGradients = _vectorGraphics.hasGradients || _vectorGraphics.useGradients == SVGUseGradients.Always;
-            Material sharedOpaqueMaterial = SVGAtlas.Instance.GetOpaqueMaterial(hasGradients);
-            Material sharedTransparentMaterial = SVGAtlas.Instance.GetTransparentMaterial(_vectorGraphics.softEdges, hasGradients);
+            Material sharedOpaqueMaterial = SVGAtlas.Instance.GetOpaqueMaterial(hasGradients, _receive2DLights);
+            Material sharedTransparentMaterial = SVGAtlas.Instance.GetTransparentMaterial(_vectorGraphics.softEdges, hasGradients, _receive2DLights);
 
             int subMeshCount = 0;
             if(useLayers)

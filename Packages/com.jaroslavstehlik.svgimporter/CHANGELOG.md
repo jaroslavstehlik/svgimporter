@@ -16,7 +16,7 @@
 - Fixed gradients not updating at runtime in URP.
 - Fixed importing SVG files failing with a NullReferenceException on Unity 6.
 - Fixed SVG Image not rendering when added through Add Component on Unity 6.
-- The Diffuse shaders now render in URP (lit by the main light) and the URP 2D Renderer (unlit).
+- The Diffuse shaders now render in URP (lit by the main light) and the URP 2D Renderer (lit by 2D lights).
 - Removed the "Standard SVG" materials, which referenced a shader that was never included.
 - Settings are in **Edit > Project Settings > SVG Importer** (also Window > SVG Importer > Settings), stored in `ProjectSettings/SVGImporterSettings.asset` with the project's other settings, instead of an asset in `Assets`. Projects that have the settings asset of an earlier 2.0 build get its values once; the asset can then be deleted. Builds include the one runtime setting, the antialiasing width, automatically.
 - The plugin no longer creates an `Assets/Gizmos` folder in your project.
@@ -83,6 +83,7 @@
 - **Generate Collider** outlines are computed by the native core, in one pass, instead of merging shape after shape with Clipper, which made large files slow to import. Holes are kept: a ring gets a ring-shaped collider instead of a disc, unless other shapes cover the hole. The C# Clipper library is removed. Files with Generate Collider on reimport once.
 - SVG Renderer looks after its MeshFilter and MeshRenderer, which are now hidden, as a sprite's are, and are removed with it. Their settings are on SVG Renderer: Sorting Layer and Order in Layer, and under Additional Settings shadows, light probes and the Rendering Layer Mask. New renderers don't cast or receive shadows, as sprites don't; existing ones keep what their MeshRenderer had.
 - Sorting uses Unity's Sorting Layers, Order in Layer and Sorting Group. **SVG Sorter** is now **SVG Opaque Sorting Group**: it places the SVG Renderers below it along z in hierarchy order, for Opaque + Transparent assets, which the depth test orders. It no longer changes Order in Layer, and it places renderers again only when something changes, rather than every frame: the hierarchy below it (renderers moved at any depth, the group's or a renderer's children reordered) or an asset; in the Editor also any hierarchy change, undo and redo, and renderers moved by hand. In play mode, after reordering the children of other objects below it, call `Sort()`. **SVG Opaque Sort Override** leaves an object (and optionally its children) where it is, replacing SVG Renderer's Override Sorter settings. Scenes with an SVG Sorter keep it as an SVG Opaque Sorting Group.
+- **2D lights** light SVG Renderers in the URP 2D Renderer, as they light sprites with the default lit material, including light blend styles and the HDR emulation scale. Without 2D lights nothing changes. Turn off **Receive 2D Lights** on an SVG Renderer (`receive2DLights`) to draw it unlit, like the Sprite-Unlit material. Lit renderers on a sorting layer that no light reaches are dark, as sprites are. The Universal Renderer and the Built-in Render Pipeline still draw SVGs unlit, and SVG Images are never lit.
 
 ### Script API changes (2.0)
 
