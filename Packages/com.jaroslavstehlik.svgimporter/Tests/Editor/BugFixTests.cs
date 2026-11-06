@@ -119,6 +119,14 @@ public static class BugFixTests
             Check("canvas channels kept", (canvas.additionalShaderChannels & AdditionalCanvasShaderChannels.Tangent) != 0
                 && (canvas.additionalShaderChannels & AdditionalCanvasShaderChannels.TexCoord1) != 0, canvas.additionalShaderChannels.ToString());
 
+            // Without a Canvas, an SVG Image left uGUI's shared VertexHelper untouched, so it drew the
+            // mesh of the graphic built before it.
+            var noCanvas = new GameObject("Image without Canvas").AddComponent<SVGImage>();
+            noCanvas.vectorGraphics = image.vectorGraphics;
+            Check("no canvas replaces the previous mesh", PopulateAfterPreviousGraphic(noCanvas) == noCanvas.vectorGraphics.sharedMesh.vertexCount, "vertices");
+            noCanvas.type = SVGDrawMode.Sliced;
+            Check("no canvas, sliced", PopulateAfterPreviousGraphic(noCanvas) == noCanvas.vectorGraphics.sharedMesh.vertexCount, "vertices");
+
             // The native core refuses documents above its input limit instead of running out of memory.
             if (SVGNativeCore.isSupported)
             {
@@ -250,6 +258,18 @@ public static class BugFixTests
     static SVGAsset Load(string name)
     {
         return AssetDatabase.LoadAssetAtPath<SVGAsset>(Root + "/" + name + ".svg");
+    }
+
+    // Builds a graphic the way uGUI does, into a VertexHelper another graphic has already filled.
+    static int PopulateAfterPreviousGraphic(SVGImage image)
+    {
+        using (var helper = new UnityEngine.UI.VertexHelper())
+        {
+            helper.AddVert(Vector3.zero, Color.white, Vector4.zero);
+            typeof(SVGImage).GetMethod("OnPopulateMesh", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+                null, new[] { typeof(UnityEngine.UI.VertexHelper) }, null).Invoke(image, new object[] { helper });
+            return helper.currentVertCount;
+        }
     }
 
     static SVGAsset Import(string name, string svg, Action<SerializedObject> settings)
