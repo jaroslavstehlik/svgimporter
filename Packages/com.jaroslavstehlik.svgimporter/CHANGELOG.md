@@ -16,6 +16,7 @@
 - Fixed gradients not updating at runtime in URP.
 - Fixed importing SVG files failing with a NullReferenceException on Unity 6.
 - Fixed SVG Image not rendering when added through Add Component on Unity 6.
+- Fixed an SVG Image with no parent Canvas drawing the mesh of the graphic built before it.
 - The Diffuse shaders now render in URP (lit by the main light) and the URP 2D Renderer (lit by 2D lights).
 - Removed the "Standard SVG" materials, which referenced a shader that was never included.
 - Settings are in **Edit > Project Settings > SVG Importer** (also Window > SVG Importer > Settings), stored in `ProjectSettings/SVGImporterSettings.asset` with the project's other settings, instead of an asset in `Assets`. Projects that have the settings asset of an earlier 2.0 build get its values once; the asset can then be deleted. Builds include the one runtime setting, the antialiasing width, automatically.

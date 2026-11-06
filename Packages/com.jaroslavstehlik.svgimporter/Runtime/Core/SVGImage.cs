@@ -348,7 +348,8 @@ namespace SVGImporter
 
         void PopulateMesh(VertexHelper vh)
         {
-            if (canvas == null) return;
+            // Always fill or clear vh, with or without a Canvas: uGUI shares one VertexHelper, so leaving it
+            // untouched hands this graphic the mesh of the graphic built before it.
             // Without an asset, a white rectangle as uGUI's Image draws; an asset with nothing to draw draws nothing.
             if (_vectorGraphics == null) { base.OnPopulateMesh(vh); return; }
             if (sharedMesh == null) { vh.Clear(); return; }
@@ -363,7 +364,7 @@ namespace SVGImporter
             AdditionalCanvasShaderChannels channels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.TexCoord2;
             if (_vectorGraphics.softEdges || _vectorGraphics.generateNormals)
                 channels |= AdditionalCanvasShaderChannels.Normal;
-            if ((canvas.additionalShaderChannels & channels) != channels)
+            if (canvas != null && (canvas.additionalShaderChannels & channels) != channels)
                 canvas.additionalShaderChannels |= channels;
 
             Bounds bounds = sharedMesh.bounds;
@@ -392,7 +393,8 @@ namespace SVGImporter
                 
                 Vector2 normalizedPosition;
                 
-                float rectSize = canvas.referencePixelsPerUnit * vectorGraphics.scale * 100f;
+                float referencePixelsPerUnit = canvas != null ? canvas.referencePixelsPerUnit : pixelsPerUnit;
+                float rectSize = referencePixelsPerUnit * vectorGraphics.scale * 100f;
                 Vector2 size = new Vector2(bounds.size.x * rectSize, bounds.size.y * rectSize);
                 Vector4 transformRect = new Vector4(v.x, v.y, v.x + v.z, v.y + v.w);
                 Vector4 borderRect = new Vector4(size.x * border.x,
