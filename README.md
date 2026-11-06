@@ -1,5 +1,7 @@
 # SVG Importer
 
+[![Sponsor](https://img.shields.io/github/sponsors/jaroslavstehlik?label=Sponsor&logo=GitHub)](https://github.com/sponsors/jaroslavstehlik)
+
 Import SVG files into Unity as lightweight, GPU-friendly meshes. Drop an `.svg` file into your project and drag it into the scene, or use it in Unity UI, just as you would a sprite. It stays sharp at any size and any zoom.
 
 [<img src="https://img.youtube.com/vi/XDEVNreEWYU/maxresdefault.jpg" width="50%" alt="SVG Importer feature video">](https://www.youtube.com/watch?v=XDEVNreEWYU)
@@ -45,6 +47,6 @@ SVG Importer is free and open source under the [MIT license](Packages/com.jarosl
 
 It includes third-party software, listed in [Third Party Notices](Packages/com.jaroslavstehlik.svgimporter/Third%20Party%20Notices.md). Games and apps that include the native library should reproduce those notices, for example in their credits or legal notices.
 
-Made something with SVG Importer? A "Made with SVG Importer" in your credits is appreciated, never required.
+Made something with SVG Importer? A "Made with SVG Importer" in your credits is appreciated, never required. If SVG Importer saves you time, you can support its development through [GitHub Sponsors](https://github.com/sponsors/jaroslavstehlik).
 
 More at [svgimporter.com](https://svgimporter.com/) and on the [YouTube channel](https://www.youtube.com/@Svgimporter).
